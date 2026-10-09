@@ -47,10 +47,14 @@ export function toRange(p: SearchParams): { start: LocalDateTime; end: LocalDate
   return isValidLocal(start) && isValidLocal(end) ? { start, end } : null;
 }
 
-/** Busca en los datos de demostración. Disponibles primero, luego por precio. */
-export function searchSpaces(p: SearchParams): SearchResult[] {
+/** Busca en una lista de garages. Disponibles primero, luego por precio. */
+export function searchSpaces(
+  p: SearchParams,
+  /** Lista donde buscar: por defecto los garages de ejemplo. Nunca mezclar reales y de ejemplo. */
+  source: Space[] = publishedSpaces(),
+): SearchResult[] {
   const range = toRange(p);
-  return publishedSpaces()
+  return source
     .filter((s) => matchesZone(s, p.zona))
     .map((space) => ({
       space,
