@@ -3,6 +3,10 @@
 Plataforma para buscar y reservar cocheras ofrecidas por propietarios, en Argentina (precios en ARS, hora de Buenos Aires).
 Los conductores buscan por ciudad y barrio, ven precio y disponibilidad y solicitan una reserva; el propietario la aprueba o la rechaza.
 
+## Demo publicada
+
+**https://guspot-demo.pages.dev** (Cloudflare Pages, plan gratuito). Datos de ejemplo: sin reservas persistentes ni pagos reales. Para actualizarla: `npm run deploy:demo` (ver [docs/publicacion.md](docs/publicacion.md)).
+
 ## Estado: demo
 
 Esta es una **versión de demostración estática** con datos de ejemplo. Un banner fijo lo indica en todas las páginas.

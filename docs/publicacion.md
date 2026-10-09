@@ -19,6 +19,38 @@ Fuentes: documentación oficial consultada el **9 de octubre de 2026**. Los plan
 
 ---
 
+## Estado actual (2026-10-09): publicada en Cloudflare Pages
+
+- **URL:** https://guspot-demo.pages.dev — demo con datos de ejemplo, sin reservas persistentes ni pagos reales. Tiene `noindex` (no aparece en buscadores).
+- **Proyecto:** `guspot-demo`, Cloudflare Pages, plan Free, carga directa con Wrangler (sin integración con Git). Rama de producción: `main`.
+- Solo archivos estáticos (sin Pages Functions): según la documentación oficial, las solicitudes a archivos estáticos son gratuitas e ilimitadas.
+
+### Actualizar la demo
+
+```bash
+npm run deploy:demo
+```
+
+Compila (`out/`) y sube a producción (`https://guspot-demo.pages.dev`). Cada deploy además tiene una URL propia (`https://<hash>.guspot-demo.pages.dev`) que sirve como versión fija para comparar.
+
+Para una versión de prueba sin tocar producción:
+
+```bash
+npm run build
+npx wrangler pages deploy out --project-name guspot-demo --branch prueba
+```
+
+(queda en `https://prueba.guspot-demo.pages.dev`).
+
+Requisitos: sesión iniciada con `npx wrangler login` (la hace el dueño de la cuenta; las credenciales quedan en la computadora). Para cerrarla: `npx wrangler logout`.
+
+### Notas del primer deploy
+
+- Wrangler 4.149 intenta "delegar" los comandos de Pages a Cloudflare Workers. Para crear el proyecto en Pages se usó una única vez `wrangler pages project create guspot-demo --production-branch main --force`. Los deploys posteriores van directo a Pages y no necesitan `--force`.
+- El primer intento de crear el proyecto devolvió un error 500 de la API; el reintento funcionó.
+- El login se hizo con los permisos por defecto de Wrangler (amplios). Para limitarlos: `npx wrangler logout` y luego `npx wrangler login --scopes account:read user:read pages:write offline_access --use-keyring`. También se puede revocar el acceso desde el panel de Cloudflare.
+- Wrangler envía métricas de uso anónimas; se pueden desactivar con `npx wrangler telemetry disable`.
+
 ## Antes de empezar: el repositorio
 
 El proyecto tiene git local (rama `main`) pero **no tiene remoto en GitHub**. Para la opción "importar desde GitHub" hay que subirlo primero:
