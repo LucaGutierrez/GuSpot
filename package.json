@@ -8,7 +8,8 @@
     "prebuild": "node scripts/copy-map-worker.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "deploy:demo": "npm run build && wrangler pages deploy out --project-name guspot-demo --branch main --commit-dirty=true"
   },
   "dependencies": {
     "maplibre-gl": "^6.13.0",
@@ -24,6 +25,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wrangler": "^4.149.0"
   }
 }
