@@ -4,6 +4,9 @@ import "./globals.css";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { DemoBanner } from "@/components/ui/demo-notice";
+import { ChromeHeight } from "@/components/chrome-height";
+import { preconnect } from "react-dom";
+import { MAP_ORIGIN } from "@/components/map/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,11 +25,14 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  // El mapa es la pantalla principal: abrimos antes la conexión a su proveedor.
+  preconnect(MAP_ORIGIN, { crossOrigin: "anonymous" });
   return (
     <html lang="es-AR" className={`${geistSans.variable} h-full antialiased`}>
       <body className="pb-safe-nav flex min-h-full flex-col font-sans">
         <DemoBanner />
         <SiteHeader />
+        <ChromeHeight />
         <main className="flex-1">{children}</main>
         <SiteFooter />
       </body>

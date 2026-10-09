@@ -2,7 +2,8 @@
 // archivo es real. Los precios son ilustrativos y las "fotos" son ilustraciones.
 // Reemplazar por la base de datos en la etapa de reservas reales.
 
-import type { Booking, Owner, Space } from "./types";
+import type { Booking, LatLng, Owner, Space } from "./types";
+import { approximatePoint } from "./geo";
 
 const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 const WEEKDAYS = [1, 2, 3, 4, 5];
@@ -17,17 +18,23 @@ export const owners: Owner[] = [
   { id: "prop-3", displayName: "Propietario de ejemplo", memberSince: "2026" },
 ];
 
-export const spaces: Space[] = [
+/**
+ * En los datos de entrada cada espacio tiene su punto "exacto" (ficticio).
+ * Lo que se expone es `coords`, desplazado 100–200 m de forma estable.
+ */
+type DemoSpaceInput = Omit<Space, "coords"> & { exactCoords: LatLng };
+
+const spaceInputs: DemoSpaceInput[] = [
   {
     id: "palermo-cochera-cubierta",
     ownerId: DEMO_OWNER_ID,
     title: "Cochera cubierta en edificio, cerca de Plaza Serrano",
     description:
       "Cochera fija en subsuelo de edificio residencial. Ingreso con portón eléctrico; el propietario o el encargado te recibe la primera vez.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Palermo",
     approxLocation: "A ~3 cuadras de Plaza Serrano",
-    coords: { lat: -34.5864, lng: -58.4278 },
+    exactCoords: { lat: -34.5864, lng: -58.4278 },
     type: "cubierta",
     maxVehicle: "auto_mediano",
     features: ["porton_electrico", "camaras", "techada", "acceso_24h", "iluminacion"],
@@ -53,10 +60,10 @@ export const spaces: Space[] = [
     title: "Garage de casa en Palermo Hollywood",
     description:
       "Garage privado de una casa, con portón manual. Ideal para estadías durante el día.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Palermo",
     approxLocation: "Palermo Hollywood, cerca de Av. Juan B. Justo",
-    coords: { lat: -34.5838, lng: -58.4386 },
+    exactCoords: { lat: -34.5838, lng: -58.4386 },
     type: "cubierta",
     maxVehicle: "camioneta",
     features: ["techada", "apta_camioneta", "sin_escalones"],
@@ -77,10 +84,10 @@ export const spaces: Space[] = [
     title: "Cochera en edificio de Recoleta con vigilancia",
     description:
       "Cochera con vigilancia permanente a pocas cuadras de la zona de museos y hospitales.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Recoleta",
     approxLocation: "Cerca de Av. Pueyrredón y Av. Las Heras",
-    coords: { lat: -34.5884, lng: -58.3986 },
+    exactCoords: { lat: -34.5884, lng: -58.3986 },
     type: "cubierta",
     maxVehicle: "auto_mediano",
     features: ["vigilancia", "camaras", "acceso_24h", "techada"],
@@ -105,10 +112,10 @@ export const spaces: Space[] = [
     title: "Espacio semicubierto en Belgrano R",
     description:
       "Espacio semicubierto en el fondo de una casa, con entrada independiente.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Belgrano",
     approxLocation: "Belgrano R, cerca de la estación",
-    coords: { lat: -34.5648, lng: -58.4672 },
+    exactCoords: { lat: -34.5648, lng: -58.4672 },
     type: "semicubierta",
     maxVehicle: "auto_mediano",
     features: ["iluminacion", "sin_escalones"],
@@ -129,10 +136,10 @@ export const spaces: Space[] = [
     ownerId: "prop-2",
     title: "Lugar para moto en San Telmo",
     description: "Espacio para moto dentro de un PH, con candado disponible.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "San Telmo",
     approxLocation: "A 4 cuadras de Plaza Dorrego",
-    coords: { lat: -34.6228, lng: -58.3738 },
+    exactCoords: { lat: -34.6228, lng: -58.3738 },
     type: "cubierta",
     maxVehicle: "moto",
     features: ["techada", "camaras"],
@@ -150,10 +157,10 @@ export const spaces: Space[] = [
     ownerId: "prop-3",
     title: "Cochera en edificio cerca de Plaza Italia",
     description: "Cochera fija en edificio, a pasos del Jardín Botánico y del subte D.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Palermo",
     approxLocation: "Palermo Botánico, cerca de Plaza Italia",
-    coords: { lat: -34.5823, lng: -58.4196 },
+    exactCoords: { lat: -34.5823, lng: -58.4196 },
     type: "cubierta",
     maxVehicle: "auto_mediano",
     features: ["porton_electrico", "techada", "camaras"],
@@ -171,10 +178,10 @@ export const spaces: Space[] = [
     ownerId: "prop-2",
     title: "Garage de PH en Colegiales",
     description: "Garage cubierto en PH, calle tranquila. Ideal para estadías largas.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Colegiales",
     approxLocation: "Cerca de Av. Federico Lacroze",
-    coords: { lat: -34.5747, lng: -58.4508 },
+    exactCoords: { lat: -34.5747, lng: -58.4508 },
     type: "cubierta",
     maxVehicle: "camioneta",
     features: ["techada", "apta_camioneta", "sin_escalones"],
@@ -192,10 +199,10 @@ export const spaces: Space[] = [
     ownerId: "prop-3",
     title: "Espacio semicubierto en Núñez",
     description: "Cerca de la Av. del Libertador y del estadio. Entrada independiente.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Núñez",
     approxLocation: "A pocas cuadras de Av. del Libertador",
-    coords: { lat: -34.5452, lng: -58.4612 },
+    exactCoords: { lat: -34.5452, lng: -58.4612 },
     type: "semicubierta",
     maxVehicle: "camioneta",
     features: ["apta_camioneta", "iluminacion"],
@@ -213,10 +220,10 @@ export const spaces: Space[] = [
     ownerId: "prop-2",
     title: "Cochera cubierta frente a Parque Rivadavia",
     description: "Cochera en edificio con portón eléctrico, cerca del subte A.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Caballito",
     approxLocation: "Cerca de Parque Rivadavia",
-    coords: { lat: -34.6178, lng: -58.4362 },
+    exactCoords: { lat: -34.6178, lng: -58.4362 },
     type: "cubierta",
     maxVehicle: "auto_mediano",
     features: ["porton_electrico", "acceso_24h", "techada", "camaras"],
@@ -237,10 +244,10 @@ export const spaces: Space[] = [
     ownerId: "prop-3",
     title: "Lugar en garage comunitario de Almagro",
     description: "Lugar asignado en garage de edificio, con vigilancia de día.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Almagro",
     approxLocation: "Cerca de Av. Medrano y Av. Corrientes",
-    coords: { lat: -34.6036, lng: -58.4212 },
+    exactCoords: { lat: -34.6036, lng: -58.4212 },
     type: "cubierta",
     maxVehicle: "auto_chico",
     features: ["vigilancia", "techada"],
@@ -257,10 +264,10 @@ export const spaces: Space[] = [
     ownerId: "prop-2",
     title: "Cochera en edificio de oficinas, Microcentro",
     description: "A pocas cuadras del Obelisco. Ideal para trámites y reuniones en el centro.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "San Nicolás",
     approxLocation: "Microcentro, cerca del Obelisco",
-    coords: { lat: -34.6022, lng: -58.3786 },
+    exactCoords: { lat: -34.6022, lng: -58.3786 },
     type: "cubierta",
     maxVehicle: "auto_mediano",
     features: ["vigilancia", "camaras", "techada"],
@@ -278,10 +285,10 @@ export const spaces: Space[] = [
     ownerId: "prop-3",
     title: "Cochera en Puerto Madero",
     description: "Cochera cubierta en edificio residencial, cerca de los diques.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Puerto Madero",
     approxLocation: "Cerca del Dique 3",
-    coords: { lat: -34.6108, lng: -58.3638 },
+    exactCoords: { lat: -34.6108, lng: -58.3638 },
     type: "cubierta",
     maxVehicle: "camioneta",
     features: ["vigilancia", "camaras", "acceso_24h", "apta_camioneta", "carga_electrica"],
@@ -302,10 +309,10 @@ export const spaces: Space[] = [
     ownerId: "prop-2",
     title: "Espacio descubierto cerca de Congreso",
     description: "Lugar en playón privado con encargado.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Balvanera",
     approxLocation: "A 4 cuadras de Plaza del Congreso",
-    coords: { lat: -34.6086, lng: -58.3965 },
+    exactCoords: { lat: -34.6086, lng: -58.3965 },
     type: "descubierta",
     maxVehicle: "camioneta",
     features: ["vigilancia", "apta_camioneta", "iluminacion"],
@@ -326,7 +333,7 @@ export const spaces: Space[] = [
     city: "Córdoba",
     neighborhood: "Nueva Córdoba",
     approxLocation: "Cerca del Paseo del Buen Pastor",
-    coords: { lat: -31.4238, lng: -64.1862 },
+    exactCoords: { lat: -31.4238, lng: -64.1862 },
     type: "cubierta",
     maxVehicle: "auto_mediano",
     features: ["porton_electrico", "acceso_24h", "techada"],
@@ -350,7 +357,7 @@ export const spaces: Space[] = [
     city: "Córdoba",
     neighborhood: "Centro",
     approxLocation: "A 5 cuadras de Plaza San Martín",
-    coords: { lat: -31.4176, lng: -64.1902 },
+    exactCoords: { lat: -31.4176, lng: -64.1902 },
     type: "descubierta",
     maxVehicle: "camioneta",
     features: ["vigilancia", "apta_camioneta", "iluminacion"],
@@ -370,7 +377,7 @@ export const spaces: Space[] = [
     city: "Rosario",
     neighborhood: "Pichincha",
     approxLocation: "Cerca de Bv. Oroño",
-    coords: { lat: -32.9418, lng: -60.6508 },
+    exactCoords: { lat: -32.9418, lng: -60.6508 },
     type: "cubierta",
     maxVehicle: "camioneta",
     features: ["techada", "apta_camioneta", "carga_electrica"],
@@ -391,7 +398,7 @@ export const spaces: Space[] = [
     city: "Rosario",
     neighborhood: "Centro",
     approxLocation: "A 6 cuadras del Monumento",
-    coords: { lat: -32.9498, lng: -60.6418 },
+    exactCoords: { lat: -32.9498, lng: -60.6418 },
     type: "cubierta",
     maxVehicle: "auto_mediano",
     features: ["porton_electrico", "camaras", "acceso_24h"],
@@ -412,7 +419,7 @@ export const spaces: Space[] = [
     city: "Mendoza",
     neighborhood: "Quinta Sección",
     approxLocation: "Cerca de Av. Emilio Civit",
-    coords: { lat: -32.8868, lng: -68.8603 },
+    exactCoords: { lat: -32.8868, lng: -68.8603 },
     type: "semicubierta",
     maxVehicle: "camioneta",
     features: ["apta_camioneta", "iluminacion", "sin_escalones"],
@@ -430,10 +437,10 @@ export const spaces: Space[] = [
     ownerId: DEMO_OWNER_ID,
     title: "Cochera en Villa Crespo (borrador)",
     description: "Publicación sin terminar: faltan fotos y horarios.",
-    city: "Buenos Aires",
+    city: "CABA",
     neighborhood: "Villa Crespo",
     approxLocation: "Cerca de Av. Corrientes",
-    coords: { lat: -34.5992, lng: -58.4381 },
+    exactCoords: { lat: -34.5992, lng: -58.4381 },
     type: "cubierta",
     maxVehicle: "auto_chico",
     features: ["techada"],
@@ -446,6 +453,12 @@ export const spaces: Space[] = [
     status: "borrador",
   },
 ];
+
+export const spaces: Space[] = spaceInputs.map(({ exactCoords, ...space }) => ({
+  ...space,
+  coords: approximatePoint(space.id, exactCoords),
+}));
+
 
 /** Reservas de ejemplo. Ninguna tiene pago: los pagos no están integrados. */
 export const bookings: Booking[] = [

@@ -12,11 +12,11 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { LngLatLike, Map as MapLibreMap, Marker } from "maplibre-gl";
 import type { LatLng } from "@/lib/types";
 import type { MapMarker, MapViewProps } from "./types";
+import { MAP_STYLE_URL as STYLE_URL } from "./config";
 
 type MapLibreModule = typeof import("maplibre-gl");
 type Padding = NonNullable<MapViewProps["padding"]>;
 
-const STYLE_URL = "https://tiles.openfreemap.org/styles/positron";
 const WORKER_URL = "/vendor/maplibre-gl-worker.mjs";
 const MAX_FIT_ZOOM = 15;
 const SINGLE_ZOOM = 15;
@@ -45,6 +45,13 @@ const LOCALE_ES: Record<string, string> = {
 };
 
 let workerConfigured = false;
+
+// Empezamos a descargar la biblioteca apenas se carga este módulo en el
+// navegador (antes de que React monte el componente). En el build no se ejecuta.
+const maplibrePromise: Promise<MapLibreModule> | null =
+  typeof window !== "undefined" ? import("maplibre-gl") : null;
+// Evita un aviso de promesa rechazada sin manejar; el error se trata al usarla.
+maplibrePromise?.catch(() => {});
 
 type Status = "loading" | "ready" | "error";
 
@@ -194,7 +201,7 @@ export function MapView(props: MapViewProps) {
     (async () => {
       let ml: MapLibreModule;
       try {
-        ml = await import("maplibre-gl");
+        ml = await (maplibrePromise ?? import("maplibre-gl"));
       } catch {
         fail();
         return;

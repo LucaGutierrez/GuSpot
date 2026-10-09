@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, ParkingIcon, SearchIcon, TicketIcon } from "./ui/icons";
+import { InfoIcon, ParkingIcon, SearchIcon, TicketIcon } from "./ui/icons";
 
+// El mapa de búsqueda es la pantalla principal ("/").
 const NAV = [
-  { href: "/", label: "Inicio", icon: HomeIcon, match: (p: string) => p === "/" },
-  { href: "/buscar/", label: "Buscar", icon: SearchIcon, match: (p: string) => p.startsWith("/buscar") || p.startsWith("/espacios") },
+  { href: "/", label: "Buscar", icon: SearchIcon, match: (p: string) => p === "/" || p.startsWith("/buscar") || p.startsWith("/espacios") },
   { href: "/mis-reservas/", label: "Mis reservas", icon: TicketIcon, match: (p: string) => p.startsWith("/mis-reservas") },
   { href: "/propietarios/", label: "Propietarios", icon: ParkingIcon, match: (p: string) => p.startsWith("/propietarios") },
+  { href: "/como-funciona/", label: "Cómo funciona", icon: InfoIcon, match: (p: string) => p.startsWith("/como-funciona") || p.startsWith("/acerca-de-la-demo") },
 ];
 
 export function Logo() {
@@ -26,11 +27,11 @@ export function SiteHeader() {
   const pathname = usePathname();
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-ink-200 bg-white/90 backdrop-blur">
+      <header data-app-chrome className="sticky top-0 z-30 border-b border-ink-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Logo />
           <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
-            {NAV.slice(1).map((item) => {
+            {NAV.map((item) => {
               const active = item.match(pathname);
               return (
                 <Link

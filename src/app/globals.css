@@ -39,6 +39,8 @@
   color-scheme: light;
   /* Alto de la barra de navegación inferior en celulares (h-16 + borde). */
   --mobile-nav-height: calc(4rem + 1px + env(safe-area-inset-bottom));
+  /* Alto del banner de demo + encabezado; lo mide ChromeHeight en el navegador. */
+  --app-top: 97px;
 }
 
 body {

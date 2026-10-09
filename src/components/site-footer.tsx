@@ -8,7 +8,8 @@ export function SiteFooter() {
           <strong className="text-ink-700">GuSpot</strong> · Demo para recibir feedback. Argentina · Precios en ARS.
         </p>
         <nav className="flex flex-wrap gap-4" aria-label="Pie de página">
-          <Link href="/buscar/" className="hover:text-ink-900">Buscar</Link>
+          <Link href="/" className="hover:text-ink-900">Buscar en el mapa</Link>
+          <Link href="/como-funciona/" className="hover:text-ink-900">Cómo funciona</Link>
           <Link href="/mis-reservas/" className="hover:text-ink-900">Mis reservas</Link>
           <Link href="/propietarios/" className="hover:text-ink-900">Propietarios</Link>
           <Link href="/acerca-de-la-demo/" className="hover:text-ink-900">Qué incluye la demo</Link>

@@ -28,8 +28,14 @@ export function normalize(text: string): string {
     .trim();
 }
 
+/** Formas habituales de nombrar la Ciudad de Buenos Aires. */
+const ZONE_ALIASES: [RegExp, string][] = [
+  [/\b(ciudad (autonoma )?de buenos aires|capital federal|buenos aires)\b/g, "caba"],
+];
+
 export function matchesZone(space: Space, zona: string): boolean {
-  const q = normalize(zona);
+  let q = normalize(zona);
+  for (const [re, to] of ZONE_ALIASES) q = q.replace(re, to);
   if (!q) return true;
   const haystack = normalize(`${space.neighborhood} ${space.city}`);
   return q.split(/[\s,]+/).every((word) => haystack.includes(word));

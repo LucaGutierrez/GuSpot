@@ -19,7 +19,7 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - Nunca mostrar una reserva como pagada ni insinuar que Mercado Pago, tarjetas, mapas, mensajes o carga de fotos funcionan.
 - El estado de la reserva (`BookingStatus`) y el del pago (`PaymentStatus`) se muestran siempre por separado. En la demo el pago es siempre `no_disponible`.
 - Códigos de reserva: nunca mostrar un código con apariencia real. Solo conductor y propietario de una reserva **confirmada**, dentro de una ventana horaria (propuesta: desde 2 h antes del inicio hasta el fin). En la demo se muestra enmascarado/explicado.
-- La dirección exacta no se muestra antes de confirmar; usar `approxLocation`.
+- La dirección exacta solo se muestra al conductor cuando la reserva está **confirmada y pagada**. En la demo (sin pagos) nunca se muestra: usar `approxLocation` y el punto aproximado del mapa.
 - No inventar políticas de cancelación, verificación de propietarios ni requisitos legales: mostrarlos como "a definir".
 - Interfaz en español rioplatense (voseo: "buscá", "publicá").
 
@@ -38,5 +38,8 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - Biblioteca: MapLibre GL JS (`maplibre-gl`, BSD-3). Mapas base: instancia pública de OpenFreeMap (sin clave, sin SLA): **solo apta para la demo**. Ver docs/mapas.md.
 - El worker de MapLibre se copia a `public/vendor/` con `predev`/`prebuild` (scripts/copy-map-worker.mjs).
 - Contrato entre el mapa y las pantallas: `src/components/map/types.ts` (lo mantiene el coordinador).
-- Las coordenadas de `Space.coords` son puntos aproximados de ejemplo; nunca la dirección exacta.
+- `Space.coords` es el punto PÚBLICO: desplazado 100–200 m de forma estable (`approximatePoint` en src/lib/geo.ts). Las distancias calculadas con él son aproximadas ("≈").
+- Proveedor de mapas: solo en `src/components/map/config.ts` (o `NEXT_PUBLIC_MAP_STYLE_URL`).
+- Zona inicial: la última buscada (`src/lib/last-zone.ts`, localStorage) o CABA. Nunca pedir ubicación automáticamente.
+- La búsqueda en el mapa es la pantalla principal (`/`). Alto disponible bajo banner+encabezado: variable CSS `--app-top`.
 - Barra inferior móvil: alto en la variable CSS `--mobile-nav-height`.

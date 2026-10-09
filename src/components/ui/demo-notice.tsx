@@ -4,7 +4,7 @@ import { InfoIcon } from "./icons";
 /** Franja fija en todas las páginas: deja claro que es una demo. */
 export function DemoBanner() {
   return (
-    <div className="bg-ink-900 px-4 py-2 text-center text-xs text-white sm:text-sm">
+    <div data-app-chrome className="bg-ink-900 px-4 py-2 text-center text-xs text-white sm:text-sm">
       <strong className="font-semibold text-accent-300">Versión de demostración.</strong>{" "}
       Los espacios, precios y reservas son de ejemplo. No se procesan reservas ni pagos reales.
     </div>
