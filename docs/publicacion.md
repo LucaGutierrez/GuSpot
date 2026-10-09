@@ -48,7 +48,7 @@ Requisitos: sesión iniciada con `npx wrangler login` (la hace el dueño de la c
 
 - Wrangler 4.149 intenta "delegar" los comandos de Pages a Cloudflare Workers. Para crear el proyecto en Pages se usó una única vez `wrangler pages project create guspot-demo --production-branch main --force`. Los deploys posteriores van directo a Pages y no necesitan `--force`.
 - El primer intento de crear el proyecto devolvió un error 500 de la API; el reintento funcionó.
-- El login se hizo con los permisos por defecto de Wrangler (amplios). Para limitarlos: `npx wrangler logout` y luego `npx wrangler login --scopes account:read user:read pages:write offline_access --use-keyring`. También se puede revocar el acceso desde el panel de Cloudflare.
+- El login se hizo con los permisos por defecto de Wrangler (amplios). Para limitarlos: `npx wrangler logout` y luego `npx wrangler login --scopes account:read user:read pages:write --use-keyring` (`offline_access` lo agrega Wrangler solo; `logout` invalida el token anterior).
 - Wrangler envía métricas de uso anónimas; se pueden desactivar con `npx wrangler telemetry disable`.
 
 ## Antes de empezar: el repositorio
