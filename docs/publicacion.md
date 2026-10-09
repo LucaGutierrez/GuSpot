@@ -2,6 +2,12 @@
 
 La demo es un **sitio estático**: `npm run build` genera la carpeta `out/` (HTML, CSS, JS). No necesita servidor, base de datos ni funciones, así que cualquier hosting estático gratuito sirve.
 
+> **Mapa (qué cambia y qué no)**
+> - El sitio ahora hace **solicitudes a un tercero desde el navegador del visitante**: el mapa pide estilo, tiles, fuentes e íconos a `tiles.openfreemap.org` (OpenFreeMap). No hay clave ni configuración que cargar en el hosting. Ver [mapas.md](mapas.md).
+> - El worker del mapa (`public/vendor/maplibre-gl-worker.mjs`) lo genera `npm run build` (script `prebuild`) y queda dentro de `out/`. Los comandos de build de abajo no cambian.
+> - **"Mi ubicación" requiere HTTPS** (la geolocalización del navegador no funciona en HTTP, salvo `localhost`). Los subdominios `*.vercel.app` y `*.pages.dev` ya sirven por HTTPS.
+> - Nada más cambia en el deploy.
+
 Fuentes: documentación oficial consultada el **9 de octubre de 2026**. Los planes y límites cambian; revisá los enlaces antes de publicar.
 
 > **Reglas para no gastar plata**
@@ -159,3 +165,4 @@ Requiere un `wrangler.jsonc` en la raíz con `"assets": { "directory": "./out" }
 ## Para el lanzamiento público
 
 La demo estática es lo único que entra en estas opciones gratuitas. El producto real (cuentas, base de datos, pagos con Mercado Pago, webhooks) necesita funciones de servidor y es **uso comercial**: requiere un plan pago o un hosting acorde, a decidir más adelante (ver `decisiones-pendientes.md`).
+Lo mismo para el mapa: la instancia pública de OpenFreeMap no tiene SLA; para el lanzamiento hace falta un proveedor con condiciones comerciales y SLA, o self-hosting (ver [mapas.md](mapas.md) §7).

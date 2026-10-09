@@ -28,6 +28,12 @@ export interface MapViewProps {
   fallbackCenter: LatLng;
   /** Ubicación del conductor si dio permiso; se dibuja como punto azul. */
   userLocation: LatLng | null;
+  /**
+   * Zoom mínimo al encuadrar. Si para mostrar todos los marcadores habría que
+   * alejarse más, se centra en ellos con este zoom (en celular evita que las
+   * píldoras de precio se amontonen; el resto se ve moviendo el mapa).
+   */
+  minFitZoom?: number;
   /** Si es true, el encuadre de `fitKey` incluye también `userLocation`. */
   includeUserInFit?: boolean;
   /**

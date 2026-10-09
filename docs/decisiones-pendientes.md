@@ -5,7 +5,7 @@ Mientras no se decidan, la interfaz las muestra como "a definir".
 
 ## Ya decidido (referencia)
 
-Argentina, ARS, zona `America/Argentina/Buenos_Aires` · aprobación manual del propietario · precio por hora con tarifa diaria opcional y mínimo de horas · código de reserva para confirmar llegada y verificar (no abre cerraduras), visible solo para conductor y propietario de una reserva confirmada · Mercado Pago y tarjetas obligatorios para el lanzamiento público · búsqueda por ciudad y barrio (mapa después) · stack: Next.js + Prisma + PostgreSQL + Auth.js (email y contraseña) + Zod.
+Argentina, ARS, zona `America/Argentina/Buenos_Aires` · aprobación manual del propietario · precio por hora con tarifa diaria opcional y mínimo de horas · código de reserva para confirmar llegada y verificar (no abre cerraduras), visible solo para conductor y propietario de una reserva confirmada · Mercado Pago y tarjetas obligatorios para el lanzamiento público · búsqueda por ciudad y barrio · mapa en la demo con MapLibre GL JS + instancia pública de OpenFreeMap (solo demo, ver `mapas.md`) · stack: Next.js + Prisma + PostgreSQL + Auth.js (email y contraseña) + Zod.
 
 ## Producto y reglas
 
@@ -80,3 +80,17 @@ Email transaccional (solicitud recibida, aprobada, recordatorio), proveedor y, m
 
 ### 20. Representación de montos en la base
 `BigInt` en centavos o `Decimal` en pesos (no `Int` de 32 bits). Ver `modelo-de-datos.md` §3.8.
+
+## Mapa (ver `mapas.md`)
+
+### 21. Proveedor de mapas para producción
+La instancia pública de OpenFreeMap no tiene SLA y puede discontinuarse sin aviso: solo apta para la demo. Opciones: plan pago de MapTiler o Stadia (sus planes gratuitos no permiten uso comercial), self-hosting (OpenFreeMap o Protomaps con PMTiles) o Google Maps Platform (implica reescribir el componente de mapa). Comparativa en `mapas.md` §7.
+
+### 22. Precisión de la ubicación pública de las cocheras
+Antes de confirmar se muestra un punto aproximado. A definir: radio de difuminado (p. ej. unos cientos de metros), si es un punto desplazado fijo, un círculo o una grilla, y que se calcule en el servidor sin enviar la coordenada exacta al navegador.
+
+### 23. Uso de la ubicación del conductor
+En la demo: solo con permiso explícito al tocar "Mi ubicación", no se guarda ni se envía. A definir para producción: si se envía al servidor (p. ej. búsqueda "cerca mío"), si se guarda y por cuánto tiempo, y cómo se informa en la política de privacidad (Ley 25.326, con asesoramiento; ver punto 13).
+
+### 24. Búsqueda por dirección / geocodificación
+Hoy solo ciudad y barrio. Buscar o autocompletar direcciones requiere un proveedor de geocodificación (condiciones, límites y costo propios). También sirve para que el propietario ubique su cochera al publicar.

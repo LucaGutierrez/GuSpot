@@ -1,0 +1,245 @@
+/*
+  Estilos del mapa de GuSpot (MapLibre). Los colores usan la paleta de
+  globals.css con valores de respaldo, porque Tailwind solo emite las
+  variables de tema que encuentra en uso.
+*/
+
+.gs-map {
+  --gs-brand-600: var(--color-brand-600, #2453e0);
+  --gs-brand-700: var(--color-brand-700, #1c41bd);
+  --gs-ink-900: var(--color-ink-900, #121722);
+  --gs-ink-200: var(--color-ink-200, #dde1e8);
+  --gs-ink-100: var(--color-ink-100, #eef0f4);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--gs-ink-100);
+}
+
+/* Lienzo: el gesto se queda en el mapa y no desplaza la página. */
+.gs-map .gs-map-canvas {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  overscroll-behavior: contain;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gs-map-canvas .maplibregl-canvas:focus-visible {
+  outline: 2px solid var(--gs-brand-600);
+  outline-offset: -2px;
+}
+
+/* ---------- Controles: se corren según el padding (barra arriba, tarjeta abajo) ---------- */
+
+.gs-map .maplibregl-ctrl-bottom-left,
+.gs-map .maplibregl-ctrl-bottom-right {
+  bottom: var(--gs-map-pad-bottom, 0px);
+  transition: bottom 200ms ease;
+}
+.gs-map .maplibregl-ctrl-top-left,
+.gs-map .maplibregl-ctrl-top-right {
+  top: var(--gs-map-pad-top, 0px);
+}
+
+.gs-map .maplibregl-ctrl-group {
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgb(18 23 34 / 0.08), 0 4px 12px rgb(18 23 34 / 0.12);
+  overflow: hidden;
+}
+.gs-map .maplibregl-ctrl-group button {
+  width: 36px;
+  height: 36px;
+}
+
+.gs-map .maplibregl-ctrl-attrib {
+  font-size: 11px;
+}
+
+/* En celulares se hace zoom con los dedos: ocultamos +/− para dejar el mapa limpio. */
+@media (max-width: 767px) {
+  .gs-map .gs-map-zoom {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-map .maplibregl-ctrl-bottom-left,
+  .gs-map .maplibregl-ctrl-bottom-right {
+    transition: none;
+  }
+}
+
+/* ---------- Marcador "píldora de precio" ---------- */
+
+.gs-map-marker {
+  /* MapLibre fija `transform` en este elemento; el aspecto va en .gs-map-pill. */
+  display: block;
+  padding: 0 0 7px; /* espacio para la punta */
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  -webkit-tap-highlight-color: transparent;
+}
+.gs-map-marker:focus {
+  outline: none;
+}
+.gs-map-marker:hover {
+  z-index: 5;
+}
+.gs-map-marker.is-selected {
+  z-index: 10;
+}
+
+.gs-map-pill {
+  position: relative;
+  display: block;
+  padding: 5px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--gs-ink-200);
+  background: #fff;
+  color: var(--gs-ink-900);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 2px rgb(18 23 34 / 0.1), 0 3px 8px rgb(18 23 34 / 0.14);
+  transform-origin: 50% calc(100% + 7px);
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+/* Punta inferior (borde + relleno). */
+.gs-map-pill::before,
+.gs-map-pill::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  transform: translateX(-50%);
+}
+.gs-map-pill::before {
+  top: 100%;
+  border-width: 7px 6px 0;
+  border-color: var(--gs-ink-200) transparent transparent;
+}
+.gs-map-pill::after {
+  top: calc(100% - 1px);
+  border-width: 7px 6px 0;
+  border-color: #fff transparent transparent;
+}
+
+.gs-map-marker:hover .gs-map-pill {
+  transform: scale(1.05);
+}
+
+.gs-map-marker.is-selected .gs-map-pill {
+  background: var(--gs-brand-600);
+  border-color: var(--gs-brand-700);
+  color: #fff;
+  transform: scale(1.18);
+  box-shadow: 0 2px 4px rgb(18 23 34 / 0.18), 0 8px 18px rgb(36 83 224 / 0.35);
+}
+.gs-map-marker.is-selected .gs-map-pill::before {
+  border-top-color: var(--gs-brand-700);
+}
+.gs-map-marker.is-selected .gs-map-pill::after {
+  border-top-color: var(--gs-brand-600);
+}
+
+.gs-map-marker:focus-visible .gs-map-pill {
+  outline: 3px solid var(--gs-brand-600);
+  outline-offset: 2px;
+}
+.gs-map-marker.is-selected:focus-visible .gs-map-pill {
+  outline-color: var(--gs-ink-900);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gs-map-pill {
+    transition: none;
+  }
+}
+
+/* ---------- Ubicación del conductor ---------- */
+
+.gs-map-user {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+.gs-map-user::before {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border-radius: 9999px;
+  background: rgb(59 130 246 / 0.22);
+  animation: gs-map-user-pulse 2.2s ease-out infinite;
+}
+.gs-map-user::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: #2b7bf3;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgb(18 23 34 / 0.35);
+}
+@keyframes gs-map-user-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-map-user::before {
+    animation: none;
+  }
+}
+
+/* ---------- Carga ---------- */
+
+.gs-map-skeleton {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background:
+    linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.55) 50%, transparent 100%) 0 0 / 200% 100%
+      no-repeat,
+    repeating-linear-gradient(0deg, transparent 0 46px, rgb(18 23 34 / 0.04) 46px 48px),
+    repeating-linear-gradient(90deg, transparent 0 46px, rgb(18 23 34 / 0.04) 46px 48px),
+    var(--gs-ink-100);
+  animation: gs-map-shimmer 1.4s linear infinite;
+  transition: opacity 250ms ease;
+  pointer-events: none;
+}
+.gs-map-skeleton.is-hidden {
+  opacity: 0;
+}
+@keyframes gs-map-shimmer {
+  from {
+    background-position: 200% 0, 0 0, 0 0, 0 0;
+  }
+  to {
+    background-position: -100% 0, 0 0, 0 0, 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-map-skeleton {
+    animation: none;
+    transition: none;
+  }
+}

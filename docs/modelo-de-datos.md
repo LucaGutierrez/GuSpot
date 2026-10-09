@@ -110,7 +110,7 @@ Así un cambio de tarifa o de regla no altera reservas existentes y queda trazab
 ### 3.7 Ubicación y búsqueda
 
 - `Province`, `City` (FK a provincia), `Neighborhood` (FK a ciudad), con `slug` normalizado (sin tildes, minúsculas). "Buenos Aires" hoy es ambiguo (CABA vs. provincia).
-- `Space` referencia `cityId` y `neighborhoodId`. Dirección exacta (`addressLine`) en el espacio pero solo expuesta al conductor de una reserva confirmada (y al propietario). `lat`/`lng` opcionales para el mapa futuro.
+- `Space` referencia `cityId` y `neighborhoodId`. Dirección exacta (`addressLine`) en el espacio pero solo expuesta al conductor de una reserva confirmada (y al propietario). `lat`/`lng` exactos (privados) para el mapa; la UI hoy usa `Space.coords`, un punto aproximado. En producción conviene guardar aparte el punto público difuminado (radio a definir, ver `mapas.md` §6).
 - Índices: `@@index([status, cityId, neighborhoodId])`, `@@index([ownerId])`. Para texto libre ("Palermo", "cordoba"): extensiones `unaccent` + `pg_trgm` con índice GIN sobre el nombre (migración SQL manual).
 - Reservas: el índice GiST de la exclusion constraint sirve para buscar superposiciones por espacio; agregar `@@index([driverId, startAt])` y `@@index([ownerId, status, startAt])` para las bandejas.
 

@@ -14,6 +14,8 @@ import {
   TicketIcon,
 } from "@/components/ui/icons";
 import { SearchForm } from "@/components/driver/search-form";
+import { HomeExplore } from "@/components/explore/mobile-explore";
+import { MapIcon } from "@/components/explore/icons";
 
 const STEPS = [
   {
@@ -41,8 +43,10 @@ export default function Home() {
     count: spaces.filter((s) => s.city === city).length,
   }));
 
+  // En celulares la pantalla principal es el mapa (HomeExplore); en escritorio,
+  // este inicio.
   return (
-    <>
+    <HomeExplore>
       <section className="bg-gradient-to-b from-brand-50 to-ink-50">
         <Container className="grid items-center gap-8 py-10 md:grid-cols-[1.1fr_1fr] md:py-16">
           <div>
@@ -68,6 +72,9 @@ export default function Home() {
                 </li>
               ))}
             </ul>
+            <ButtonLink href="/buscar/" variant="secondary" className="mt-6">
+              <MapIcon /> Ver mapa
+            </ButtonLink>
           </div>
           <Card className="p-5 sm:p-6">
             <h2 className="mb-4 text-lg font-semibold text-ink-900">¿Dónde y cuándo?</h2>
@@ -149,6 +156,6 @@ export default function Home() {
           </ButtonLink>
         </section>
       </Container>
-    </>
+    </HomeExplore>
   );
 }

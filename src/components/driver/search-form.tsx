@@ -9,7 +9,8 @@ import { PinIcon, SearchIcon } from "@/components/ui/icons";
 import { RangeFields, fieldInput, fieldLabel } from "./range-fields";
 import { useRange } from "./use-range";
 
-const ZONE_SUGGESTIONS = cities().flatMap(({ city, neighborhoods }) => [
+/** Sugerencias de zona: ciudades y "Barrio, Ciudad". */
+export const ZONE_SUGGESTIONS = cities().flatMap(({ city, neighborhoods }) => [
   city,
   ...neighborhoods.map((n) => `${n}, ${city}`),
 ]);

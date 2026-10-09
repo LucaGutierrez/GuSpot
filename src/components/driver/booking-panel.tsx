@@ -78,8 +78,8 @@ export function BookingPanel({ space }: { space: Space }) {
         </p>
       </Card>
 
-      {/* Barra fija para celulares, encima de la navegación inferior (~4.5rem). */}
-      <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 border-t border-ink-200 bg-white/95 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur md:hidden">
+      {/* Barra fija para celulares, encima de la navegación inferior (--mobile-nav-height). */}
+      <div className="fixed inset-x-0 bottom-[var(--mobile-nav-height)] z-20 border-t border-ink-200 bg-white/95 px-4 py-3 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] backdrop-blur md:hidden">
         <div className="mx-auto flex max-w-6xl items-center gap-3">
           <div className="min-w-0 flex-1">
             {check.status.ok && check.quote.ok ? (

@@ -6,6 +6,7 @@
 Navegador ──▶ archivos estáticos (out/) en un CDN
                └─ HTML pre-generado + JS de React
                   └─ datos: src/lib/demo-data.ts (embebidos en el build)
+Navegador ──▶ tiles.openfreemap.org (estilo y tiles del mapa, tercero)
 ```
 
 - Next.js 16 (App Router) con `output: "export"`, `trailingSlash: true`, `images.unoptimized` (`next.config.ts`).
@@ -26,19 +27,37 @@ src/
     ui/                   COMPARTIDO: Badge, Button, Card, DemoNotice/DemoBanner, íconos, SpacePhoto
     site-header.tsx       COMPARTIDO
     site-footer.tsx       COMPARTIDO
+    map/                  componente de mapa (MapLibre); types.ts = contrato, lo mantiene el coordinador
+    explore/              pantallas de exploración (mapa a pantalla completa en celular, lista + mapa en escritorio)
   lib/                    COMPARTIDO: dominio y utilidades
     types.ts              tipos de dominio
     demo-data.ts          datos de ejemplo (se reemplaza por la base)
     pricing.ts            cotización (regla propuesta, pendiente de confirmar)
     availability.ts       horario semanal + superposición
     search.ts             búsqueda por ciudad/barrio
+    geo.ts                centro por defecto, distancia aproximada, centroide
     datetime.ts, format.ts  fechas de pared argentinas, ARS, etiquetas
 docs/                     documentación
-public/                   archivos estáticos
+public/                   archivos estáticos (public/vendor/: worker del mapa, generado)
+scripts/copy-map-worker.mjs  copia el worker de MapLibre (predev/prebuild)
 ```
 
 **Compartido** (solo lo edita el coordinador): `src/lib/**`, `src/components/ui/**`, `src/components/site-*.tsx`, `src/app/layout.tsx`, `src/app/globals.css`, configuración (`next.config.ts`, `package.json`, `tsconfig.json`, `eslint.config.mjs`).
 **Por sección**: la carpeta de la ruta y sus componentes propios, asignada a un agente.
+
+## 2.1 Módulo de mapa
+
+- **Biblioteca:** MapLibre GL JS (`maplibre-gl`, BSD-3). **Mapas base:** instancia pública de OpenFreeMap, estilo positron (solo demo, sin SLA). Detalle, atribución y alternativas: `mapas.md`.
+- **Separación:** `src/components/map/` encapsula MapLibre (estilo, atribución, marcadores, punto del conductor). `src/components/explore/` arma las pantallas (búsqueda, lista, tarjeta del espacio seleccionado) y solo conoce el contrato.
+- **Contrato** (`src/components/map/types.ts`, lo mantiene el coordinador; cambiarlo se acuerda antes):
+  - `MapMarker { id, position: LatLng, label, ariaLabel }`
+  - `MapViewProps { markers, selectedId, onSelect(id | null), fitKey, fallbackCenter, userLocation, includeUserInFit?, padding?, className? }`
+  - `fitKey`: al cambiar, el mapa encuadra todos los marcadores (o `fallbackCenter`). `padding`: espacio tapado por la barra de búsqueda/tarjeta inferior.
+- **Datos:** `Space.coords` (`LatLng`, WGS84) son puntos aproximados de ejemplo, nunca la dirección exacta. En producción, el servidor envía solo el punto público difuminado.
+- **Carga:** solo en el cliente (WebGL); el HTML estático no incluye el mapa. El worker se sirve desde `public/vendor/` (copiado por `predev`/`prebuild`).
+- **Ubicación del conductor:** solo tras permiso explícito ("Mi ubicación"); queda en memoria del navegador, no se guarda ni se envía.
+- **Móvil:** la barra inferior expone su alto en `--mobile-nav-height` para que el mapa y la tarjeta no queden tapados.
+- **Cambio de proveedor:** si sigue siendo tiles vectoriales compatibles con MapLibre, se cambia la URL del estilo y la atribución dentro de `map/`; con Google Maps habría que reescribir `map/` manteniendo el contrato.
 
 ## 3. Objetivo: etapas
 
@@ -49,7 +68,7 @@ public/                   archivos estáticos
 | 2. Reservas reales sin cobro | Solicitar, aprobar/rechazar, código de reserva con ventana | Máquina de estados en el servidor, exclusion constraint, `AccessCode` cifrado, tareas programadas (expirar/completar). Ver `modelo-de-datos.md`. |
 | 3. Pagos (requisito del lanzamiento) | Mercado Pago y tarjetas | `PaymentProvider`, webhooks, `aprobada_pendiente_pago` (según el momento del cobro). |
 | 4. Lanzamiento público | — | Políticas y aspectos legales definidos, quitar banner de demo. Ver checklist del README. |
-| Después | Mapa, fotos reales, mensajes, reseñas | A definir. |
+| Después | Fotos reales, mensajes, reseñas, búsqueda por dirección | A definir. Mapa: proveedor de producción antes del lanzamiento (ver §2.1 y `mapas.md`). |
 
 Las etapas 1 y 2 pueden probarse en privado; **no** se abren al público sin la etapa 3.
 

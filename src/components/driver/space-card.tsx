@@ -7,7 +7,10 @@ import { AvailabilityBadge, bookability } from "./availability-status";
 import { rateSummary } from "./price-breakdown";
 import { Rating } from "./rating";
 
-/** Tarjeta de resultado de búsqueda. Toda la tarjeta es clickeable (enlace en el título). */
+/**
+ * Tarjeta de resultado de búsqueda. Toda la tarjeta es clickeable (enlace en el título).
+ * Se acomoda al ancho del contenedor (`@container` en la lista), no al de la pantalla.
+ */
 export function SpaceCard({ result, href }: { result: SearchResult; href: string }) {
   const { space, quote } = result;
   const status = bookability(result.availability, quote);
@@ -15,15 +18,15 @@ export function SpaceCard({ result, href }: { result: SearchResult; href: string
   const extra = space.features.length - 3;
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-brand-500 hover:shadow-md sm:flex-row">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-sm transition-shadow focus-within:ring-2 focus-within:ring-brand-500 hover:shadow-md @xl:flex-row">
       {photo ? (
         <SpacePhoto
           variant={photo.variant}
           label={photo.caption}
-          className="aspect-[16/10] w-full shrink-0 sm:aspect-auto sm:w-56"
+          className="aspect-[16/10] w-full shrink-0 @xl:aspect-auto @xl:w-56"
         />
       ) : (
-        <div className="aspect-[16/10] w-full shrink-0 bg-ink-100 sm:aspect-auto sm:w-56" />
+        <div className="aspect-[16/10] w-full shrink-0 bg-ink-100 @xl:aspect-auto @xl:w-56" />
       )}
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="flex flex-wrap items-center gap-2">
