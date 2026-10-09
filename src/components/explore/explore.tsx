@@ -1,10 +1,11 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { MapView } from "@/components/map/map-view";
 import { searchQuery, searchSpaces, type SearchResult } from "@/lib/search";
-import { DEFAULT_MAP_ZONE, distanceKm, formatDistance } from "@/lib/geo";
+import { distanceKm, formatDistance } from "@/lib/geo";
+import { setLastZone } from "@/lib/last-zone";
 import { formatRange } from "@/lib/format";
 import { DemoBadge } from "@/components/ui/badge";
 import { Button, buttonClass } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { ResultsSheet } from "./results-sheet";
 import { SearchPanel, type ExploreQuery } from "./search-panel";
 import { SelectedCard } from "./selected-card";
 import { useDriverLocation } from "./use-driver-location";
+import { useInitialZone } from "./use-initial-zone";
 import { useElementHeight, useLockBodyScroll } from "./use-element-height";
 
 /** Si el conductor está más lejos que esto del garage más cercano, no se lo encuadra. */
@@ -32,11 +34,16 @@ export function Explore() {
   const id = useId();
   const params = useSearchParams();
   const router = useRouter();
-  const pathname = usePathname();
   const now = useNow();
 
   // --- Búsqueda (URL) -------------------------------------------------------
-  const zona = params.get("zona")?.trim() || DEFAULT_MAP_ZONE;
+  // Sin zona en la URL: la última buscada en este navegador o CABA.
+  const fallbackZone = useInitialZone();
+  const urlZone = params.get("zona")?.trim() ?? "";
+  const zona = urlZone || fallbackZone;
+  useEffect(() => {
+    if (urlZone) setLastZone(urlZone);
+  }, [urlZone]);
   const { fecha, desde, fechaHasta, hasta } = withDefaults(readRange(params), defaultDay(now));
   const range = useMemo(
     () => ({ fecha, desde, fechaHasta, hasta }),
@@ -77,14 +84,16 @@ export function Explore() {
     ? Math.min(...zoneResults.map((r) => distanceKm(userCoords, r.space.coords)))
     : Infinity;
   const userIsNear = nearestKm <= FAR_KM;
-  const fitKey = `${params.toString()}|${filters.tipo}|${filters.vehiculo}|${fitNonce}`;
+  const fitKey = `${params.toString()}|${zona}|${filters.tipo}|${filters.vehiculo}|${fitNonce}`;
 
   const selectedIndex = available.findIndex((r) => r.space.id === selectedId);
   const selected = selectedIndex >= 0 ? available[selectedIndex] : null;
 
   const hrefFor = (spaceId: string) => `/espacios/${spaceId}/${rangeQuery(search)}`;
   const distanceFor = (r: SearchResult) =>
-    userCoords ? `${formatDistance(distanceKm(userCoords, r.space.coords))} de vos` : null;
+    userCoords
+      ? `${formatDistance(distanceKm(userCoords, r.space.coords))} de vos (ubicación aproximada)`
+      : null;
 
   // --- Medidas para que el mapa no quede tapado -----------------------------
   const topRef = useRef<HTMLDivElement>(null);
@@ -124,9 +133,10 @@ export function Explore() {
     setListOpen(false);
     setPanelOpen(false);
     refit();
-    const base = pathname.endsWith("/") ? pathname : `${pathname}/`;
+    if (q.zona) setLastZone(q.zona);
+    // La búsqueda vive en la URL de la pantalla principal ("/").
     const qs = searchQuery({ zona: q.zona, ...q.range });
-    router.replace(qs ? `${base}?${qs}` : base, { scroll: false });
+    router.replace(qs ? `/?${qs}` : "/", { scroll: false });
     pillRef.current?.focus();
   };
 
@@ -201,7 +211,7 @@ export function Explore() {
       {/* Arriba: búsqueda, chips y avisos */}
       <div
         ref={topRef}
-        className="pointer-events-none absolute inset-x-0 top-0 z-10 space-y-2 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-1"
+        className="pointer-events-none absolute inset-x-0 top-0 z-10 space-y-2 pt-[max(12px,env(safe-area-inset-top))] pr-[max(12px,env(safe-area-inset-right))] pb-1 pl-[max(12px,env(safe-area-inset-left))]"
       >
         <button
           ref={pillRef}

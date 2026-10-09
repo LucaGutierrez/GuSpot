@@ -92,7 +92,7 @@ export function ResultsSheet({
   return (
     <div
       className={`flex flex-col rounded-t-2xl border-t border-ink-200 bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.08)] ${
-        expanded ? "max-h-[70dvh]" : ""
+        expanded ? "max-h-[min(70dvh,calc(100dvh_-_var(--mobile-nav-height)_-_6rem))]" : ""
       }`}
     >
       <div className="mx-auto mt-2 h-1 w-10 rounded-full bg-ink-200" aria-hidden="true" />

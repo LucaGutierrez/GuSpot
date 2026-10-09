@@ -299,7 +299,7 @@ function ReviewStep({ draft, onEdit }: { draft: Draft; onEdit: (step: number) =>
             <>
               {draft.exactAddress}
               <span className="block text-xs font-normal text-ink-500">
-                Privada: solo para conductores con reserva confirmada.
+                Privada: solo para conductores con reserva confirmada y pagada.
               </span>
             </>
           ),

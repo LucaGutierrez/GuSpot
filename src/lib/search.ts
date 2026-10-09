@@ -4,7 +4,7 @@ import { quote, type Quote } from "./pricing";
 import { publishedSpaces } from "./demo-data";
 import { combine, isValidLocal } from "./datetime";
 
-/** Parámetros de búsqueda tal como viajan en la URL de /buscar. */
+/** Parámetros de búsqueda tal como viajan en la URL de la búsqueda (/). */
 export interface SearchParams {
   /** Texto libre: ciudad o barrio ("Palermo", "Córdoba"…). */
   zona: string;
@@ -70,7 +70,7 @@ export function searchSpaces(p: SearchParams): SearchResult[] {
     });
 }
 
-/** Construye la query string de /buscar a partir de los parámetros. */
+/** Construye la query string de la búsqueda (/) a partir de los parámetros. */
 export function searchQuery(p: Partial<SearchParams>): string {
   const qs = new URLSearchParams();
   for (const [k, v] of Object.entries(p)) if (v) qs.set(k, v);

@@ -1,11 +1,11 @@
 # Decisiones pendientes
 
-Decisiones abiertas que **toma el usuario**. Acá solo hay contexto y opciones; ninguna está elegida.
+Decisiones abiertas que **toma el usuario**. Acá solo hay contexto y opciones; salvo las marcadas **DECIDIDA**, ninguna está elegida.
 Mientras no se decidan, la interfaz las muestra como "a definir".
 
 ## Ya decidido (referencia)
 
-Argentina, ARS, zona `America/Argentina/Buenos_Aires` · aprobación manual del propietario · precio por hora con tarifa diaria opcional y mínimo de horas · código de reserva para confirmar llegada y verificar (no abre cerraduras), visible solo para conductor y propietario de una reserva confirmada · Mercado Pago y tarjetas obligatorios para el lanzamiento público · búsqueda por ciudad y barrio · mapa en la demo con MapLibre GL JS + instancia pública de OpenFreeMap (solo demo, ver `mapas.md`) · stack: Next.js + Prisma + PostgreSQL + Auth.js (email y contraseña) + Zod.
+Argentina, ARS, zona `America/Argentina/Buenos_Aires` · aprobación manual del propietario · precio por hora con tarifa diaria opcional y mínimo de horas · código de reserva para confirmar llegada y verificar (no abre cerraduras), visible solo para conductor y propietario de una reserva confirmada · Mercado Pago y tarjetas obligatorios para el lanzamiento público · búsqueda por ciudad y barrio · mapa en la demo con MapLibre GL JS + instancia pública de OpenFreeMap (solo demo, ver `mapas.md`) · decisiones de mapa del 2026-10-09 (puntos 21, 23, 24 y 25 abajo) · stack: Next.js + Prisma + PostgreSQL + Auth.js (email y contraseña) + Zod.
 
 ## Producto y reglas
 
@@ -83,14 +83,26 @@ Email transaccional (solicitud recibida, aprobada, recordatorio), proveedor y, m
 
 ## Mapa (ver `mapas.md`)
 
-### 21. Proveedor de mapas para producción
-La instancia pública de OpenFreeMap no tiene SLA y puede discontinuarse sin aviso: solo apta para la demo. Opciones: plan pago de MapTiler o Stadia (sus planes gratuitos no permiten uso comercial), self-hosting (OpenFreeMap o Protomaps con PMTiles) o Google Maps Platform (implica reescribir el componente de mapa). Comparativa en `mapas.md` §7.
+### 21. Proveedor de mapas para la demo — DECIDIDA (2026-10-09)
+OpenFreeMap (instancia pública). Según su documentación: uso comercial permitido, sin límite de vistas, sin SLA. Limitación anotada: sin garantía de disponibilidad. Se cambia en un solo archivo (`src/components/map/config.ts`) o con la variable de build `NEXT_PUBLIC_MAP_STYLE_URL` (estilo compatible con MapLibre; si usa clave, queda visible en el navegador → clave restringida por dominio). Ver `mapas.md` §1 y §4.1.
 
-### 22. Precisión de la ubicación pública de las cocheras
-Antes de confirmar se muestra un punto aproximado. A definir: radio de difuminado (p. ej. unos cientos de metros), si es un punto desplazado fijo, un círculo o una grilla, y que se calcule en el servidor sin enviar la coordenada exacta al navegador.
+### 22. Proveedor de mapas para producción — ABIERTA
+La instancia pública de OpenFreeMap no tiene SLA y puede discontinuarse sin aviso. Hace falta un proveedor con condiciones comerciales y SLA, o self-hosting. Opciones: plan pago de MapTiler o Stadia (sus planes gratuitos no permiten uso comercial), self-hosting (OpenFreeMap o Protomaps con PMTiles) o Google Maps Platform (implica reescribir el componente de mapa). Comparativa en `mapas.md` §7.
 
-### 23. Uso de la ubicación del conductor
-En la demo: solo con permiso explícito al tocar "Mi ubicación", no se guarda ni se envía. A definir para producción: si se envía al servidor (p. ej. búsqueda "cerca mío"), si se guarda y por cuánto tiempo, y cómo se informa en la política de privacidad (Ley 25.326, con asesoramiento; ver punto 13).
+### 23. Ubicación pública de las cocheras — DECIDIDA (2026-10-09)
+- Punto aproximado desplazado de forma estable 100–200 m (`approximatePoint`, hash del id del espacio).
+- La dirección exacta se muestra al conductor cuando la reserva está **confirmada y pagada** (o sea, después del pago cuando haya pagos reales). En la demo (sin pagos) queda oculta.
+- En producción el desplazamiento se calcula en el servidor y la coordenada exacta nunca se envía al navegador antes de ese momento. En la demo los puntos "exactos" son ficticios y están en el código.
+Ver `mapas.md` §6 y `modelo-de-datos.md` §3.7.
 
-### 24. Búsqueda por dirección / geocodificación
+### 24. Página principal — DECIDIDA (2026-10-09)
+La búsqueda en el mapa es la pantalla principal en celular y escritorio (`/`). El contenido del antiguo inicio pasa a `/como-funciona/`. `/buscar/` queda como alias que redirige a `/` conservando la búsqueda.
+
+### 25. Zona inicial y ubicación del conductor — DECIDIDA (2026-10-09)
+- Zona inicial: la última zona buscada (guardada en el navegador de la persona, `localStorage`, solo como comodidad) o CABA si no buscó ninguna.
+- Nunca se pide la ubicación automáticamente; hay un botón para usar la del dispositivo. En la demo queda en memoria, no se guarda ni se envía.
+- Los datos de la Ciudad usan "CABA" y la búsqueda acepta "Buenos Aires" / "Capital Federal" como sinónimos.
+- Sigue abierto para producción: si la ubicación del dispositivo se envía al servidor (p. ej. "cerca mío" en el backend), si se guarda y cuánto tiempo, y cómo se informa en la política de privacidad (Ley 25.326, con asesoramiento; ver punto 13).
+
+### 26. Búsqueda por dirección / geocodificación — ABIERTA
 Hoy solo ciudad y barrio. Buscar o autocompletar direcciones requiere un proveedor de geocodificación (condiciones, límites y costo propios). También sirve para que el propietario ubique su cochera al publicar.

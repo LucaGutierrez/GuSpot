@@ -88,8 +88,9 @@ export function BookingItem({ booking, space }: { booking: Booking; space?: Spac
           <div className="flex items-start gap-3">
             <PinIcon className="mt-0.5 shrink-0 text-brand-700" />
             <p className="text-ink-700">
-              <span className="font-semibold text-ink-900">Dirección:</span> se muestra aquí
-              cuando la reserva está confirmada (no disponible en la demo).
+              <span className="font-semibold text-ink-900">Dirección oculta.</span> Se mostrará
+              cuando la reserva esté confirmada y pagada. En la demo no hay pagos, por eso no se
+              muestra.
             </p>
           </div>
         </div>

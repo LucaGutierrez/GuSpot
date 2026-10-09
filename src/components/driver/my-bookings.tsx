@@ -55,7 +55,7 @@ function Section({
       ) : (
         <Card className="mt-3 flex flex-col items-start gap-3 p-5 text-sm text-ink-500">
           {empty}
-          <ButtonLink href="/buscar/" variant="secondary">
+          <ButtonLink href="/" variant="secondary">
             Buscar cocheras
           </ButtonLink>
         </Card>

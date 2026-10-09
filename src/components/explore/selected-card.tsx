@@ -28,7 +28,7 @@ export function SelectedCard({
   ref?: Ref<HTMLDivElement>;
   result: SearchResult;
   href: string;
-  /** "≈ 450 m de vos" o null si no hay ubicación del conductor. */
+  /** "≈ 450 m de vos (ubicación aproximada)" o null si no hay ubicación del conductor. */
   distance: string | null;
   position: { index: number; total: number };
   onPrev: () => void;
@@ -103,6 +103,10 @@ export function SelectedCard({
           {space.neighborhood}, {space.city} · {space.approxLocation}
           {distance && <strong className="font-semibold text-ink-700"> · {distance}</strong>}
         </span>
+      </p>
+      <p className="mt-1 text-[11px] leading-snug text-ink-500">
+        Ubicación aproximada (±200 m). La dirección exacta se comparte cuando la reserva está
+        confirmada y pagada.
       </p>
 
       <div className="mt-3 flex items-end justify-between gap-3">

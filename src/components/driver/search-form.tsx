@@ -4,6 +4,7 @@ import Form from "next/form";
 import { useId, useState } from "react";
 import type { SearchParams } from "@/lib/search";
 import { cities } from "@/lib/demo-data";
+import { setLastZone } from "@/lib/last-zone";
 import { Button } from "@/components/ui/button";
 import { PinIcon, SearchIcon } from "@/components/ui/icons";
 import { RangeFields, fieldInput, fieldLabel } from "./range-fields";
@@ -16,8 +17,9 @@ export const ZONE_SUGGESTIONS = cities().flatMap(({ city, neighborhoods }) => [
 ]);
 
 /**
- * Formulario de búsqueda. Envía GET a /buscar/ con zona, fecha, desde,
- * fechaHasta y hasta. `variant="compact"` es la barra editable de resultados.
+ * Formulario de búsqueda. Envía GET al mapa ("/") con zona, fecha, desde,
+ * fechaHasta y hasta, y recuerda la zona como última buscada.
+ * `variant="compact"` es la barra editable de resultados (reemplaza la URL).
  */
 export function SearchForm({
   initial = {},
@@ -33,7 +35,15 @@ export function SearchForm({
   const compact = variant === "compact";
 
   return (
-    <Form action="/buscar/" role="search" aria-label="Buscar cocheras" className="space-y-3">
+    <Form
+      action="/"
+      replace={compact}
+      scroll={!compact}
+      onSubmit={() => setLastZone(zona)}
+      role="search"
+      aria-label="Buscar cocheras"
+      className="space-y-3"
+    >
       <div>
         <label htmlFor={`${id}-zona`} className={fieldLabel}>
           Zona (ciudad o barrio)

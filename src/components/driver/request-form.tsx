@@ -46,7 +46,10 @@ export function RequestForm({ space }: { space: Space }) {
       ? `Este espacio admite hasta ${VEHICLE_LABEL[space.maxVehicle].toLowerCase()}.`
       : null;
 
-  if (submitted) return <RequestResult space={space} data={submitted} />;
+  // Vuelta al mapa ("/") con la misma zona y el período elegido.
+  const mapHref = `/${rangeQuery({ zona: params.get("zona") ?? "", ...value })}`;
+
+  if (submitted) return <RequestResult space={space} data={submitted} mapHref={mapHref} />;
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -184,7 +187,7 @@ export function RequestForm({ space }: { space: Space }) {
   );
 }
 
-function RequestResult({ space, data }: { space: Space; data: Submitted }) {
+function RequestResult({ space, data, mapHref }: { space: Space; data: Submitted; mapHref: string }) {
   return (
     <div className="space-y-6">
       <Card className="space-y-4 p-6">
@@ -222,8 +225,8 @@ function RequestResult({ space, data }: { space: Space; data: Submitted }) {
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-ink-700">
           <li>El propietario revisa la solicitud y la acepta o la rechaza.</li>
           <li>
-            Si la acepta, la reserva pasa a <strong>confirmada</strong> y vas a ver la dirección
-            exacta.
+            Si la acepta, la reserva pasa a <strong>confirmada</strong>. La dirección exacta
+            se comparte cuando la reserva esté confirmada y pagada (en la demo no hay pagos).
           </li>
           <li>
             El código de llegada aparece desde 2 h antes del inicio, solo para vos y el
@@ -241,7 +244,7 @@ function RequestResult({ space, data }: { space: Space; data: Submitted }) {
         <ButtonLink href="/mis-reservas/" size="lg">
           Ir a Mis reservas
         </ButtonLink>
-        <ButtonLink href="/buscar/" variant="secondary" size="lg">
+        <ButtonLink href={mapHref} variant="secondary" size="lg">
           Seguir buscando
         </ButtonLink>
       </div>

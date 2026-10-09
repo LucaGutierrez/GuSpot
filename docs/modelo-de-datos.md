@@ -109,8 +109,13 @@ Así un cambio de tarifa o de regla no altera reservas existentes y queda trazab
 
 ### 3.7 Ubicación y búsqueda
 
-- `Province`, `City` (FK a provincia), `Neighborhood` (FK a ciudad), con `slug` normalizado (sin tildes, minúsculas). "Buenos Aires" hoy es ambiguo (CABA vs. provincia).
-- `Space` referencia `cityId` y `neighborhoodId`. Dirección exacta (`addressLine`) en el espacio pero solo expuesta al conductor de una reserva confirmada (y al propietario). `lat`/`lng` exactos (privados) para el mapa; la UI hoy usa `Space.coords`, un punto aproximado. En producción conviene guardar aparte el punto público difuminado (radio a definir, ver `mapas.md` §6).
+- `Province`, `City` (FK a provincia), `Neighborhood` (FK a ciudad), con `slug` normalizado (sin tildes, minúsculas). "Buenos Aires" es ambiguo (CABA vs. provincia): la demo usa "CABA" para la Ciudad (ver abajo).
+- `Space` referencia `cityId` y `neighborhoodId`. En la demo la Ciudad figura como "CABA" y la búsqueda acepta "Buenos Aires" y "Capital Federal" como sinónimos.
+- **Punto exacto vs. punto público** (decidido 2026-10-09, ver `mapas.md` §6):
+  - **Exacto (privado):** `addressLine` y `lat`/`lng`. Solo lo ven el propietario y el conductor de una reserva **confirmada con pago aprobado**.
+  - **Público:** `approxLocation` (texto) y `publicLat`/`publicLng`: el punto exacto desplazado de forma estable 100–200 m (`approximatePoint`, hash del id). Se calcula **en el servidor** al crear o mover el espacio y se guarda; es lo único que viaja al navegador en búsquedas y detalle. Equivale a lo que hoy la UI llama `Space.coords`.
+  - **Demo:** los puntos exactos son ficticios y están en `src/lib/demo-data.ts`; la dirección exacta no se muestra nunca (no hay pagos).
+- **Cuándo se libera la dirección exacta**, en términos de las máquinas de estado (§4): cuando `Booking.status = confirmada` **y** el `Payment` de esa reserva está en `aprobado` (§4.3). La aprobación del propietario sola no alcanza: en el flujo de §4.2, `aprobada_pendiente_pago` todavía no la libera; si el cobro es al solicitar, la reserva llega a `confirmada` ya con el pago aprobado. Si después el pago pasa a `reembolsado`/`contracargo` o la reserva a `cancelada`, se deja de mostrar. Se verifica en el servidor: el navegador no recibe el dato si no corresponde.
 - Índices: `@@index([status, cityId, neighborhoodId])`, `@@index([ownerId])`. Para texto libre ("Palermo", "cordoba"): extensiones `unaccent` + `pg_trgm` con índice GIN sobre el nombre (migración SQL manual).
 - Reservas: el índice GiST de la exclusion constraint sirve para buscar superposiciones por espacio; agregar `@@index([driverId, startAt])` y `@@index([ownerId, status, startAt])` para las bandejas.
 
@@ -325,10 +330,12 @@ model Space {
   city             City          @relation(fields: [cityId], references: [id])
   neighborhoodId   String
   neighborhood     Neighborhood  @relation(fields: [neighborhoodId], references: [id])
-  approxLocation   String        // visible antes de confirmar
-  addressLine      String        // PRIVADA: solo conductor con reserva confirmada y propietario
-  lat              Decimal?      @db.Decimal(9, 6) // mapa: más adelante
+  approxLocation   String        // pública
+  addressLine      String        // PRIVADA: propietario y conductor con reserva confirmada + pago aprobado
+  lat              Decimal?      @db.Decimal(9, 6) // PRIVADA: punto exacto
   lng              Decimal?      @db.Decimal(9, 6)
+  publicLat        Decimal?      @db.Decimal(9, 6) // pública: exacto desplazado 100–200 m (estable), calculado en el servidor
+  publicLng        Decimal?      @db.Decimal(9, 6)
   timezone         String        @default("America/Argentina/Buenos_Aires")
   type             SpaceType
   maxVehicle       VehicleSize
@@ -539,12 +546,12 @@ Problemas concretos en el código actual (solo lectura; no se tocó nada). Orden
 6. **`createdAt` es `LocalDateTime`** (hora de pared). Es un instante: en la etapa real, `timestamptz`.
 7. **`rating` en `Space` sin modelo de reseñas** y con valores verosímiles (4.8, 4.9). Puede leerse como dato real; AGENTS.md pide que todo dato de ejemplo se vea como tal. Sugerencia: no mostrarlo, o mostrarlo con `DemoBadge`. Reseñas: decisión de producto pendiente.
 8. **Snapshot de precio incompleto:** solo `totalPrice`. La regla está pendiente de confirmación; sin desglose ni versión no se puede explicar un total después.
-9. **Ubicación en texto libre:** `city: "Buenos Aires"` es ambiguo (CABA vs. provincia); no hay provincia. `matchesZone` busca subcadenas ("centro" coincide con Córdoba y Rosario, lo que es correcto, pero no hay forma de desambiguar).
+9. **Ubicación en texto libre:** no hay provincia. (Resuelto en la demo: la Ciudad figura como `city: "CABA"` y la búsqueda acepta "Buenos Aires"/"Capital Federal" como sinónimos.) `matchesZone` busca subcadenas ("centro" coincide con Córdoba y Rosario, lo que es correcto, pero no hay forma de desambiguar).
 10. **Reglas de disponibilidad sin validar:** `checkAvailability` muestrea cada 30 min y el último minuto; una regla con bordes que no sean :00/:30 (p. ej. 07:15) da falsos positivos/negativos. No se soportan franjas que crucen medianoche. Validar en el formulario del propietario (Zod) o documentarlo en el tipo.
 11. **`datetime.ts` asume que Argentina nunca tendrá horario de verano** ("1 hora = 3.600.000 ms siempre"). Correcto hoy y aceptable para la demo; en la etapa real, convertir con la base de zonas horarias.
 12. **Montos:** `number` en JS está bien, pero al pasar a la base no usar `Int` de 32 bits (tope ≈ $ 21,4 millones); ver §3.8.
 13. **El id visible de la reserva (`R-DEMO-1001`) cumple el rol de referencia.** En la etapa real separar `id` interno, `reference` visible y el código de reserva secreto.
 14. **`Owner` está separado de un usuario**; `memberSince` es texto. En la etapa real: `User` con roles + `OwnerProfile`.
-15. **No hay dirección exacta** en `Space` (correcto para la demo). En la etapa real hace falta, con acceso restringido.
+15. **No hay dirección exacta** en `Space` (correcto para la demo). En la etapa real hace falta, con acceso restringido (reserva confirmada + pago aprobado, §3.7). `Space.coords` ya es el punto público (`approximatePoint` sobre puntos exactos ficticios).
 16. Menor: en `searchSpaces`, si no hay rango válido la razón de no disponibilidad es `"fuera_de_horario"`, que no es lo que pasa; la UI debería tratar ese caso como "elegí fecha y horario" (ya lo hace `quote`).
 17. Menor: `quote()` rechaza si la duración es menor al mínimo (otra opción sería cobrar el mínimo) y redondea hacia arriba (61 min = 2 h). Ambas son parte de la regla **pendiente de confirmación**; conviene que la UI lo explique.

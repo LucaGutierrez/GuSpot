@@ -41,7 +41,7 @@ export default async function SpacePage({ params }: Props) {
     <Container className="pt-4 pb-28 md:pb-12">
       <Suspense
         fallback={
-          <Link href="/buscar/" className="inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+          <Link href="/" className="inline-flex items-center gap-1 text-sm font-medium text-brand-700">
             <ChevronLeftIcon width={16} height={16} /> Volver a la búsqueda
           </Link>
         }
@@ -66,8 +66,8 @@ export default async function SpacePage({ params }: Props) {
               </span>
             </p>
             <p className="text-sm text-ink-500">
-              Ubicación aproximada. La dirección exacta se comparte cuando el propietario confirma
-              la reserva.
+              Ubicación aproximada (±200 m). La dirección exacta se comparte cuando la reserva esté
+              confirmada y pagada.
             </p>
           </header>
 

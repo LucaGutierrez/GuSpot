@@ -6,10 +6,12 @@ import { ButtonLink } from "@/components/ui/button";
 export const metadata: Metadata = { title: "Qué incluye la demo" };
 
 const works = [
-  "Búsqueda por ciudad o barrio, fecha y horario sobre espacios de ejemplo.",
+  "Mapa interactivo como pantalla principal: mover, acercar, tocar un garage y ver su tarjeta.",
+  "Búsqueda por ciudad o barrio, fecha y horario sobre espacios de ejemplo; recuerda la última zona buscada.",
+  "Ubicación del dispositivo, solo si tocás \"Mi ubicación\" y das permiso (no se guarda ni se envía).",
   "Cálculo de precio por hora, tarifa diaria y mínimo de horas.",
   "Verificación de disponibilidad según el horario semanal de cada espacio.",
-  "Navegación entre inicio, resultados, detalle, solicitud, mis reservas y la sección de propietarios.",
+  "Navegación entre el mapa, la lista, el detalle, la solicitud, mis reservas y la sección de propietarios.",
   "Diseño adaptable a celulares y escritorio.",
 ];
 
@@ -19,11 +21,13 @@ const demoOnly = [
   "Solicitudes de reserva, aceptar/rechazar y publicar: no se guardan ni notifican a nadie.",
   "Cuentas de usuario e inicio de sesión: no existen todavía.",
   "Códigos de llegada: no se generan; solo se muestra cómo se verán.",
+  "Ubicaciones del mapa: puntos aproximados (100–200 m) de garages ficticios. La dirección exacta no se muestra porque requiere una reserva confirmada y pagada.",
 ];
 
 const notIntegrated = [
   "Pagos con Mercado Pago o tarjetas (requisito para el lanzamiento público).",
-  "Mapas y búsqueda por dirección.",
+  "Búsqueda por dirección (geocodificación).",
+  "Mapas con garantía de disponibilidad: la demo usa OpenFreeMap, gratuito pero sin SLA.",
   "Mensajes, emails y notificaciones.",
   "Políticas de cancelación, verificación de propietarios y aspectos legales: a definir.",
 ];
@@ -67,7 +71,7 @@ export default function AboutDemoPage() {
         </Card>
       </div>
       <div className="mt-6 flex flex-wrap gap-3">
-        <ButtonLink href="/buscar/">Probar la búsqueda</ButtonLink>
+        <ButtonLink href="/">Buscar en el mapa</ButtonLink>
         <ButtonLink href="/propietarios/" variant="secondary">
           Ver sección de propietarios
         </ButtonLink>

@@ -3,7 +3,7 @@ import { searchQuery, toRange } from "@/lib/search";
 import type { LocalDateTime } from "@/lib/types";
 import { addDays } from "@/lib/datetime";
 
-/** Período elegido por el conductor, en el mismo formato que la URL de /buscar. */
+/** Período elegido por el conductor, en el mismo formato que la URL de la búsqueda ("/"). */
 export type RangeValue = Pick<SearchParams, "fecha" | "desde" | "fechaHasta" | "hasta">;
 
 export const DEFAULT_FROM = "10:00";

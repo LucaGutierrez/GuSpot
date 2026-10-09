@@ -8,7 +8,7 @@ import { RecenterIcon } from "./icons";
 import { toMarkers, zoneCenter } from "./map-data";
 
 /**
- * Mapa de la columna derecha de /buscar/ en escritorio. Muestra como marcador
+ * Mapa de la columna derecha de la búsqueda ("/") en escritorio. Muestra como marcador
  * solo los resultados disponibles y con precio para el período.
  */
 export function ResultsMap({

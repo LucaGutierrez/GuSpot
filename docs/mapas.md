@@ -12,11 +12,15 @@ Convención: **"Fuente:"** es lo que dice la página (citado o resumido); **"Int
 | Datos del mapa | OpenStreetMap (vía OpenMapTiles) | ODbL, requiere atribución |
 | Búsqueda | Por ciudad/barrio sobre el catálogo propio (`src/lib/search.ts`) | Sin geocodificación |
 
-Por qué: permite mostrar el mapa en la demo **sin crear cuentas, sin claves y sin tarjeta**, con una biblioteca abierta que sirve igual con cualquier proveedor de tiles vectoriales (cambiar de proveedor es, en principio, cambiar la URL del estilo y la atribución).
+Por qué: permite mostrar el mapa en la demo **sin crear cuentas, sin claves y sin tarjeta**, con una biblioteca abierta que sirve igual con cualquier proveedor de tiles vectoriales.
 
-Pantallas:
-- **Celular:** mapa a pantalla completa en `/` y `/buscar/`, con marcadores de precio y una tarjeta inferior al tocar uno.
-- **Escritorio:** `/buscar/` con lista + mapa.
+**Decidido (usuario, 2026-10-09):** OpenFreeMap para la demo. Según su documentación: uso comercial permitido, sin límite de vistas, **sin SLA**. Limitación anotada: si OpenFreeMap se cae o se discontinúa, la demo se queda sin mapa (la lista y la búsqueda siguen andando). Para producción hace falta otro proveedor (§7, pendiente). Cambiar de proveedor: §4.1.
+
+Pantallas (decidido 2026-10-09): **la búsqueda en el mapa es la pantalla principal** en celular y escritorio, en `/`.
+- **Celular:** mapa a pantalla completa, con marcadores de precio y una tarjeta inferior al tocar uno.
+- **Escritorio:** lista + mapa, ocupando exactamente el alto bajo el banner y el encabezado (variable CSS `--app-top`, ver §4).
+- `/buscar/` es un alias que redirige a `/` conservando la búsqueda. El contenido del antiguo inicio está en `/como-funciona/`.
+- **Zona inicial:** la última zona buscada (guardada en el navegador de la persona, ver §5) o **CABA** si no buscó ninguna.
 
 ## 2. OpenFreeMap: qué es gratis y por qué es SOLO para la demo
 
@@ -55,25 +59,50 @@ En la demo: el control de atribución de MapLibre (que toma el texto del estilo)
 
 - **Carga solo en el cliente.** El mapa usa APIs del navegador (WebGL, workers): el componente se carga del lado del cliente; en el HTML estático pre-generado no hay mapa. Se muestra un estado de carga y un mensaje si falla (sin conexión, WebGL no disponible, tiles caídos); la lista y la búsqueda siguen funcionando sin mapa.
 - **Worker.** MapLibre procesa los tiles en un web worker. Como el bundler no lo empaqueta solo, `scripts/copy-map-worker.mjs` copia `node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs` a `public/vendor/` antes de `npm run dev` y `npm run build` (scripts `predev`/`prebuild` de `package.json`). Así el sitio estático sirve el worker desde su propio dominio. Si se agrega `public/vendor/` al `.gitignore`, el build lo regenera igual.
-- **Conexión.** El estilo, los tiles, las fuentes de etiquetas y los íconos se piden a `tiles.openfreemap.org` desde el navegador del visitante. Sin conexión a ese dominio, el mapa no se dibuja.
+- **Conexión.** El estilo, los tiles, las fuentes de etiquetas y los íconos se piden al proveedor (en la demo, `tiles.openfreemap.org`) desde el navegador del visitante. Sin conexión a ese dominio, el mapa no se dibuja.
 - **Contrato.** `src/components/map/types.ts` (`MapViewProps`, `MapMarker`) define la interfaz entre el componente de mapa (`src/components/map/`) y las pantallas que lo usan (`src/components/explore/`). Lo mantiene el coordinador. Resumen: marcadores con `label` (precio) y `ariaLabel`; selección con `selectedId`/`onSelect`; `fitKey` para reencuadrar; `fallbackCenter`; `userLocation` opcional; `padding` para que nada quede tapado.
-- **Coordenadas.** `Space.coords` (`src/lib/types.ts`, WGS84). Utilidades en `src/lib/geo.ts`: centro por defecto (Obelisco), distancia aproximada (Haversine) y su formato ("≈ 450 m").
-- **Proveedor intercambiable.** La URL del estilo y la atribución deberían estar en un solo lugar del componente de mapa, para cambiar de proveedor sin tocar las pantallas.
+- **Coordenadas.** `Space.coords` (`src/lib/types.ts`, WGS84) es el **punto público** (§6). Utilidades en `src/lib/geo.ts`: centro por defecto (Obelisco), zona inicial (`DEFAULT_MAP_ZONE = "CABA"`), distancia aproximada (Haversine) y su formato ("≈ 450 m"), `approximatePoint`.
+- **Alto en escritorio.** `src/components/chrome-height.tsx` (`ChromeHeight`, montado en el layout) mide el banner de demo y el encabezado (elementos con `data-app-chrome`) y publica la suma en la variable CSS `--app-top`; la vista lista + mapa usa `calc(100dvh - var(--app-top))` o equivalente para no quedar cortada. En móvil, la barra inferior expone su alto en `--mobile-nav-height`.
+
+### 4.1 Cambiar de proveedor
+
+El proveedor está en **un solo archivo**: `src/components/map/config.ts` (`MAP_STYLE_URL` y `MAP_ORIGIN`). Las pantallas no lo conocen.
+
+Opción A, sin tocar código (proveedor compatible con MapLibre):
+1. Conseguir la URL de un **estilo compatible con MapLibre** (JSON de estilo, versión 8) del proveedor elegido o de tus propios tiles (p. ej. PMTiles).
+2. Definirla como variable de **build** `NEXT_PUBLIC_MAP_STYLE_URL` (en `.env.local` para desarrollo, o en las variables de entorno del hosting). Ver `.env.example`.
+3. Volver a correr `npm run build` y publicar: la variable se incrusta en el JS en el momento del build (cambiarla en el hosting sin rebuild no tiene efecto).
+4. Verificar que la **atribución** que muestra el mapa sea la que pide el nuevo proveedor (§3); viene del estilo.
+5. El preconnect del layout toma el origen de esa URL automáticamente (`MAP_ORIGIN`).
+
+Opción B: cambiar el valor por defecto (`DEFAULT_STYLE_URL`) en `config.ts`.
+
+**Claves:** si el proveedor usa clave, va dentro de esa URL y **queda visible en el navegador** de cualquier visitante. Usar solo una clave pública **restringida por dominio** en el panel del proveedor; nunca una clave secreta.
+
+Proveedores que no usan MapLibre (Google Maps): hay que reescribir `src/components/map/` manteniendo el contrato `types.ts` (§7, notas).
+
+### 4.2 Rendimiento
+
+- **Medición (2026-10-09):** con la pestaña visible, el mapa queda listo en **~0,8 s**. La lentitud observada antes se debía a que Chrome frena el dibujo en pestañas no visibles durante las pruebas automatizadas, no a la app.
+- Mejoras aplicadas: **preconnect** al origen del proveedor desde `src/app/layout.tsx` (`preconnect(MAP_ORIGIN)`), y la descarga de `maplibre-gl` **empieza al cargar el módulo del mapa** (`map-view.tsx`), no al montar el componente.
 
 ## 5. Privacidad: ubicación del conductor
 
-- Solo se pide al tocar **"Mi ubicación"** (permiso explícito del navegador). Nunca al abrir la página.
+- **Nunca se pide automáticamente** (decidido 2026-10-09). Solo al tocar el botón para usar la ubicación del dispositivo (permiso explícito del navegador).
+- **Zona inicial sin ubicación:** la última zona buscada, guardada en el `localStorage` del navegador de la persona (`src/lib/last-zone.ts`, clave `guspot:ultima-zona`, máx. 80 caracteres) solo como comodidad; si no hay o el almacenamiento está bloqueado, CABA. Es texto de la zona buscada, no coordenadas, y no sale del navegador.
+- Los datos de la Ciudad usan "CABA"; la búsqueda acepta "Buenos Aires" y "Capital Federal" como sinónimos.
 - Se usa únicamente en el navegador para centrar el mapa y calcular distancias aproximadas. **No se guarda ni se envía** a ningún servidor (la demo no tiene servidor). Al recargar la página se pierde.
 - Si el conductor rechaza el permiso o falla, la app sigue funcionando con búsqueda por ciudad/barrio.
 - La geolocalización del navegador solo funciona en **HTTPS** (o `localhost`).
 - Las solicitudes de tiles las hace el navegador del visitante a OpenFreeMap (un tercero); la zona del mapa que se mira se puede inferir de los tiles pedidos. Ver la [política de privacidad de OpenFreeMap](https://openfreemap.org/privacy/).
 - **Para producción (a revisar con asesoramiento profesional):** si la ubicación llegara a guardarse o enviarse al servidor (p. ej. "cocheras cerca mío" calculado en el backend), es un dato personal en los términos de la **Ley 25.326**: definir finalidad, consentimiento, plazo de conservación y mencionarlo en la política de privacidad, junto con la mención del proveedor de mapas como tercero.
 
-## 6. Precisión de la ubicación pública de las cocheras
+## 6. Ubicación pública de las cocheras (decidido 2026-10-09)
 
-- Regla del producto: la dirección exacta no se muestra antes de confirmar la reserva (`approxLocation`).
-- En la demo, `Space.coords` son **puntos aproximados de ejemplo** dentro del barrio (Buenos Aires y otras ciudades); no corresponden a cocheras reales ni a direcciones exactas.
-- **Decisión pendiente para producción:** cómo publicar la ubicación sin revelar la dirección. Opciones: desplazar el punto al azar dentro de un radio fijo (p. ej. unos cientos de metros) guardado una vez por cocheras (para que no "converja" si se recalcula), mostrar un círculo en lugar de un punto, o ajustar a una grilla. El radio exacto y si el punto real se guarda separado del público quedan **a definir** (ver `decisiones-pendientes.md`). El punto público debe calcularse en el servidor: el navegador nunca debe recibir la coordenada exacta antes de confirmar.
+- **Punto público aproximado:** se desplaza el punto exacto entre **100 y 200 m**, en una dirección y distancia que dependen solo de un hash del id del espacio (`approximatePoint` en `src/lib/geo.ts`, FNV-1a). Es **estable**: siempre el mismo punto, así que no se puede promediar para encontrar el real. Las distancias calculadas con él se muestran como aproximadas ("≈").
+- **Dirección exacta:** se muestra al conductor recién cuando la reserva está **confirmada y pagada**. En la demo (sin pagos) queda oculta siempre; se usa `approxLocation` (texto) y el punto aproximado.
+- **Producción:** el desplazamiento se calcula **en el servidor** y la coordenada exacta **nunca se envía al navegador** antes de ese momento.
+- **Demo:** los puntos "exactos" son **ficticios** y están en el código (`src/lib/demo-data.ts`, que expone `coords: approximatePoint(space.id, exactCoords)`); no corresponden a cocheras ni direcciones reales. Al ser un sitio estático, no hay forma de ocultarlos del navegador: por eso son inventados.
 
 ## 7. Opciones para producción (solo descripción, nada elegido)
 
@@ -99,4 +128,4 @@ Notas:
 
 ## 8. Pendiente: búsqueda por dirección / geocodificación
 
-Hoy se busca solo por ciudad y barrio del catálogo propio. Buscar por dirección ("Av. Corrientes 1234") o autocompletar requiere un **servicio de geocodificación** (otro proveedor, con sus propias condiciones, límites y costo; varios de los de la tabla lo ofrecen). No usar el geocodificador público de OSM (Nominatim) para un producto sin revisar su política de uso. Decisión pendiente: ver `decisiones-pendientes.md`.
+Hoy se busca solo por ciudad y barrio del catálogo propio. Buscar por dirección ("Av. Corrientes 1234") o autocompletar requiere un **servicio de geocodificación** (otro proveedor, con sus propias condiciones, límites y costo; varios de los de la tabla lo ofrecen). No usar el geocodificador público de OSM (Nominatim) para un producto sin revisar su política de uso. Sigue pendiente: ver `decisiones-pendientes.md`.

@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { Suspense } from "react";
 import { getSpace, publishedSpaces } from "@/lib/demo-data";
 import { SPACE_TYPE_LABEL } from "@/lib/format";
 import { DemoBadge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/card";
-import { PinIcon } from "@/components/ui/icons";
+import { ChevronLeftIcon, PinIcon } from "@/components/ui/icons";
 import { SpacePhoto } from "@/components/ui/space-photo";
 import { RequestForm } from "@/components/driver/request-form";
 import { rateSummary } from "@/components/driver/price-breakdown";
+import { BackToResults } from "@/components/driver/back-to-results";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -32,7 +34,16 @@ export default async function SolicitarPage({ params }: Props) {
 
   return (
     <Container className="max-w-3xl py-6">
-      <div className="flex flex-wrap items-center gap-2">
+      <Suspense
+        fallback={
+          <Link href="/" className="inline-flex items-center gap-1 text-sm font-medium text-brand-700">
+            <ChevronLeftIcon width={16} height={16} /> Volver a la búsqueda
+          </Link>
+        }
+      >
+        <BackToResults />
+      </Suspense>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <h1 className="text-2xl font-bold tracking-tight text-ink-900 sm:text-3xl">Solicitar reserva</h1>
         <DemoBadge />
       </div>

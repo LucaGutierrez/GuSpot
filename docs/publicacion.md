@@ -3,9 +3,10 @@
 La demo es un **sitio estático**: `npm run build` genera la carpeta `out/` (HTML, CSS, JS). No necesita servidor, base de datos ni funciones, así que cualquier hosting estático gratuito sirve.
 
 > **Mapa (qué cambia y qué no)**
-> - El sitio ahora hace **solicitudes a un tercero desde el navegador del visitante**: el mapa pide estilo, tiles, fuentes e íconos a `tiles.openfreemap.org` (OpenFreeMap). No hay clave ni configuración que cargar en el hosting. Ver [mapas.md](mapas.md).
+> - El sitio ahora hace **solicitudes a un tercero desde el navegador del visitante**: el mapa pide estilo, tiles, fuentes e íconos a `tiles.openfreemap.org` (OpenFreeMap). Para la demo no hay clave ni configuración que cargar en el hosting. Ver [mapas.md](mapas.md).
 > - El worker del mapa (`public/vendor/maplibre-gl-worker.mjs`) lo genera `npm run build` (script `prebuild`) y queda dentro de `out/`. Los comandos de build de abajo no cambian.
 > - **"Mi ubicación" requiere HTTPS** (la geolocalización del navegador no funciona en HTTP, salvo `localhost`). Los subdominios `*.vercel.app` y `*.pages.dev` ya sirven por HTTPS.
+> - **Variable opcional `NEXT_PUBLIC_MAP_STYLE_URL`** (no hace falta para la demo): URL de un estilo compatible con MapLibre para usar otro proveedor de mapas. Se carga en las variables de entorno **de build** del hosting (Vercel: Settings > Environment Variables; Cloudflare Pages: Settings > Variables) y requiere volver a hacer build. Si el proveedor usa clave, queda visible en el navegador: usar una clave restringida por dominio. Ver `.env.example` y [mapas.md](mapas.md) §4.1.
 > - Nada más cambia en el deploy.
 
 Fuentes: documentación oficial consultada el **9 de octubre de 2026**. Los planes y límites cambian; revisá los enlaces antes de publicar.

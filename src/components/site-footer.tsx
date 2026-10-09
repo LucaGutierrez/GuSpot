@@ -1,6 +1,11 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function SiteFooter() {
+  // En el mapa (pantalla principal) la vista ocupa todo el alto: sin pie de página.
+  if (usePathname() === "/") return null;
   return (
     <footer className="mt-16 border-t border-ink-200 bg-white">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-ink-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">

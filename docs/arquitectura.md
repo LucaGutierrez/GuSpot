@@ -6,12 +6,16 @@
 Navegador ──▶ archivos estáticos (out/) en un CDN
                └─ HTML pre-generado + JS de React
                   └─ datos: src/lib/demo-data.ts (embebidos en el build)
-Navegador ──▶ tiles.openfreemap.org (estilo y tiles del mapa, tercero)
+Navegador ──▶ proveedor de mapas (demo: tiles.openfreemap.org; estilo y tiles, tercero)
 ```
 
 - Next.js 16 (App Router) con `output: "export"`, `trailingSlash: true`, `images.unoptimized` (`next.config.ts`).
 - Sin servidor, sin base de datos, sin cuentas, sin pagos. Todo lo "interactivo" (búsqueda, cotización, verificación de disponibilidad) corre en el navegador sobre datos de ejemplo.
 - Rutas dinámicas con `generateStaticParams` + `dynamicParams = false`: se genera una página por cada espacio de ejemplo.
+- Rutas principales (decidido 2026-10-09):
+  - `/` — **búsqueda en el mapa**, pantalla principal en celular y escritorio.
+  - `/como-funciona/` — el contenido del antiguo inicio.
+  - `/buscar/` — alias: redirige a `/` conservando la búsqueda (parámetros de la URL). Como el sitio es estático (sin rewrites ni redirects del servidor), la redirección se hace en el navegador.
 - Prohibido en esta etapa: server actions, route handlers dinámicos, cookies, headers, rewrites, `next/image` optimizado (ver `AGENTS.md`).
 
 ## 2. Estructura de carpetas
@@ -19,15 +23,18 @@ Navegador ──▶ tiles.openfreemap.org (estilo y tiles del mapa, tercero)
 ```
 src/
   app/                    rutas (App Router)
-    layout.tsx            COMPARTIDO: layout raíz, DemoBanner, header/footer
+    layout.tsx            COMPARTIDO: layout raíz, DemoBanner, header/footer, ChromeHeight, preconnect al proveedor del mapa
     globals.css           COMPARTIDO: Tailwind v4 y paleta (brand-*, accent-*, ink-*)
-    page.tsx              inicio
+    page.tsx              `/`: búsqueda en el mapa (pantalla principal)
+    como-funciona/        contenido del antiguo inicio
+    buscar/               alias que redirige a `/` con la misma búsqueda
     <seccion>/            POR SECCIÓN: cada agente trabaja en la carpeta que le asigna el coordinador
   components/
     ui/                   COMPARTIDO: Badge, Button, Card, DemoNotice/DemoBanner, íconos, SpacePhoto
     site-header.tsx       COMPARTIDO
     site-footer.tsx       COMPARTIDO
-    map/                  componente de mapa (MapLibre); types.ts = contrato, lo mantiene el coordinador
+    chrome-height.tsx     COMPARTIDO: mide banner + encabezado y publica `--app-top`
+    map/                  componente de mapa (MapLibre); types.ts = contrato y config.ts = proveedor, los mantiene el coordinador
     explore/              pantallas de exploración (mapa a pantalla completa en celular, lista + mapa en escritorio)
   lib/                    COMPARTIDO: dominio y utilidades
     types.ts              tipos de dominio
@@ -35,14 +42,15 @@ src/
     pricing.ts            cotización (regla propuesta, pendiente de confirmar)
     availability.ts       horario semanal + superposición
     search.ts             búsqueda por ciudad/barrio
-    geo.ts                centro por defecto, distancia aproximada, centroide
+    geo.ts                centro y zona por defecto (CABA), distancia aproximada, centroide, approximatePoint
+    last-zone.ts          última zona buscada (localStorage del navegador) o CABA
     datetime.ts, format.ts  fechas de pared argentinas, ARS, etiquetas
 docs/                     documentación
 public/                   archivos estáticos (public/vendor/: worker del mapa, generado)
 scripts/copy-map-worker.mjs  copia el worker de MapLibre (predev/prebuild)
 ```
 
-**Compartido** (solo lo edita el coordinador): `src/lib/**`, `src/components/ui/**`, `src/components/site-*.tsx`, `src/app/layout.tsx`, `src/app/globals.css`, configuración (`next.config.ts`, `package.json`, `tsconfig.json`, `eslint.config.mjs`).
+**Compartido** (solo lo edita el coordinador): `src/lib/**`, `src/components/ui/**`, `src/components/site-*.tsx`, `src/components/chrome-height.tsx`, `src/components/map/types.ts` y `config.ts`, `src/app/layout.tsx`, `src/app/globals.css`, configuración (`next.config.ts`, `package.json`, `tsconfig.json`, `eslint.config.mjs`).
 **Por sección**: la carpeta de la ruta y sus componentes propios, asignada a un agente.
 
 ## 2.1 Módulo de mapa
@@ -53,11 +61,13 @@ scripts/copy-map-worker.mjs  copia el worker de MapLibre (predev/prebuild)
   - `MapMarker { id, position: LatLng, label, ariaLabel }`
   - `MapViewProps { markers, selectedId, onSelect(id | null), fitKey, fallbackCenter, userLocation, includeUserInFit?, padding?, className? }`
   - `fitKey`: al cambiar, el mapa encuadra todos los marcadores (o `fallbackCenter`). `padding`: espacio tapado por la barra de búsqueda/tarjeta inferior.
-- **Datos:** `Space.coords` (`LatLng`, WGS84) son puntos aproximados de ejemplo, nunca la dirección exacta. En producción, el servidor envía solo el punto público difuminado.
-- **Carga:** solo en el cliente (WebGL); el HTML estático no incluye el mapa. El worker se sirve desde `public/vendor/` (copiado por `predev`/`prebuild`).
-- **Ubicación del conductor:** solo tras permiso explícito ("Mi ubicación"); queda en memoria del navegador, no se guarda ni se envía.
-- **Móvil:** la barra inferior expone su alto en `--mobile-nav-height` para que el mapa y la tarjeta no queden tapados.
-- **Cambio de proveedor:** si sigue siendo tiles vectoriales compatibles con MapLibre, se cambia la URL del estilo y la atribución dentro de `map/`; con Google Maps habría que reescribir `map/` manteniendo el contrato.
+- **Proveedor:** solo en `src/components/map/config.ts` (`MAP_STYLE_URL`, `MAP_ORIGIN`), o con la variable de build `NEXT_PUBLIC_MAP_STYLE_URL`. Pasos en `mapas.md` §4.1.
+- **Datos:** `Space.coords` (`LatLng`, WGS84) es el **punto público**: el punto exacto desplazado de forma estable 100–200 m con `approximatePoint` (hash del id). En la demo los puntos exactos son ficticios y están en `demo-data.ts`. En producción el servidor calcula y envía solo el punto público; la dirección exacta se libera con reserva confirmada y pagada (`modelo-de-datos.md` §3.7).
+- **Zona inicial:** `initialZone()` de `src/lib/last-zone.ts`: la última zona buscada (guardada en `localStorage`, clave `guspot:ultima-zona`, solo comodidad) o `DEFAULT_MAP_ZONE` ("CABA"). Nunca se pide la ubicación automáticamente.
+- **Carga:** solo en el cliente (WebGL); el HTML estático no incluye el mapa. El worker se sirve desde `public/vendor/` (copiado por `predev`/`prebuild`). El layout hace `preconnect` al origen del proveedor y la descarga de `maplibre-gl` empieza al cargar el módulo del mapa (medido: ~0,8 s hasta el mapa listo con la pestaña visible; ver `mapas.md` §4.2).
+- **Ubicación del conductor:** nunca se pide automáticamente; solo tras tocar el botón "Mi ubicación" y dar permiso. Queda en memoria del navegador, no se guarda ni se envía.
+- **Altos:** en móvil, la barra inferior expone su alto en `--mobile-nav-height` para que el mapa y la tarjeta no queden tapados. En escritorio, `ChromeHeight` (`src/components/chrome-height.tsx`) mide los elementos con `data-app-chrome` (banner de demo y encabezado) y publica la suma en `--app-top`; lista + mapa ocupa exactamente el resto de la ventana, sin que el mapa quede cortado.
+- **Cambio de proveedor:** con un estilo compatible con MapLibre alcanza con `config.ts` o `NEXT_PUBLIC_MAP_STYLE_URL` (la atribución viene del estilo); con Google Maps habría que reescribir `map/` manteniendo el contrato.
 
 ## 3. Objetivo: etapas
 

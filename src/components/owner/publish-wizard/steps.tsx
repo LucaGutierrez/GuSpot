@@ -179,7 +179,7 @@ export function LocationStep({ draft, errors, update }: StepProps) {
       <Field
         id="exactAddress"
         label="Dirección exacta (privada)"
-        hint="Solo se comparte con conductores con reserva confirmada."
+        hint="Solo se comparte con conductores con reserva confirmada y pagada. En el mapa se muestra un punto aproximado (100–200 m)."
         error={errors.exactAddress}
       >
         <input

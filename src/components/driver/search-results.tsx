@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { searchSpaces, type SearchParams } from "@/lib/search";
 import { cities } from "@/lib/demo-data";
+import { setLastZone } from "@/lib/last-zone";
 import { formatRange } from "@/lib/format";
 import { DemoBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { DemoNotice } from "@/components/ui/demo-notice";
 import { ResultsMap } from "@/components/explore/results-map";
+import { useInitialZone } from "@/components/explore/use-initial-zone";
+import { useLockBodyScroll } from "@/components/explore/use-element-height";
 import { FilterSelects, NO_FILTERS, isBookable, matchesFilters, type ResultFilters } from "./filters";
 import { defaultDay, rangeQuery, rangeToInterval, readRange, withDefaults } from "./range";
 import { fieldInput, fieldLabel } from "./range-fields";
@@ -21,13 +24,20 @@ import { useNow } from "./use-now";
 type Order = "recomendado" | "precio_asc" | "precio_desc";
 
 /**
- * Resultados de /buscar/ en escritorio: lista (búsqueda, filtros, tarjetas) a
- * la izquierda y mapa fijo a la derecha. En celulares /buscar/ usa `Explore`.
+ * Búsqueda en escritorio (pantalla principal, "/"): lista (búsqueda, filtros,
+ * tarjetas) a la izquierda y mapa a la derecha. En celulares se usa `Explore`.
  */
 export function SearchResults() {
   const params = useSearchParams();
   const now = useNow();
-  const zona = params.get("zona")?.trim() ?? "";
+  // Sin `zona` en la URL: la última buscada o CABA. `zona=` vacía: todas.
+  const fallbackZone = useInitialZone();
+  const urlZone = params.get("zona");
+  const zona = urlZone !== null ? urlZone.trim() : fallbackZone;
+
+  useEffect(() => {
+    if (urlZone?.trim()) setLastZone(urlZone);
+  }, [urlZone]);
   const { fecha, desde, fechaHasta, hasta } = withDefaults(readRange(params), defaultDay(now));
   const search = useMemo<SearchParams>(
     () => ({ zona, fecha, desde, fechaHasta, hasta }),
@@ -42,7 +52,7 @@ export function SearchResults() {
       />
       <Card className="p-4">
         <h2 className="sr-only">Modificar búsqueda</h2>
-        <SearchForm key={params.toString()} initial={search} variant="compact" />
+        <SearchForm key={`${params.toString()}|${zona}`} initial={search} variant="compact" />
       </Card>
     </Results>
   );
@@ -67,6 +77,19 @@ function Results({
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const cardRefs = useRef(new Map<string, HTMLLIElement>());
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // La vista ocupa exactamente el alto libre bajo el encabezado: el documento
+  // no se desplaza (la lista tiene su propio scroll) y el mapa nunca queda cortado.
+  useLockBodyScroll();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    const keepTop = () => {
+      if (window.scrollY !== 0) window.scrollTo(0, 0);
+    };
+    window.addEventListener("scroll", keepTop, { passive: true });
+    return () => window.removeEventListener("scroll", keepTop);
+  }, []);
 
   const all = useMemo(() => searchSpaces(search), [search]);
   const matching = useMemo(() => all.filter((r) => matchesFilters(r, filters)), [all, filters]);
@@ -84,9 +107,14 @@ function Results({
     setSelectedId(spaceId);
     if (!spaceId) return;
     const el = cardRefs.current.get(spaceId);
-    if (!el) return;
+    const list = listRef.current;
+    if (!el || !list) return;
+    // Se desplaza solo la columna de la lista (scrollIntoView movería también la página).
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    const elBox = el.getBoundingClientRect();
+    const listBox = list.getBoundingClientRect();
+    const top = list.scrollTop + (elBox.top - listBox.top) - (listBox.height - elBox.height) / 2;
+    list.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
   }, []);
 
   const filtersActive = !!filters.tipo || !!filters.vehiculo || soloDisponibles;
@@ -100,8 +128,14 @@ function Results({
   const highlighted = hoveredId && onMap.has(hoveredId) ? hoveredId : selectedId;
 
   return (
-    <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,48rem)_minmax(0,1fr)]">
-      <div className="min-w-0 space-y-6 px-4 pb-10 sm:px-6">
+    <div
+      className="grid grid-rows-[minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,48rem)_minmax(0,1fr)]"
+      style={{ height: "calc(100dvh - var(--app-top))" }}
+    >
+      <div
+        ref={listRef}
+        className="min-h-0 min-w-0 space-y-6 overflow-y-auto overscroll-contain px-4 pb-10 sm:px-6"
+      >
         {children}
 
         <section aria-labelledby={`${id}-filtros`} className="space-y-3">
@@ -159,7 +193,8 @@ function Results({
           )}
           <p className="text-xs text-ink-500">
             En el mapa aparecen solo los espacios disponibles en ese período, en una ubicación
-            aproximada de ejemplo.
+            aproximada (±200 m). La dirección exacta se comparte cuando la reserva esté confirmada
+            y pagada.
           </p>
 
           {results.length > 0 ? (
@@ -175,7 +210,7 @@ function Results({
                   onMouseLeave={() => setHoveredId(null)}
                   onFocus={() => setHoveredId(r.space.id)}
                   onBlur={() => setHoveredId(null)}
-                  className={`scroll-mt-24 rounded-2xl transition-shadow ${
+                  className={`rounded-2xl transition-shadow ${
                     highlighted === r.space.id ? "ring-2 ring-brand-500 ring-offset-2" : ""
                   }`}
                 >
@@ -199,16 +234,13 @@ function Results({
         </section>
       </div>
 
-      <div className="hidden border-l border-ink-200 md:block">
-        {/* 65px = header fijo (h-16 + borde). */}
-        <div className="sticky top-[65px] h-[calc(100dvh-65px)]">
-          <ResultsMap
-            results={matching}
-            selectedId={highlighted}
-            onSelect={onMapSelect}
-            fitKey={`${queryKey}|${filters.tipo}|${filters.vehiculo}`}
-          />
-        </div>
+      <div className="hidden min-h-0 border-l border-ink-200 md:block">
+        <ResultsMap
+          results={matching}
+          selectedId={highlighted}
+          onSelect={onMapSelect}
+          fitKey={`${queryKey}|${search.zona}|${filters.tipo}|${filters.vehiculo}`}
+        />
       </div>
     </div>
   );
@@ -242,7 +274,7 @@ function EmptyState({
           {cities().map(({ city }) => (
             <li key={city}>
               <Link
-                href={`/buscar/${rangeQuery({ ...query, zona: city })}`}
+                href={`/${rangeQuery({ ...query, zona: city })}`}
                 className="inline-flex rounded-full border border-ink-200 bg-white px-3 py-1.5 text-sm font-medium text-ink-900 hover:bg-ink-100 focus-visible:outline-2 focus-visible:outline-brand-500"
               >
                 {city}
