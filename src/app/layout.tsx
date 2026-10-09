@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { DemoBanner } from "@/components/ui/demo-notice";
 import { ChromeHeight } from "@/components/chrome-height";
+import { AuthProvider } from "@/lib/auth/auth-provider";
 import { preconnect } from "react-dom";
 import { MAP_ORIGIN } from "@/components/map/config";
 
@@ -30,11 +31,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es-AR" className={`${geistSans.variable} h-full antialiased`}>
       <body className="pb-safe-nav flex min-h-full flex-col font-sans">
-        <DemoBanner />
-        <SiteHeader />
-        <ChromeHeight />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
+        <AuthProvider>
+          <DemoBanner />
+          <SiteHeader />
+          <ChromeHeight />
+          <main className="flex-1">{children}</main>
+          <SiteFooter />
+        </AuthProvider>
       </body>
     </html>
   );

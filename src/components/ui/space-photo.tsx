@@ -26,11 +26,22 @@ export function SpacePhoto({
   variant,
   label = "Ilustración de muestra",
   className = "",
+  url,
 }: {
   variant: PhotoVariant;
   label?: string;
   className?: string;
+  /** Foto real (garages reales). Si está, se muestra en lugar de la ilustración. */
+  url?: string;
 }) {
+  if (url) {
+    return (
+      <div className={`relative overflow-hidden bg-ink-100 ${className}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- exportación estática sin optimizador */}
+        <img src={url} alt={label} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+      </div>
+    );
+  }
   const p = palettes[variant];
   return (
     <div className={`relative overflow-hidden bg-ink-100 ${className}`}>

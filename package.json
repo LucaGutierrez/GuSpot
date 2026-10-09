@@ -12,6 +12,7 @@
     "deploy:demo": "npm run build && wrangler pages deploy out --project-name guspot-demo --branch main --commit-dirty=true"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "maplibre-gl": "^6.13.0",
     "next": "16.4.0",
     "react": "19.3.0",

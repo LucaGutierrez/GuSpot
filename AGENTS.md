@@ -43,3 +43,13 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - Zona inicial: la última buscada (`src/lib/last-zone.ts`, localStorage) o CABA. Nunca pedir ubicación automáticamente.
 - La búsqueda en el mapa es la pantalla principal (`/`). Alto disponible bajo banner+encabezado: variable CSS `--app-top`.
 - Barra inferior móvil: alto en la variable CSS `--mobile-nav-height`.
+
+## Etapa 1: cuentas y garages reales (Supabase)
+- Backend: Supabase (Postgres + Auth + Storage). El sitio sigue siendo ESTÁTICO: el navegador (y la futura app móvil) habla directo con Supabase usando la clave **publishable**; la seguridad la imponen las reglas RLS y los permisos de columnas de `supabase/migrations/`. Nunca usar claves secretas en el cliente.
+- Configuración: `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` en `.env.local` (`src/lib/supabase/config.ts`). Sin ellas: **modo demo** (`isBackendConfigured === false`), todo debe seguir funcionando con datos de ejemplo y las pantallas de cuenta explican que no hay cuentas.
+- Sesión: `useAuth()` de `src/lib/auth/auth-provider.tsx` (`disabled | loading | signed-out | signed-in`). Acciones: `src/lib/auth/actions.ts`.
+- Datos reales: contrato en `src/lib/data/types.ts` (lo mantiene el coordinador), implementación en `src/lib/data/garages.ts`.
+- `Space.source` ("demo" | "real"): garages de ejemplo y reales NUNCA se mezclan en la misma lista/mapa; los de ejemplo siempre con etiqueta "Ejemplo".
+- Datos privados (dirección exacta, punto exacto) solo los ve el propietario. El punto público se calcula en la base (100–200 m, estable).
+- Rutas reales: `/ingresar/`, `/crear-cuenta/`, `/recuperar/`, `/recuperar/nueva/`, `/cuenta/`, `/mis-garages/`, `/mis-garages/nuevo/`, `/mis-garages/editar/?id=`, `/espacio/?id=` (detalle de garage real; ruta con query porque el sitio es estático). Las pantallas de demo (`/propietarios/**`, `/espacios/[id]/`, `/mis-reservas/`) se conservan como demostración.
+- Fuera de alcance en esta etapa: reservas reales, pagos, Mercado Pago, comisiones, códigos de llegada, app nativa.

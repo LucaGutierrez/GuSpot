@@ -1,12 +1,22 @@
 import type { ReactNode } from "react";
 import { InfoIcon } from "./icons";
+import { isBackendConfigured } from "@/lib/supabase/config";
 
 /** Franja fija en todas las páginas: deja claro que es una demo. */
 export function DemoBanner() {
   return (
     <div data-app-chrome className="bg-ink-900 px-4 py-2 text-center text-xs text-white sm:text-sm">
-      <strong className="font-semibold text-accent-300">Versión de demostración.</strong>{" "}
-      Los espacios, precios y reservas son de ejemplo. No se procesan reservas ni pagos reales.
+      {isBackendConfigured ? (
+        <>
+          <strong className="font-semibold text-accent-300">Versión en desarrollo.</strong> Cuentas y garages
+          son reales; los marcados &quot;Ejemplo&quot; no. Todavía no hay reservas ni pagos.
+        </>
+      ) : (
+        <>
+          <strong className="font-semibold text-accent-300">Versión de demostración.</strong> Los espacios,
+          precios y reservas son de ejemplo. No se procesan reservas ni pagos reales.
+        </>
+      )}
     </div>
   );
 }

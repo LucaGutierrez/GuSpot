@@ -2,15 +2,42 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { InfoIcon, ParkingIcon, SearchIcon, TicketIcon } from "./ui/icons";
+import { InfoIcon, ParkingIcon, SearchIcon, TicketIcon, UserIcon } from "./ui/icons";
+import { useAuth } from "@/lib/auth/auth-provider";
 
 // El mapa de búsqueda es la pantalla principal ("/").
+const isAccount = (p: string) =>
+  ["/cuenta", "/ingresar", "/crear-cuenta", "/recuperar"].some((r) => p.startsWith(r));
+
 const NAV = [
-  { href: "/", label: "Buscar", icon: SearchIcon, match: (p: string) => p === "/" || p.startsWith("/buscar") || p.startsWith("/espacios") },
+  { href: "/", label: "Buscar", icon: SearchIcon, match: (p: string) => p === "/" || p.startsWith("/buscar") || p.startsWith("/espacio") },
   { href: "/mis-reservas/", label: "Mis reservas", icon: TicketIcon, match: (p: string) => p.startsWith("/mis-reservas") },
-  { href: "/propietarios/", label: "Propietarios", icon: ParkingIcon, match: (p: string) => p.startsWith("/propietarios") },
-  { href: "/como-funciona/", label: "Cómo funciona", icon: InfoIcon, match: (p: string) => p.startsWith("/como-funciona") || p.startsWith("/acerca-de-la-demo") },
+  { href: "/mis-garages/", label: "Mis garages", icon: ParkingIcon, match: (p: string) => p.startsWith("/mis-garages") || p.startsWith("/propietarios") },
+  { href: "/como-funciona/", label: "Cómo funciona", icon: InfoIcon, match: (p: string) => p.startsWith("/como-funciona") || p.startsWith("/acerca-de-la-demo"), desktopOnly: true },
+  { href: "/cuenta/", label: "Cuenta", icon: UserIcon, match: isAccount, mobileOnly: true },
 ];
+
+/** Botón de cuenta del encabezado (escritorio). */
+function AccountButton() {
+  const auth = useAuth();
+  if (auth.status === "disabled" || auth.status === "loading") return null;
+  if (auth.status === "signed-out") {
+    return (
+      <Link href="/ingresar/" className="rounded-lg px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">
+        Ingresar
+      </Link>
+    );
+  }
+  return (
+    <Link
+      href="/cuenta/"
+      className="flex max-w-48 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-ink-700 hover:bg-ink-100"
+    >
+      <UserIcon width={18} height={18} className="shrink-0" />
+      <span className="truncate">{auth.user.displayName}</span>
+    </Link>
+  );
+}
 
 export function Logo() {
   return (
@@ -31,7 +58,7 @@ export function SiteHeader() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Logo />
           <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
-            {NAV.map((item) => {
+            {NAV.filter((item) => !item.mobileOnly).map((item) => {
               const active = item.match(pathname);
               return (
                 <Link
@@ -47,12 +74,17 @@ export function SiteHeader() {
               );
             })}
           </nav>
-          <Link
-            href="/propietarios/publicar/"
-            className="hidden rounded-lg border border-ink-200 px-3 py-2 text-sm font-semibold text-ink-900 hover:bg-ink-100 sm:inline-flex md:ml-2"
-          >
-            Publicá tu cochera
-          </Link>
+          <div className="flex items-center gap-1">
+            <div className="hidden md:block">
+              <AccountButton />
+            </div>
+            <Link
+              href="/mis-garages/nuevo/"
+              className="hidden rounded-lg border border-ink-200 px-3 py-2 text-sm font-semibold text-ink-900 hover:bg-ink-100 sm:inline-flex md:ml-2"
+            >
+              Publicá tu cochera
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -62,7 +94,7 @@ export function SiteHeader() {
         className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         <ul className="grid h-16 grid-cols-4">
-          {NAV.map((item) => {
+          {NAV.filter((item) => !item.desktopOnly).map((item) => {
             const active = item.match(pathname);
             const Icon = item.icon;
             return (

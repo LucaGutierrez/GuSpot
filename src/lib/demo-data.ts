@@ -22,7 +22,7 @@ export const owners: Owner[] = [
  * En los datos de entrada cada espacio tiene su punto "exacto" (ficticio).
  * Lo que se expone es `coords`, desplazado 100–200 m de forma estable.
  */
-type DemoSpaceInput = Omit<Space, "coords"> & { exactCoords: LatLng };
+type DemoSpaceInput = Omit<Space, "coords" | "source"> & { exactCoords: LatLng };
 
 const spaceInputs: DemoSpaceInput[] = [
   {
@@ -456,6 +456,7 @@ const spaceInputs: DemoSpaceInput[] = [
 
 export const spaces: Space[] = spaceInputs.map(({ exactCoords, ...space }) => ({
   ...space,
+  source: "demo" as const,
   coords: approximatePoint(space.id, exactCoords),
 }));
 

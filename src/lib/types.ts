@@ -30,8 +30,11 @@ export type Feature =
 export type PhotoVariant = "garage" | "cochera" | "patio" | "subsuelo" | "porton";
 
 export interface DemoPhoto {
+  /** Ilustración a mostrar si no hay `url` (o mientras carga). */
   variant: PhotoVariant;
   caption: string;
+  /** Foto real subida por el propietario (solo garages reales). */
+  url?: string;
 }
 
 /** Franja semanal de disponibilidad. day: 0 = domingo … 6 = sábado. */
@@ -54,8 +57,15 @@ export interface LatLng {
 
 export type ListingStatus = "publicado" | "pausado" | "borrador";
 
+/**
+ * Origen del garage. Los de ejemplo ("demo") y los publicados de verdad
+ * ("real") NUNCA se muestran mezclados ni pueden reservarse igual.
+ */
+export type SpaceSource = "demo" | "real";
+
 export interface Space {
   id: string;
+  source: SpaceSource;
   ownerId: string;
   title: string;
   description: string;
