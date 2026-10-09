@@ -1,0 +1,35 @@
+import type { Metadata, Viewport } from "next";
+import { Geist } from "next/font/google";
+import "./globals.css";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import { DemoBanner } from "@/components/ui/demo-notice";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: { default: "GuSpot — Estacionamiento cerca, con precio claro", template: "%s · GuSpot" },
+  description:
+    "Demo de GuSpot: buscá y reservá cocheras ofrecidas por propietarios en Argentina. Versión de demostración con datos de ejemplo.",
+  robots: { index: false, follow: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2453e0",
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html lang="es-AR" className={`${geistSans.variable} h-full antialiased`}>
+      <body className="pb-safe-nav flex min-h-full flex-col font-sans">
+        <DemoBanner />
+        <SiteHeader />
+        <main className="flex-1">{children}</main>
+        <SiteFooter />
+      </body>
+    </html>
+  );
+}

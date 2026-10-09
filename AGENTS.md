@@ -1,0 +1,35 @@
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+
+# GuSpot — convenciones del proyecto
+
+GuSpot es una plataforma (Argentina, ARS) para buscar y reservar cocheras ofrecidas por propietarios.
+**Estado actual: demo estática navegable con datos de ejemplo.** No hay base de datos, cuentas,
+reservas reales, pagos, mapas, mensajes ni carga de fotos.
+
+## Reglas de producto (no negociables)
+- Todo dato de ejemplo debe verse como tal (usar `DemoBadge`, `DemoNotice`; el `DemoBanner` ya está en el layout).
+- Nunca mostrar una reserva como pagada ni insinuar que Mercado Pago, tarjetas, mapas, mensajes o carga de fotos funcionan.
+- El estado de la reserva (`BookingStatus`) y el del pago (`PaymentStatus`) se muestran siempre por separado. En la demo el pago es siempre `no_disponible`.
+- Códigos de reserva: nunca mostrar un código con apariencia real. Solo conductor y propietario de una reserva **confirmada**, dentro de una ventana horaria (propuesta: desde 2 h antes del inicio hasta el fin). En la demo se muestra enmascarado/explicado.
+- La dirección exacta no se muestra antes de confirmar; usar `approxLocation`.
+- No inventar políticas de cancelación, verificación de propietarios ni requisitos legales: mostrarlos como "a definir".
+- Interfaz en español rioplatense (voseo: "buscá", "publicá").
+
+## Técnica
+- Next.js 16 App Router, exportación estática (`output: "export"`, `trailingSlash: true`). Prohibido: server actions, route handlers dinámicos, cookies, headers, rewrites, `next/image` con optimización.
+- Rutas dinámicas: `generateStaticParams` + `export const dynamicParams = false`. Tipar props como `{ params: Promise<{ id: string }> }`.
+- `useSearchParams` solo en componentes cliente envueltos en `<Suspense>`.
+- Estilos con Tailwind v4 y la paleta de `src/app/globals.css` (`brand-*`, `accent-*`, `ink-*`). Mobile-first; la barra de navegación inferior existe en móvil.
+- Montos en centavos (`formatARS`), fechas como `LocalDateTime` "YYYY-MM-DDTHH:mm" hora argentina (`src/lib/datetime.ts`, `src/lib/format.ts`).
+- Código compartido (solo lo edita el coordinador): `src/lib/**`, `src/components/ui/**`, `src/components/site-*.tsx`, `src/app/layout.tsx`, `src/app/globals.css`, configuración.
+
+## Comandos
+- `npm run dev` — desarrollo. `npm run build` — genera `out/`. `npm run lint`.

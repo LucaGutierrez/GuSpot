@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/*
+  Paleta de GuSpot. Usar estas clases (bg-brand-600, text-ink-500, etc.)
+  en lugar de colores sueltos para mantener la identidad visual.
+  La demo usa solo tema claro.
+*/
+@theme {
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dbe6ff;
+  --color-brand-200: #bfd3ff;
+  --color-brand-300: #93b4fd;
+  --color-brand-400: #6090fa;
+  --color-brand-500: #3b6ef5;
+  --color-brand-600: #2453e0;
+  --color-brand-700: #1c41bd;
+  --color-brand-800: #1c3797;
+  --color-brand-900: #1b3278;
+
+  --color-accent-100: #fff4cc;
+  --color-accent-300: #ffd95c;
+  --color-accent-400: #ffc823;
+  --color-accent-500: #f5b301;
+  --color-accent-700: #9a6700;
+
+  --color-ink-50: #f7f8fa;
+  --color-ink-100: #eef0f4;
+  --color-ink-200: #dde1e8;
+  --color-ink-300: #c3c9d4;
+  --color-ink-400: #8d95a5;
+  --color-ink-500: #5f6879;
+  --color-ink-700: #333a48;
+  --color-ink-900: #121722;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-ink-50);
+  color: var(--color-ink-900);
+}
+
+/* Espacio para la barra inferior en celulares. */
+.pb-safe-nav {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .pb-safe-nav {
+    padding-bottom: 0;
+  }
+}
