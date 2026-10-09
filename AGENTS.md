@@ -33,3 +33,10 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 
 ## Comandos
 - `npm run dev` — desarrollo. `npm run build` — genera `out/`. `npm run lint`.
+
+## Mapa
+- Biblioteca: MapLibre GL JS (`maplibre-gl`, BSD-3). Mapas base: instancia pública de OpenFreeMap (sin clave, sin SLA): **solo apta para la demo**. Ver docs/mapas.md.
+- El worker de MapLibre se copia a `public/vendor/` con `predev`/`prebuild` (scripts/copy-map-worker.mjs).
+- Contrato entre el mapa y las pantallas: `src/components/map/types.ts` (lo mantiene el coordinador).
+- Las coordenadas de `Space.coords` son puntos aproximados de ejemplo; nunca la dirección exacta.
+- Barra inferior móvil: alto en la variable CSS `--mobile-nav-height`.

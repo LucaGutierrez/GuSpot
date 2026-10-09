@@ -60,7 +60,7 @@ export function SiteHeader() {
         aria-label="Principal (móvil)"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden"
       >
-        <ul className="grid grid-cols-4">
+        <ul className="grid h-16 grid-cols-4">
           {NAV.map((item) => {
             const active = item.match(pathname);
             const Icon = item.icon;
@@ -69,7 +69,7 @@ export function SiteHeader() {
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium ${
+                  className={`flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${
                     active ? "text-brand-700" : "text-ink-500"
                   }`}
                 >

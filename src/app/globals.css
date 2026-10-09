@@ -37,6 +37,8 @@
 
 :root {
   color-scheme: light;
+  /* Alto de la barra de navegación inferior en celulares (h-16 + borde). */
+  --mobile-nav-height: calc(4rem + 1px + env(safe-area-inset-bottom));
 }
 
 body {
@@ -46,7 +48,7 @@ body {
 
 /* Espacio para la barra inferior en celulares. */
 .pb-safe-nav {
-  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  padding-bottom: var(--mobile-nav-height);
 }
 @media (min-width: 768px) {
   .pb-safe-nav {

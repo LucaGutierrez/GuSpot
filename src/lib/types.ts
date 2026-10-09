@@ -46,6 +46,12 @@ export interface Interval {
   end: LocalDateTime;
 }
 
+/** Coordenadas WGS84. */
+export interface LatLng {
+  lat: number;
+  lng: number;
+}
+
 export type ListingStatus = "publicado" | "pausado" | "borrador";
 
 export interface Space {
@@ -57,6 +63,11 @@ export interface Space {
   neighborhood: string;
   /** Referencia aproximada visible antes de reservar (nunca la dirección exacta). */
   approxLocation: string;
+  /**
+   * Punto aproximado para el mapa (nunca la dirección exacta). En la demo son
+   * ubicaciones de ejemplo dentro del barrio, no corresponden a cocheras reales.
+   */
+  coords: LatLng;
   type: SpaceType;
   maxVehicle: VehicleSize;
   features: Feature[];
