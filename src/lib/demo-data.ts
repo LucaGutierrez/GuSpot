@@ -45,7 +45,6 @@ export const spaces: Space[] = [
       "No se permite dejar objetos fuera del vehículo.",
     ],
     status: "publicado",
-    rating: 4.8,
   },
   {
     id: "palermo-garage-casa",
@@ -69,7 +68,6 @@ export const spaces: Space[] = [
       "Retirar el vehículo antes de las 20:00.",
     ],
     status: "publicado",
-    rating: 4.6,
   },
   {
     id: "recoleta-edificio",
@@ -97,7 +95,6 @@ export const spaces: Space[] = [
       "Se registra la patente del vehículo.",
     ],
     status: "publicado",
-    rating: 4.9,
   },
   {
     id: "belgrano-semicubierta",
@@ -122,7 +119,6 @@ export const spaces: Space[] = [
     busy: [],
     accessConditions: ["El propietario abre el portón al llegar."],
     status: "publicado",
-    rating: 4.5,
   },
   {
     id: "san-telmo-moto",
@@ -167,7 +163,6 @@ export const spaces: Space[] = [
     busy: [],
     accessConditions: ["Altura máxima 2,00 m."],
     status: "publicado",
-    rating: 4.7,
   },
   {
     id: "cordoba-centro-descubierto",
@@ -207,7 +202,6 @@ export const spaces: Space[] = [
     busy: [],
     accessConditions: ["Coordinar el horario de llegada con el propietario."],
     status: "publicado",
-    rating: 4.4,
   },
   {
     id: "rosario-centro",
@@ -248,7 +242,6 @@ export const spaces: Space[] = [
     busy: [],
     accessConditions: ["El propietario recibe al conductor la primera vez."],
     status: "publicado",
-    rating: 4.6,
   },
   {
     id: "villa-crespo-borrador",
@@ -306,7 +299,7 @@ export const bookings: Booking[] = [
     totalPrice: 2000000,
     status: "solicitada",
     paymentStatus: "no_disponible",
-    vehicle: "Camioneta",
+    vehicle: "Auto mediano",
     createdAt: "2026-10-09T15:10",
   },
   {
@@ -346,6 +339,12 @@ export const bookings: Booking[] = [
     createdAt: "2026-09-25T18:00",
   },
 ];
+
+// Las reservas confirmadas ocupan el horario del espacio en la búsqueda.
+for (const b of bookings) {
+  if (b.status !== "confirmada") continue;
+  spaces.find((s) => s.id === b.spaceId)?.busy.push({ start: b.start, end: b.end });
+}
 
 /** Nombre del conductor ficticio que "usa" la demo (sección Mis reservas). */
 export const DEMO_DRIVER_NAME = "Conductor Demo";

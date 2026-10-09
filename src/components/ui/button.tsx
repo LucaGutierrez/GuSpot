@@ -29,7 +29,7 @@ export function Button({
   className = "",
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }) {
-  return <button className={buttonClass(variant, size, className)} {...props} />;
+  return <button type="button" className={buttonClass(variant, size, className)} {...props} />;
 }
 
 export function ButtonLink({
