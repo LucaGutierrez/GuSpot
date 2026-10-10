@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { PinIcon } from "@/components/ui/icons";
 import { searchAddress, type AddressMatch } from "@/lib/geocoding";
 import { inputClass } from "@/components/owner/form-fields";
 
@@ -33,6 +34,7 @@ export function AddressSearch({
   // Solo se busca cuando la persona escribe (no al cargar un garage existente).
   const [query, setQuery] = useState<string | null>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (query === null || query.trim().length < 3) return;
@@ -55,6 +57,16 @@ export function AddressSearch({
   }, [query, provinceId]);
 
   function pick(m: AddressMatch) {
+    if (m.kind === "calle") {
+      // Solo la calle: completarla y pedir la altura.
+      const text = `${m.label} `;
+      onTextChange(text);
+      setQuery(text);
+      setResults([]);
+      setOpen(false);
+      inputRef.current?.focus();
+      return;
+    }
     onPick(m);
     setOpen(false);
     setResults([]);
@@ -83,6 +95,7 @@ export function AddressSearch({
   return (
     <div className="relative">
       <input
+        ref={inputRef}
         id={id}
         role="combobox"
         aria-expanded={showList}
@@ -92,7 +105,7 @@ export function AddressSearch({
         aria-invalid={invalid}
         aria-describedby={describedBy}
         autoComplete="off"
-        placeholder="Ej.: Av. Santa Fe 1860"
+        placeholder="Calle y altura, ej.: Gurruchaga 1500"
         className={inputClass}
         value={value}
         onChange={(e) => {
@@ -116,7 +129,8 @@ export function AddressSearch({
         >
           {results.length === 0 ? (
             <li className="px-3 py-2 text-sm text-ink-500">
-              No encontramos esa dirección. Revisá calle y altura, o la provincia.
+              No encontramos esa dirección. Revisá calle y altura, o la provincia. También podés
+              marcarla en el mapa.
             </li>
           ) : (
             results.map((r, i) => (
@@ -127,9 +141,15 @@ export function AddressSearch({
                 aria-selected={i === active}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(r)}
-                className={`cursor-pointer px-3 py-2 text-sm text-ink-900 ${i === active ? "bg-brand-50" : "hover:bg-ink-50"}`}
+                className={`flex cursor-pointer items-start gap-2.5 px-3 py-2.5 ${i === active ? "bg-brand-50" : "hover:bg-ink-50"}`}
               >
-                {r.label}
+                <PinIcon width={18} height={18} className="mt-0.5 shrink-0 text-ink-400" />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-ink-900">{r.label}</span>
+                  <span className="block truncate text-xs text-ink-500">
+                    {r.kind === "calle" ? `${r.detail ? `${r.detail} · ` : ""}Elegila y agregá la altura` : r.detail}
+                  </span>
+                </span>
               </li>
             ))
           )}

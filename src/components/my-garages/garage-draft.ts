@@ -19,7 +19,8 @@ export interface GarageDraft extends Draft {
 }
 
 export function emptyGarageDraft(): GarageDraft {
-  return { ...emptyDraft(), exactLocation: null };
+  // Por ahora solo CABA.
+  return { ...emptyDraft(), city: "CABA", exactLocation: null };
 }
 
 export function draftFromGarage(g: OwnerGarage): GarageDraft {

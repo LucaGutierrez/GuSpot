@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 import { ChevronLeftIcon } from "@/components/ui/icons";
 import { Field, describedBy, inputClass } from "@/components/owner/form-fields";
 import type { Draft, Errors } from "@/components/owner/publish-wizard/draft";
-import { CABA_ID, PROVINCES, googleMapsUrl, reverseLookup, type AddressMatch } from "@/lib/geocoding";
+import { CABA_ID, fullAddress, googleMapsUrl, reverseLookup, type AddressMatch } from "@/lib/geocoding";
 import { AddressSearch } from "./address-search";
 import { AvailabilityStep, BasicsStep, FeaturesStep, PriceStep } from "@/components/owner/publish-wizard/steps";
 import { LocationPicker } from "./location-picker";
@@ -48,16 +48,16 @@ function LocationFields({
   update: (patch: Partial<GarageDraft>) => void;
   publicLocation: LatLng | null;
 }) {
-  const [provinceId, setProvinceId] = useState(() =>
-    !draft.city || draft.city === "CABA" ? CABA_ID : "06",
-  );
+  // Por ahora GuSpot funciona solo en CABA (decisión del 2026-10-10). Para sumar
+  // provincias, volver a mostrar un selector con PROVINCES de src/lib/geocoding.ts.
+  const provinceId = CABA_ID;
   const [showMap, setShowMap] = useState(!!draft.exactLocation);
 
   async function onPick(m: AddressMatch) {
     update({
-      exactAddress: m.label,
+      exactAddress: fullAddress(m),
       exactLocation: m.location,
-      city: m.city || draft.city,
+      city: "CABA",
       neighborhood: m.neighborhood || draft.neighborhood,
     });
     setShowMap(true);
@@ -69,20 +69,9 @@ function LocationFields({
 
   return (
     <div className="flex flex-col gap-5">
-      <Field id="province" label="Provincia">
-        <select
-          id="province"
-          className={inputClass}
-          value={provinceId}
-          onChange={(e) => setProvinceId(e.target.value)}
-        >
-          {PROVINCES.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <p className="text-sm text-ink-700">
+        Por ahora GuSpot está disponible solo en la <strong>Ciudad de Buenos Aires</strong>.
+      </p>
       <Field
         id="exactAddress"
         label="Dirección exacta (privada)"
@@ -142,16 +131,6 @@ function LocationFields({
       )}
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="city" label="Ciudad o localidad" error={errors.city}>
-          <input
-            id="city"
-            className={inputClass}
-            value={draft.city}
-            onChange={(e) => update({ city: e.target.value })}
-            aria-invalid={!!errors.city}
-            aria-describedby={describedBy("city", false, errors.city)}
-          />
-        </Field>
         <Field id="neighborhood" label="Barrio" error={errors.neighborhood}>
           <input
             id="neighborhood"
