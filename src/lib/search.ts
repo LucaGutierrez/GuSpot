@@ -41,6 +41,19 @@ export function matchesZone(space: Space, zona: string): boolean {
   return q.split(/[\s,]+/).every((word) => haystack.includes(word));
 }
 
+/** Rectángulo del mapa (grados) para "Buscar en esta zona". */
+export interface Area {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
+export function inArea(space: Space, a: Area): boolean {
+  const { lat, lng } = space.coords;
+  return lat <= a.north && lat >= a.south && lng <= a.east && lng >= a.west;
+}
+
 export function toRange(p: SearchParams): { start: LocalDateTime; end: LocalDateTime } | null {
   const start = combine(p.fecha, p.desde);
   const end = combine(p.fechaHasta || p.fecha, p.hasta);
@@ -52,10 +65,12 @@ export function searchSpaces(
   p: SearchParams,
   /** Lista donde buscar: por defecto los garages de ejemplo. Nunca mezclar reales y de ejemplo. */
   source: Space[] = publishedSpaces(),
+  /** Si se indica, busca dentro de este rectángulo del mapa en lugar de por `zona`. */
+  area?: Area | null,
 ): SearchResult[] {
   const range = toRange(p);
   return source
-    .filter((s) => matchesZone(s, p.zona))
+    .filter((s) => (area ? inArea(s, area) : matchesZone(s, p.zona)))
     .map((space) => ({
       space,
       availability: range

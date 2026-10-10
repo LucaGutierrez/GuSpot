@@ -270,6 +270,18 @@ export function MapView(props: MapViewProps) {
         if (!loaded) fail();
       }, LOAD_TIMEOUT_MS);
 
+      // Movimiento hecho por la persona (los encuadres automáticos no traen originalEvent).
+      m.on("moveend", (e) => {
+        if (!("originalEvent" in e) || !e.originalEvent) return;
+        const b = m.getBounds();
+        propsRef.current.onUserMove?.({
+          north: b.getNorth(),
+          south: b.getSouth(),
+          east: b.getEast(),
+          west: b.getWest(),
+        });
+      });
+
       // Tocar el fondo del mapa deselecciona (los marcadores se excluyen).
       m.on("click", (e) => {
         const target = e.originalEvent.target;

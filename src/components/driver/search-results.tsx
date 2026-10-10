@@ -3,19 +3,18 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { searchSpaces, type SearchParams } from "@/lib/search";
+import { searchSpaces, type Area, type SearchParams } from "@/lib/search";
 import { cities } from "@/lib/demo-data";
 import { setLastZone } from "@/lib/last-zone";
 import { formatRange } from "@/lib/format";
 import { DemoBadge } from "@/components/ui/badge";
-import { isBackendConfigured } from "@/lib/supabase/config";
 import { Button } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { DemoNotice } from "@/components/ui/demo-notice";
 import { ResultsMap } from "@/components/explore/results-map";
 import { useInitialZone } from "@/components/explore/use-initial-zone";
 import { useLockBodyScroll } from "@/components/explore/use-element-height";
-import { SpaceModeSwitch, spaceHref, useSearchSource } from "@/components/explore/space-source";
+import { spaceHref, useSearchSource } from "@/components/explore/space-source";
 import { FilterSelects, NO_FILTERS, isBookable, matchesFilters, type ResultFilters } from "./filters";
 import { defaultDay, rangeQuery, rangeToInterval, readRange, withDefaults } from "./range";
 import { fieldInput, fieldLabel } from "./range-fields";
@@ -95,7 +94,12 @@ function Results({
 
   const { mode, spaces, failed } = useSearchSource();
   const real = mode === "reales";
-  const all = useMemo(() => searchSpaces(search, spaces ?? []), [search, spaces]);
+  // "Buscar en esta zona": vale para la búsqueda actual de la URL.
+  const [areaState, setAreaState] = useState<{ key: string; area: Area } | null>(null);
+  const [movedTo, setMovedTo] = useState<{ key: string; area: Area } | null>(null);
+  const area = areaState?.key === queryKey ? areaState.area : null;
+  const pendingArea = movedTo?.key === queryKey && movedTo.area !== area ? movedTo.area : null;
+  const all = useMemo(() => searchSpaces(search, spaces ?? [], area), [search, spaces, area]);
   const matching = useMemo(() => all.filter((r) => matchesFilters(r, filters)), [all, filters]);
   const filtered = soloDisponibles ? matching.filter(isBookable) : matching;
   const results =
@@ -188,14 +192,9 @@ function Results({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id={`${id}-resultados`} className="text-lg font-semibold text-ink-900" aria-live="polite">
               {results.length} {results.length === 1 ? "espacio" : "espacios"}
-              {search.zona ? ` en «${search.zona}»` : ""}
+              {area ? " en esta zona del mapa" : search.zona ? ` en «${search.zona}»` : ""}
             </h2>
-            {real ? <SpaceModeSwitch /> : (
-              <span className="flex flex-wrap items-center gap-2">
-                <SpaceModeSwitch />
-                {isBackendConfigured && <DemoBadge label="Datos de ejemplo" />}
-              </span>
-            )}
+            {!real && <DemoBadge label="Datos de ejemplo" />}
           </div>
           {period && (
             <p className="text-sm text-ink-500">Período: {formatRange(period.start, period.end)}</p>
@@ -236,7 +235,7 @@ function Results({
           ) : (
             <EmptyState
               real={real}
-              zona={search.zona}
+              zona={area ? "esta zona del mapa" : search.zona}
               noZoneMatch={all.length === 0}
               onClearFilters={filtersActive ? clearFilters : undefined}
               query={search}
@@ -263,6 +262,9 @@ function Results({
           selectedId={highlighted}
           onSelect={onMapSelect}
           fitKey={`${queryKey}|${search.zona}|${filters.tipo}|${filters.vehiculo}|${mode}|${spaces?.length ?? -1}`}
+          onUserMove={(a) => setMovedTo({ key: queryKey, area: a })}
+          canSearchArea={!!pendingArea}
+          onSearchArea={() => pendingArea && setAreaState({ key: queryKey, area: pendingArea })}
         />
       </div>
     </div>

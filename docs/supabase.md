@@ -46,10 +46,12 @@ cuentas que una no ve la dirección ni puede editar los garages de la otra.
 | `/mis-garages/editar/?id=` | Edición, fotos (hasta 6), publicar/pausar, eliminar. |
 | `/espacio/?id=` | Detalle público de un garage real publicado (sin reservas todavía). |
 
-**Búsqueda (`/`)**: un selector "Garages reales / Ejemplos" elige qué lista se muestra; nunca
-se mezclan. La elección se guarda en el navegador (`localStorage`, clave `guspot:datos`) y
-por defecto se muestran los **ejemplos** (decisión provisoria mientras haya pocos garages
-reales). Sin Supabase configurado solo existen los ejemplos.
+**Búsqueda (`/`)**: con Supabase configurado muestra solo los garages reales publicados (para
+todos, con o sin cuenta); sin Supabase, solo los de ejemplo. Al abrir, busca primero cerca de la
+persona si da su ubicación; al mover el mapa ofrece "Buscar en esta zona".
+
+**Dirección del garage**: se busca por calle y altura (Georef, API oficial y gratuita de
+datos.gob.ar; respaldo Photon/OpenStreetMap). Ver `src/lib/geocoding.ts`.
 
 **Publicar el sitio**: `npm run deploy:demo` compila con lo que haya en `.env.local`. Con las
 variables de Supabase definidas, el sitio publicado tendrá cuentas y garages reales.

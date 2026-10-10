@@ -9,8 +9,10 @@ import { createGarage, deleteGarage, updateGarage } from "@/lib/data/garages";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeftIcon } from "@/components/ui/icons";
-import { Field, FieldError, describedBy, inputClass } from "@/components/owner/form-fields";
-import { OTHER_CITY, demoCities, type Draft, type Errors } from "@/components/owner/publish-wizard/draft";
+import { Field, describedBy, inputClass } from "@/components/owner/form-fields";
+import type { Draft, Errors } from "@/components/owner/publish-wizard/draft";
+import { CABA_ID, PROVINCES, googleMapsUrl, reverseLookup, type AddressMatch } from "@/lib/geocoding";
+import { AddressSearch } from "./address-search";
 import { AvailabilityStep, BasicsStep, FeaturesStep, PriceStep } from "@/components/owner/publish-wizard/steps";
 import { LocationPicker } from "./location-picker";
 import { PhotoManager } from "./photo-manager";
@@ -46,39 +48,110 @@ function LocationFields({
   update: (patch: Partial<GarageDraft>) => void;
   publicLocation: LatLng | null;
 }) {
+  const [provinceId, setProvinceId] = useState(() =>
+    !draft.city || draft.city === "CABA" ? CABA_ID : "06",
+  );
+  const [showMap, setShowMap] = useState(!!draft.exactLocation);
+
+  async function onPick(m: AddressMatch) {
+    update({
+      exactAddress: m.label,
+      exactLocation: m.location,
+      city: m.city || draft.city,
+      neighborhood: m.neighborhood || draft.neighborhood,
+    });
+    setShowMap(true);
+    if (!m.neighborhood) {
+      const place = await reverseLookup(m.location);
+      if (place?.neighborhood) update({ neighborhood: place.neighborhood });
+    }
+  }
+
   return (
     <div className="flex flex-col gap-5">
+      <Field id="province" label="Provincia">
+        <select
+          id="province"
+          className={inputClass}
+          value={provinceId}
+          onChange={(e) => setProvinceId(e.target.value)}
+        >
+          {PROVINCES.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field
+        id="exactAddress"
+        label="Dirección exacta (privada)"
+        hint="Escribí calle y altura y elegí la dirección de la lista. Solo la ves vos."
+        error={errors.exactAddress ?? errors.exactLocation}
+      >
+        <AddressSearch
+          id="exactAddress"
+          provinceId={provinceId}
+          value={draft.exactAddress}
+          onTextChange={(text) => update({ exactAddress: text })}
+          onPick={onPick}
+          invalid={!!(errors.exactAddress ?? errors.exactLocation)}
+          describedBy={describedBy("exactAddress", true, errors.exactAddress ?? errors.exactLocation)}
+        />
+      </Field>
+
+      {draft.exactLocation ? (
+        <div id="exactLocation" className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-medium text-ink-900">Así quedó ubicado</p>
+            <a
+              href={googleMapsUrl(draft.exactLocation)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-brand-700 hover:underline"
+            >
+              Ver en Google Maps ↗
+            </a>
+          </div>
+          {showMap && (
+            <LocationPicker
+              value={draft.exactLocation}
+              onChange={(p) => update({ exactLocation: p })}
+              publicLocation={publicLocation}
+            />
+          )}
+          <p className="text-xs text-ink-500">
+            Si el pin no quedó justo en la entrada, arrastralo. En el mapa público se muestra un punto
+            aproximado, a 100–200 m del real.
+          </p>
+        </div>
+      ) : (
+        <div id="exactLocation" className="flex flex-col gap-2">
+          {showMap ? (
+            <LocationPicker value={null} onChange={(p) => update({ exactLocation: p })} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowMap(true)}
+              className="w-fit text-sm font-semibold text-brand-700 hover:underline"
+            >
+              ¿No aparece tu dirección? Marcala en el mapa
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="city" label="Ciudad" error={errors.city}>
-          <select
+        <Field id="city" label="Ciudad o localidad" error={errors.city}>
+          <input
             id="city"
             className={inputClass}
             value={draft.city}
             onChange={(e) => update({ city: e.target.value })}
             aria-invalid={!!errors.city}
             aria-describedby={describedBy("city", false, errors.city)}
-          >
-            <option value="">Elegí una ciudad</option>
-            {demoCities().map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-            <option value={OTHER_CITY}>Otra</option>
-          </select>
+          />
         </Field>
-        {draft.city === OTHER_CITY && (
-          <Field id="otherCity" label="¿Qué ciudad?" error={errors.otherCity}>
-            <input
-              id="otherCity"
-              className={inputClass}
-              value={draft.otherCity}
-              onChange={(e) => update({ otherCity: e.target.value })}
-              aria-invalid={!!errors.otherCity}
-              aria-describedby={describedBy("otherCity", false, errors.otherCity)}
-            />
-          </Field>
-        )}
         <Field id="neighborhood" label="Barrio" error={errors.neighborhood}>
           <input
             id="neighborhood"
@@ -105,34 +178,6 @@ function LocationFields({
           aria-describedby={describedBy("approxLocation", true, errors.approxLocation)}
         />
       </Field>
-      <Field
-        id="exactAddress"
-        label="Dirección exacta (privada)"
-        hint="Solo la ves vos. Más adelante se compartirá únicamente con conductores con reserva confirmada y pagada."
-        error={errors.exactAddress}
-      >
-        <input
-          id="exactAddress"
-          className={inputClass}
-          value={draft.exactAddress}
-          autoComplete="street-address"
-          onChange={(e) => update({ exactAddress: e.target.value })}
-          aria-invalid={!!errors.exactAddress}
-          aria-describedby={describedBy("exactAddress", true, errors.exactAddress)}
-        />
-      </Field>
-      <div id="exactLocation" className="flex flex-col gap-1.5">
-        <p className="text-sm font-medium text-ink-900">Punto exacto en el mapa (privado)</p>
-        <LocationPicker
-          value={draft.exactLocation}
-          onChange={(p) => update({ exactLocation: p })}
-          publicLocation={publicLocation}
-        />
-        <p className="text-xs text-ink-500">
-          En el mapa público se muestra un punto aproximado, a 100–200 m del real.
-        </p>
-        <FieldError message={errors.exactLocation} />
-      </div>
     </div>
   );
 }

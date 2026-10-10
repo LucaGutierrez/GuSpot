@@ -135,6 +135,10 @@ export function LocationPicker({
     } else {
       markerRef.current.setLngLat(toLngLat(value));
     }
+    // Si el punto llegó de afuera (dirección elegida) y no se ve bien, ir hasta él.
+    if (!map.getBounds().contains(toLngLat(value)) || map.getZoom() < 15) {
+      map.easeTo({ center: toLngLat(value), zoom: 17 });
+    }
   }, [value, status]);
 
   // Punto público (informativo).

@@ -13,6 +13,14 @@ export interface MapMarker {
   ariaLabel: string;
 }
 
+/** Rectángulo visible del mapa (grados). */
+export interface MapBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
 export interface MapViewProps {
   markers: MapMarker[];
   selectedId: string | null;
@@ -42,5 +50,11 @@ export interface MapViewProps {
    * y al centrar el marcador seleccionado, para que nunca quede tapado.
    */
   padding?: { top: number; right: number; bottom: number; left: number };
+  /**
+   * Se llama cuando la PERSONA termina de mover o hacer zoom en el mapa (no
+   * cuando lo mueve el encuadre automático), con el rectángulo visible.
+   * Sirve para ofrecer "Buscar en esta zona".
+   */
+  onUserMove?: (bounds: MapBounds) => void;
   className?: string;
 }

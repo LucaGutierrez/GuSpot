@@ -1,9 +1,7 @@
 import type { LatLng } from "@/lib/types";
 import type { GarageInput, OwnerGarage } from "@/lib/data/types";
 import {
-  OTHER_CITY,
   cityOf,
-  demoCities,
   emptyDraft,
   newRule,
   parsePesos,
@@ -25,15 +23,14 @@ export function emptyGarageDraft(): GarageDraft {
 }
 
 export function draftFromGarage(g: OwnerGarage): GarageDraft {
-  const known = demoCities().includes(g.city);
   const hasLocation = g.exactLocation.lat !== 0 || g.exactLocation.lng !== 0;
   return {
     title: g.title,
     description: g.description,
     type: g.type,
     maxVehicle: g.maxVehicle,
-    city: known ? g.city : OTHER_CITY,
-    otherCity: known ? "" : g.city,
+    city: g.city,
+    otherCity: "",
     neighborhood: g.neighborhood,
     approxLocation: g.approxLocation,
     exactAddress: g.address,

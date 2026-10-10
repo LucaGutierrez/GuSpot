@@ -3,8 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { MapView } from "@/components/map/map-view";
-import { searchQuery, searchSpaces, type SearchResult } from "@/lib/search";
+import { searchQuery, searchSpaces, type Area, type SearchResult } from "@/lib/search";
 import { distanceKm, formatDistance } from "@/lib/geo";
+import type { LatLng } from "@/lib/types";
 import { setLastZone } from "@/lib/last-zone";
 import { formatRange } from "@/lib/format";
 import { Button, buttonClass } from "@/components/ui/button";
@@ -17,10 +18,31 @@ import { toMarkers, zoneCenter } from "./map-data";
 import { ResultsSheet } from "./results-sheet";
 import { SearchPanel, type ExploreQuery } from "./search-panel";
 import { SelectedCard } from "./selected-card";
-import { SpaceModeSwitch, spaceHref, useSearchSource } from "./space-source";
+import { SourceBadge, spaceHref, useSearchSource } from "./space-source";
 import { useDriverLocation } from "./use-driver-location";
 import { useInitialZone } from "./use-initial-zone";
 import { useElementHeight, useLockBodyScroll } from "./use-element-height";
+
+/** Rectángulo de ~2 km alrededor de un punto ("cerca tuyo"). */
+function areaAround(c: LatLng): Area {
+  return { north: c.lat + 0.018, south: c.lat - 0.018, east: c.lng + 0.022, west: c.lng - 0.022 };
+}
+
+const LOCATION_KEY = "guspot:ubicacion";
+function locationChoice(): string | null {
+  try {
+    return window.localStorage.getItem(LOCATION_KEY);
+  } catch {
+    return null;
+  }
+}
+function rememberLocationChoice(v: "si" | "no") {
+  try {
+    window.localStorage.setItem(LOCATION_KEY, v);
+  } catch {
+    // Sin almacenamiento: se vuelve a ofrecer la próxima vez.
+  }
+}
 
 /** Si el conductor está más lejos que esto del garage más cercano, no se lo encuadra. */
 const FAR_KM = 50;
@@ -62,9 +84,59 @@ export function Explore() {
   const [locationExplained, setLocationExplained] = useState(false);
   const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
   const [focusCardTick, setFocusCardTick] = useState(0);
+  // "Buscar en esta zona": rectángulo del mapa elegido (vale para la búsqueda actual de la URL).
+  const queryKey = params.toString();
+  const [areaState, setAreaState] = useState<{ key: string; area: Area; near?: boolean } | null>(null);
+  const [movedTo, setMovedTo] = useState<{ key: string; area: Area } | null>(null);
+  const area = areaState?.key === queryKey ? areaState.area : null;
+  const nearMe = !!area && !!areaState?.near;
+  const queryKeyRef = useRef(queryKey);
+  useEffect(() => {
+    queryKeyRef.current = queryKey;
+  }, [queryKey]);
+  const pendingArea = movedTo?.key === queryKey && movedTo.area !== area ? movedTo.area : null;
 
   const refit = useCallback(() => setFitNonce((n) => n + 1), []);
-  const { state: location, request: requestLocation } = useDriverLocation(refit);
+  // Con la ubicación, se busca alrededor de la persona.
+  const onLocated = useCallback(
+    (c: LatLng) => {
+      setAreaState({ key: queryKeyRef.current, area: areaAround(c), near: true });
+      setMovedTo(null);
+      setSelectedId(null);
+      refit();
+    },
+    [refit, setAreaState, setMovedTo, setSelectedId],
+  );
+  const { state: location, request: requestLocation } = useDriverLocation(onLocated);
+
+  // Al abrir el mapa sin una búsqueda explícita: buscar primero cerca de la persona.
+  // Si ya dio permiso, directo; si no, se explica antes de que el navegador pregunte.
+  // Si dijo "Ahora no", no se vuelve a ofrecer solo.
+  useEffect(() => {
+    if (urlZone || locationChoice() === "no") return;
+    let cancelled = false;
+    const permission: Promise<PermissionState | null> =
+      typeof navigator !== "undefined" && navigator.permissions?.query
+        ? navigator.permissions
+            .query({ name: "geolocation" })
+            .then((r) => r.state)
+            .catch(() => null)
+        : Promise.resolve(null);
+    permission.then((state) => {
+      if (cancelled) return;
+      if (state === "granted") {
+        setLocationExplained(true);
+        requestLocation();
+      } else if (state !== "denied") {
+        setAskLocation(true);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Solo al abrir la pantalla.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const userCoords = location.status === "ok" ? location.coords : null;
 
   useLockBodyScroll();
@@ -72,7 +144,7 @@ export function Explore() {
   // --- Resultados -----------------------------------------------------------
   const { mode, spaces, failed } = useSearchSource();
   const real = mode === "reales";
-  const zoneResults = useMemo(() => searchSpaces(search, spaces ?? []), [search, spaces]);
+  const zoneResults = useMemo(() => searchSpaces(search, spaces ?? [], area), [search, spaces, area]);
   const results = useMemo(
     () => zoneResults.filter((r) => matchesFilters(r, filters)),
     [zoneResults, filters],
@@ -80,7 +152,13 @@ export function Explore() {
   const available = useMemo(() => results.filter(isBookable), [results]);
   const unavailable = useMemo(() => results.filter((r) => !isBookable(r)), [results]);
   const markers = useMemo(() => toMarkers(available), [available]);
-  const fallbackCenter = useMemo(() => zoneCenter(zoneResults), [zoneResults]);
+  const fallbackCenter = useMemo(
+    () =>
+      area
+        ? { lat: (area.north + area.south) / 2, lng: (area.east + area.west) / 2 }
+        : zoneCenter(zoneResults),
+    [area, zoneResults],
+  );
 
   const nearestKm = userCoords
     ? Math.min(...zoneResults.map((r) => distanceKm(userCoords, r.space.coords)))
@@ -132,7 +210,17 @@ export function Explore() {
     }
   };
 
+  const searchArea = () => {
+    if (!pendingArea) return;
+    setAreaState({ key: queryKey, area: pendingArea });
+    setSelectedId(null);
+    setListOpen(false);
+  };
+  const zoneLabel = nearMe ? "Cerca tuyo" : area ? "Zona del mapa" : zona;
+
   const runSearch = (q: ExploreQuery) => {
+    setAreaState(null);
+    setMovedTo(null);
     setFilters(q.filters);
     setSelectedId(null);
     setListOpen(false);
@@ -169,11 +257,13 @@ export function Explore() {
   const confirmLocate = () => {
     setLocationExplained(true);
     setAskLocation(false);
+    rememberLocationChoice("si");
     requestLocation();
     locateRef.current?.focus();
   };
   const cancelLocate = () => {
     setAskLocation(false);
+    rememberLocationChoice("no");
     locateRef.current?.focus();
   };
 
@@ -186,7 +276,7 @@ export function Explore() {
     notice = "No pudimos obtener tu ubicación. Podés seguir buscando por zona.";
   } else if (location.status === "unsupported") {
     notice = "Tu navegador no permite compartir la ubicación. Podés seguir buscando por zona.";
-  } else if (userCoords && zoneResults.length > 0 && !userIsNear) {
+  } else if (!area && userCoords && zoneResults.length > 0 && !userIsNear) {
     notice = `Los garages ${real ? "publicados" : "de ejemplo"} están en ${zona}; mostramos esa zona.`;
   }
   const showNotice = notice !== null && notice !== dismissedNotice;
@@ -208,9 +298,10 @@ export function Explore() {
         fitKey={fitKey}
         fallbackCenter={fallbackCenter}
         userLocation={userCoords}
-        includeUserInFit={!!userCoords && userIsNear}
+        includeUserInFit={!!userCoords && (nearMe || userIsNear)}
         padding={padding}
         minFitZoom={12}
+        onUserMove={(b) => setMovedTo({ key: queryKey, area: b })}
       />
 
       {/* Arriba: búsqueda, chips y avisos */}
@@ -224,14 +315,14 @@ export function Explore() {
           onClick={() => setPanelOpen(true)}
           aria-haspopup="dialog"
           aria-expanded={panelOpen}
-          aria-label={`Cambiar búsqueda. Zona: ${zona}. ${periodText}${
+          aria-label={`Cambiar búsqueda. Zona: ${zoneLabel}. ${periodText}${
             filterCount ? `. ${filterCount} ${filterCount === 1 ? "filtro activo" : "filtros activos"}` : ""
           }`}
           className="pointer-events-auto flex w-full items-center gap-3 rounded-full bg-white py-2 pr-2 pl-4 text-left shadow-lg ring-1 ring-ink-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <SearchIcon className="shrink-0 text-brand-600" />
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold text-ink-900">{zona}</span>
+            <span className="block truncate text-sm font-semibold text-ink-900">{zoneLabel}</span>
             <span className="block truncate text-xs text-ink-500">{periodText}</span>
           </span>
           <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink-100 text-ink-700">
@@ -245,7 +336,7 @@ export function Explore() {
         </button>
 
         <div className="flex flex-wrap items-center gap-2">
-          <SpaceModeSwitch />
+          <SourceBadge />
           <span
             className="pointer-events-auto rounded-full bg-white px-2.5 py-0.5 text-xs font-medium text-ink-900 shadow-sm ring-1 ring-ink-200"
             aria-live="polite"
@@ -253,6 +344,18 @@ export function Explore() {
             {spaces === null ? "Cargando…" : `${n} ${n === 1 ? "garage disponible" : "garages disponibles"}`}
           </span>
         </div>
+
+        {pendingArea && (
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={searchArea}
+              className="pointer-events-auto flex items-center gap-2 rounded-full bg-ink-900 px-4 py-2 text-sm font-semibold text-white shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+            >
+              <SearchIcon width={16} height={16} /> Buscar en esta zona
+            </button>
+          </div>
+        )}
 
         <div aria-live="polite" className="empty:hidden">
           {locating && (
@@ -318,8 +421,8 @@ export function Explore() {
             ¿Usamos tu ubicación?
           </h2>
           <p id={`${id}-ubic-texto`} className="mt-1 text-sm text-ink-700">
-            Solo para mostrarte en el mapa y la distancia a cada garage. No se guarda ni se envía:
-            queda en tu teléfono mientras tengas esta pantalla abierta.
+            Para mostrarte primero los garages cerca tuyo. No se guarda ni se envía: queda en tu
+            teléfono mientras tengas esta pantalla abierta.
           </p>
           <div className="mt-3 flex justify-end gap-2">
             <Button variant="secondary" onClick={cancelLocate}>
@@ -356,7 +459,7 @@ export function Explore() {
           <ResultsSheet
             available={available}
             unavailable={unavailable}
-            zona={zona}
+            zona={nearMe ? "tu zona" : area ? "esta zona del mapa" : zona}
             real={real}
             loading={spaces === null}
             failed={failed}
