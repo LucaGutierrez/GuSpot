@@ -130,6 +130,24 @@ function LocationFields({
         </div>
       )}
 
+      <Field
+        id="arrivalInstructions"
+        label="Indicaciones de llegada (privadas)"
+        hint="Cómo entrar y dónde estacionar. Solo las ves vos; más adelante las verá el conductor cuando su reserva esté confirmada."
+        optional
+      >
+        <textarea
+          id="arrivalInstructions"
+          rows={3}
+          maxLength={1000}
+          placeholder="Ej.: Tocá el timbre 3B. Entrá por el portón negro, bajá la rampa al 2º subsuelo, cochera 14 a la izquierda."
+          className={inputClass}
+          value={draft.arrivalInstructions}
+          onChange={(e) => update({ arrivalInstructions: e.target.value })}
+          aria-describedby={describedBy("arrivalInstructions", true)}
+        />
+      </Field>
+
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="neighborhood" label="Barrio" error={errors.neighborhood}>
           <input

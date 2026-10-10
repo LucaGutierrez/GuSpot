@@ -16,11 +16,12 @@ import {
 
 export interface GarageDraft extends Draft {
   exactLocation: LatLng | null;
+  arrivalInstructions: string;
 }
 
 export function emptyGarageDraft(): GarageDraft {
   // Por ahora solo CABA.
-  return { ...emptyDraft(), city: "CABA", exactLocation: null };
+  return { ...emptyDraft(), city: "CABA", exactLocation: null, arrivalInstructions: "" };
 }
 
 export function draftFromGarage(g: OwnerGarage): GarageDraft {
@@ -36,6 +37,7 @@ export function draftFromGarage(g: OwnerGarage): GarageDraft {
     approxLocation: g.approxLocation,
     exactAddress: g.address,
     exactLocation: hasLocation ? g.exactLocation : null,
+    arrivalInstructions: g.arrivalInstructions,
     features: [...g.features],
     conditions: g.accessConditions.length ? [...g.accessConditions] : [""],
     photo: null,
@@ -77,6 +79,7 @@ export function toGarageInput(d: GarageDraft): GarageInput {
     approxLocation: d.approxLocation.trim(),
     address: d.exactAddress.trim(),
     exactLocation: d.exactLocation!,
+    arrivalInstructions: d.arrivalInstructions.trim(),
     type: d.type as GarageInput["type"],
     maxVehicle: d.maxVehicle as GarageInput["maxVehicle"],
     features: d.features,

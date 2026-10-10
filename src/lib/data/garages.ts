@@ -50,6 +50,7 @@ interface PrivateRow {
   address: string;
   exact_lat: number;
   exact_lng: number;
+  arrival_instructions: string;
 }
 
 type OwnerGarageRow = GarageRow & { garage_private: PrivateRow | null };
@@ -59,7 +60,7 @@ const PUBLIC_COLUMNS =
   "features, hourly_price, daily_price, min_hours, availability, access_conditions, public_lat, public_lng, " +
   "created_at, updated_at, garage_photos(path, position)";
 
-const OWNER_COLUMNS = `${PUBLIC_COLUMNS}, garage_private(address, exact_lat, exact_lng)`;
+const OWNER_COLUMNS = `${PUBLIC_COLUMNS}, garage_private(address, exact_lat, exact_lng, arrival_instructions)`;
 
 // --- Utilidades -------------------------------------------------------------
 
@@ -152,6 +153,7 @@ function toOwnerGarage(supabase: SupabaseClient, row: OwnerGarageRow): OwnerGara
     neighborhood: row.neighborhood,
     approxLocation: row.approx_location,
     address: priv?.address ?? "",
+    arrivalInstructions: priv?.arrival_instructions ?? "",
     // Sin fila privada (alta interrumpida): 0,0 indica "sin ubicación"; publicLocation es null.
     exactLocation: priv ? { lat: priv.exact_lat, lng: priv.exact_lng } : { lat: 0, lng: 0 },
     type: row.type,
@@ -190,6 +192,7 @@ export function validateGarageInput(input: GarageInput): string | null {
     if (!HHMM.test(rule.from) || !HHMM.test(rule.to) || rule.from >= rule.to)
       return "Revisá los horarios de disponibilidad: el inicio tiene que ser anterior al fin.";
   }
+  if (input.arrivalInstructions.length > 1000) return "Las indicaciones de llegada pueden tener hasta 1000 caracteres.";
   if (input.accessConditions.length > 20) return "Podés cargar hasta 20 condiciones de acceso.";
   return null;
 }
@@ -217,6 +220,7 @@ function privateFields(input: GarageInput) {
     address: input.address.trim(),
     exact_lat: input.exactLocation.lat,
     exact_lng: input.exactLocation.lng,
+    arrival_instructions: input.arrivalInstructions.trim(),
   };
 }
 

@@ -28,6 +28,8 @@ export interface GarageInput {
   address: string;
   /** PRIVADO: punto exacto elegido en el mapa. El público se calcula en la base (100–200 m). */
   exactLocation: LatLng;
+  /** PRIVADO: cómo entrar y dónde estacionar ("portón negro, 2º subsuelo, cochera 14"). Mismas reglas que `address`. */
+  arrivalInstructions: string;
   type: SpaceType;
   maxVehicle: VehicleSize;
   features: Feature[];
