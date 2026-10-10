@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { MapView } from "@/components/map/map-view";
 import type { SearchResult } from "@/lib/search";
-import { DemoBadge } from "@/components/ui/badge";
+import { SpaceModeSwitch } from "./space-source";
 import { RecenterIcon } from "./icons";
 import { toMarkers, zoneCenter } from "./map-data";
 
@@ -42,9 +42,7 @@ export function ResultsMap({
       />
       <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="pointer-events-auto rounded-full bg-white shadow-sm">
-            <DemoBadge label="Datos de demostración" />
-          </span>
+          <SpaceModeSwitch />
           <span className="pointer-events-auto rounded-full bg-white px-2.5 py-0.5 text-xs font-medium text-ink-900 shadow-sm ring-1 ring-ink-200">
             {n} {n === 1 ? "garage disponible" : "garages disponibles"} en el mapa
           </span>

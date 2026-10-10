@@ -19,6 +19,9 @@ export function ResultsSheet({
   available,
   unavailable,
   zona,
+  real = false,
+  loading = false,
+  failed = false,
   noZoneMatch,
   filtersActive,
   expanded,
@@ -33,6 +36,10 @@ export function ResultsSheet({
   available: SearchResult[];
   unavailable: SearchResult[];
   zona: string;
+  /** Garages reales publicados (no los de ejemplo). */
+  real?: boolean;
+  loading?: boolean;
+  failed?: boolean;
   noZoneMatch: boolean;
   filtersActive: boolean;
   expanded: boolean;
@@ -47,6 +54,41 @@ export function ResultsSheet({
   const id = useId();
   const n = available.length;
   const listId = `${id}-lista`;
+
+  if (loading || failed) {
+    return (
+      <div className="rounded-t-2xl border-t border-ink-200 bg-white p-4 text-sm shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+        {loading ? (
+          <p className="text-ink-500">Cargando garages…</p>
+        ) : (
+          <p className="text-red-800">No pudimos cargar los garages. Revisá tu conexión y probá de nuevo.</p>
+        )}
+      </div>
+    );
+  }
+
+  if (real && n === 0 && unavailable.length === 0) {
+    return (
+      <div className="rounded-t-2xl border-t border-ink-200 bg-white p-4 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+        <p className="font-semibold text-ink-900">
+          {noZoneMatch
+            ? `Todavía no hay garages publicados en «${zona}».`
+            : "Ningún garage coincide con los filtros elegidos."}
+        </p>
+        <p className="mt-1 text-sm text-ink-500">
+          {noZoneMatch ? "Probá con otra zona o mirá los garages de ejemplo." : "Probá ampliar los filtros o cambiar la zona."}
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {filtersActive && (
+            <Button variant="secondary" onClick={onClearFilters}>
+              Limpiar filtros
+            </Button>
+          )}
+          <Button onClick={onChangeSearch}>Cambiar zona u horario</Button>
+        </div>
+      </div>
+    );
+  }
 
   if (n === 0 && unavailable.length === 0) {
     return (
@@ -165,8 +207,9 @@ export function ResultsSheet({
           </section>
         )}
         <p className="mt-4 text-xs text-ink-500">
-          Datos de demostración: espacios, precios y ubicaciones son de ejemplo. Solicitar no
-          reserva ni cobra nada.
+          {real
+            ? "Garages publicados por sus dueños, en una ubicación aproximada (100–200 m). Todavía no se puede reservar ni pagar."
+            : "Datos de demostración: espacios, precios y ubicaciones son de ejemplo. Solicitar no reserva ni cobra nada."}
         </p>
       </div>
     </div>
@@ -190,7 +233,7 @@ function ListItem({
   return (
     <article className="relative flex gap-3 rounded-xl border border-ink-200 bg-white p-2.5 focus-within:ring-2 focus-within:ring-brand-500">
       {photo ? (
-        <SpacePhoto variant={photo.variant} label="Ilustración" className="h-20 w-20 shrink-0 rounded-lg" />
+        <SpacePhoto variant={photo.variant} url={photo.url} label={photo.url ? photo.caption : "Ilustración"} className="h-20 w-20 shrink-0 rounded-lg" />
       ) : (
         <div className="h-20 w-20 shrink-0 rounded-lg bg-ink-100" />
       )}

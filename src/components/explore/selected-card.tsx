@@ -72,7 +72,8 @@ export function SelectedCard({
         {photo ? (
           <SpacePhoto
             variant={photo.variant}
-            label="Ilustración"
+            url={photo.url}
+            label={photo.url ? photo.caption : "Ilustración"}
             className="h-24 w-24 shrink-0 rounded-xl"
           />
         ) : (

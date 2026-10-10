@@ -146,7 +146,7 @@ export function SearchPanel({
             )}
           </fieldset>
           <p className="text-xs text-ink-500">
-            En el mapa ves solo los espacios disponibles en ese horario. Datos de demostración.
+            En el mapa ves solo los espacios disponibles en ese horario, en una ubicación aproximada.
           </p>
         </div>
 

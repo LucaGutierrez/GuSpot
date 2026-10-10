@@ -8,12 +8,14 @@ import { cities } from "@/lib/demo-data";
 import { setLastZone } from "@/lib/last-zone";
 import { formatRange } from "@/lib/format";
 import { DemoBadge } from "@/components/ui/badge";
+import { isBackendConfigured } from "@/lib/supabase/config";
 import { Button } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { DemoNotice } from "@/components/ui/demo-notice";
 import { ResultsMap } from "@/components/explore/results-map";
 import { useInitialZone } from "@/components/explore/use-initial-zone";
 import { useLockBodyScroll } from "@/components/explore/use-element-height";
+import { SpaceModeSwitch, spaceHref, useSearchSource } from "@/components/explore/space-source";
 import { FilterSelects, NO_FILTERS, isBookable, matchesFilters, type ResultFilters } from "./filters";
 import { defaultDay, rangeQuery, rangeToInterval, readRange, withDefaults } from "./range";
 import { fieldInput, fieldLabel } from "./range-fields";
@@ -91,7 +93,9 @@ function Results({
     return () => window.removeEventListener("scroll", keepTop);
   }, []);
 
-  const all = useMemo(() => searchSpaces(search), [search]);
+  const { mode, spaces, failed } = useSearchSource();
+  const real = mode === "reales";
+  const all = useMemo(() => searchSpaces(search, spaces ?? []), [search, spaces]);
   const matching = useMemo(() => all.filter((r) => matchesFilters(r, filters)), [all, filters]);
   const filtered = soloDisponibles ? matching.filter(isBookable) : matching;
   const results =
@@ -186,7 +190,12 @@ function Results({
               {results.length} {results.length === 1 ? "espacio" : "espacios"}
               {search.zona ? ` en «${search.zona}»` : ""}
             </h2>
-            <DemoBadge label="Datos de ejemplo" />
+            {real ? <SpaceModeSwitch /> : (
+              <span className="flex flex-wrap items-center gap-2">
+                <SpaceModeSwitch />
+                {isBackendConfigured && <DemoBadge label="Datos de ejemplo" />}
+              </span>
+            )}
           </div>
           {period && (
             <p className="text-sm text-ink-500">Período: {formatRange(period.start, period.end)}</p>
@@ -197,7 +206,13 @@ function Results({
             y pagada.
           </p>
 
-          {results.length > 0 ? (
+          {spaces === null ? (
+            <p className="text-sm text-ink-500">Cargando garages…</p>
+          ) : failed ? (
+            <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              No pudimos cargar los garages. Revisá tu conexión y probá de nuevo.
+            </p>
+          ) : results.length > 0 ? (
             <ul className="@container space-y-4">
               {results.map((r) => (
                 <li
@@ -214,12 +229,13 @@ function Results({
                     highlighted === r.space.id ? "ring-2 ring-brand-500 ring-offset-2" : ""
                   }`}
                 >
-                  <SpaceCard result={r} href={`/espacios/${r.space.id}/${detailQuery}`} />
+                  <SpaceCard result={r} href={spaceHref(r.space, detailQuery)} />
                 </li>
               ))}
             </ul>
           ) : (
             <EmptyState
+              real={real}
               zona={search.zona}
               noZoneMatch={all.length === 0}
               onClearFilters={filtersActive ? clearFilters : undefined}
@@ -227,10 +243,17 @@ function Results({
             />
           )}
 
-          <DemoNotice>
-            Los espacios, precios y calificaciones son de ejemplo. Reservar es solo una solicitud:
-            el propietario tiene que aceptarla.
-          </DemoNotice>
+          {real ? (
+            <DemoNotice>
+              Estos garages los publicaron sus dueños. Todavía no se puede reservar ni pagar desde
+              GuSpot.
+            </DemoNotice>
+          ) : (
+            <DemoNotice>
+              Los espacios, precios y calificaciones son de ejemplo. Reservar es solo una solicitud:
+              el propietario tiene que aceptarla.
+            </DemoNotice>
+          )}
         </section>
       </div>
 
@@ -239,7 +262,7 @@ function Results({
           results={matching}
           selectedId={highlighted}
           onSelect={onMapSelect}
-          fitKey={`${queryKey}|${search.zona}|${filters.tipo}|${filters.vehiculo}`}
+          fitKey={`${queryKey}|${search.zona}|${filters.tipo}|${filters.vehiculo}|${mode}|${spaces?.length ?? -1}`}
         />
       </div>
     </div>
@@ -247,16 +270,37 @@ function Results({
 }
 
 function EmptyState({
+  real,
   zona,
   noZoneMatch,
   onClearFilters,
   query,
 }: {
+  real: boolean;
   zona: string;
   noZoneMatch: boolean;
   onClearFilters?: () => void;
   query: SearchParams;
 }) {
+  if (real) {
+    return (
+      <Card className="space-y-3 p-6 text-center">
+        <p className="font-semibold text-ink-900">
+          {noZoneMatch
+            ? `Todavía no hay garages publicados en «${zona}».`
+            : "Ningún garage coincide con los filtros elegidos."}
+        </p>
+        <p className="text-sm text-ink-500">
+          {noZoneMatch ? "Probá con otra zona o mirá los garages de ejemplo." : "Probá ampliar los filtros o cambiar el horario."}
+        </p>
+        {!noZoneMatch && onClearFilters && (
+          <Button variant="secondary" onClick={onClearFilters}>
+            Limpiar filtros
+          </Button>
+        )}
+      </Card>
+    );
+  }
   return (
     <Card className="space-y-3 p-6 text-center">
       <p className="font-semibold text-ink-900">

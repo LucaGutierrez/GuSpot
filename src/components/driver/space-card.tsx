@@ -23,6 +23,7 @@ export function SpaceCard({ result, href }: { result: SearchResult; href: string
         <SpacePhoto
           variant={photo.variant}
           label={photo.caption}
+          url={photo.url}
           className="aspect-[16/10] w-full shrink-0 @xl:aspect-auto @xl:w-56"
         />
       ) : (

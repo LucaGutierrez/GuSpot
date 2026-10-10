@@ -34,3 +34,22 @@ El sitio sigue siendo estático: el navegador habla directo con Supabase con la 
 
 La migración se escribió sin un Postgres a mano: hay que correrla una vez y probar con dos
 cuentas que una no ve la dirección ni puede editar los garages de la otra.
+
+## Pantallas de la etapa 1
+
+| Ruta | Qué hace |
+|---|---|
+| `/crear-cuenta/`, `/ingresar/`, `/recuperar/`, `/recuperar/nueva/` | Alta con confirmación por email, ingreso y recuperación de contraseña. Aceptan `?volver=<ruta interna>`. |
+| `/cuenta/` | Nombre, cambio de contraseña, cerrar sesión. |
+| `/mis-garages/` | Garages propios con estado (borrador / publicado / pausado). |
+| `/mis-garages/nuevo/` | Alta (queda en borrador). Punto exacto marcado en el mapa. |
+| `/mis-garages/editar/?id=` | Edición, fotos (hasta 6), publicar/pausar, eliminar. |
+| `/espacio/?id=` | Detalle público de un garage real publicado (sin reservas todavía). |
+
+**Búsqueda (`/`)**: un selector "Garages reales / Ejemplos" elige qué lista se muestra; nunca
+se mezclan. La elección se guarda en el navegador (`localStorage`, clave `guspot:datos`) y
+por defecto se muestran los **ejemplos** (decisión provisoria mientras haya pocos garages
+reales). Sin Supabase configurado solo existen los ejemplos.
+
+**Publicar el sitio**: `npm run deploy:demo` compila con lo que haya en `.env.local`. Con las
+variables de Supabase definidas, el sitio publicado tendrá cuentas y garages reales.

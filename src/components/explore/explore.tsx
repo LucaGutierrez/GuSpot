@@ -7,7 +7,6 @@ import { searchQuery, searchSpaces, type SearchResult } from "@/lib/search";
 import { distanceKm, formatDistance } from "@/lib/geo";
 import { setLastZone } from "@/lib/last-zone";
 import { formatRange } from "@/lib/format";
-import { DemoBadge } from "@/components/ui/badge";
 import { Button, buttonClass } from "@/components/ui/button";
 import { InfoIcon, SearchIcon } from "@/components/ui/icons";
 import { NO_FILTERS, isBookable, matchesFilters, type ResultFilters } from "@/components/driver/filters";
@@ -18,6 +17,7 @@ import { toMarkers, zoneCenter } from "./map-data";
 import { ResultsSheet } from "./results-sheet";
 import { SearchPanel, type ExploreQuery } from "./search-panel";
 import { SelectedCard } from "./selected-card";
+import { SpaceModeSwitch, spaceHref, useSearchSource } from "./space-source";
 import { useDriverLocation } from "./use-driver-location";
 import { useInitialZone } from "./use-initial-zone";
 import { useElementHeight, useLockBodyScroll } from "./use-element-height";
@@ -70,7 +70,9 @@ export function Explore() {
   useLockBodyScroll();
 
   // --- Resultados -----------------------------------------------------------
-  const zoneResults = useMemo(() => searchSpaces(search), [search]);
+  const { mode, spaces, failed } = useSearchSource();
+  const real = mode === "reales";
+  const zoneResults = useMemo(() => searchSpaces(search, spaces ?? []), [search, spaces]);
   const results = useMemo(
     () => zoneResults.filter((r) => matchesFilters(r, filters)),
     [zoneResults, filters],
@@ -84,12 +86,15 @@ export function Explore() {
     ? Math.min(...zoneResults.map((r) => distanceKm(userCoords, r.space.coords)))
     : Infinity;
   const userIsNear = nearestKm <= FAR_KM;
-  const fitKey = `${params.toString()}|${zona}|${filters.tipo}|${filters.vehiculo}|${fitNonce}`;
+  const fitKey = `${params.toString()}|${zona}|${filters.tipo}|${filters.vehiculo}|${fitNonce}|${mode}|${spaces?.length ?? -1}`;
 
   const selectedIndex = available.findIndex((r) => r.space.id === selectedId);
   const selected = selectedIndex >= 0 ? available[selectedIndex] : null;
 
-  const hrefFor = (spaceId: string) => `/espacios/${spaceId}/${rangeQuery(search)}`;
+  const hrefFor = (spaceId: string) => {
+    const r = zoneResults.find((x) => x.space.id === spaceId);
+    return r ? spaceHref(r.space, rangeQuery(search)) : "/";
+  };
   const distanceFor = (r: SearchResult) =>
     userCoords
       ? `${formatDistance(distanceKm(userCoords, r.space.coords))} de vos (ubicación aproximada)`
@@ -182,7 +187,7 @@ export function Explore() {
   } else if (location.status === "unsupported") {
     notice = "Tu navegador no permite compartir la ubicación. Podés seguir buscando por zona.";
   } else if (userCoords && zoneResults.length > 0 && !userIsNear) {
-    notice = `Los garages de ejemplo están en ${zona}; mostramos esa zona.`;
+    notice = `Los garages ${real ? "publicados" : "de ejemplo"} están en ${zona}; mostramos esa zona.`;
   }
   const showNotice = notice !== null && notice !== dismissedNotice;
 
@@ -240,14 +245,12 @@ export function Explore() {
         </button>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="pointer-events-auto rounded-full bg-white shadow-sm">
-            <DemoBadge label="Datos de demostración" />
-          </span>
+          <SpaceModeSwitch />
           <span
             className="pointer-events-auto rounded-full bg-white px-2.5 py-0.5 text-xs font-medium text-ink-900 shadow-sm ring-1 ring-ink-200"
             aria-live="polite"
           >
-            {n} {n === 1 ? "garage disponible" : "garages disponibles"}
+            {spaces === null ? "Cargando…" : `${n} ${n === 1 ? "garage disponible" : "garages disponibles"}`}
           </span>
         </div>
 
@@ -354,6 +357,9 @@ export function Explore() {
             available={available}
             unavailable={unavailable}
             zona={zona}
+            real={real}
+            loading={spaces === null}
+            failed={failed}
             noZoneMatch={zoneResults.length === 0}
             filtersActive={filterCount > 0}
             expanded={listOpen}
