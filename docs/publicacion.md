@@ -22,6 +22,7 @@ Fuentes: documentación oficial consultada el **9 de octubre de 2026**. Los plan
 ## Estado actual (2026-10-09): publicada en Cloudflare Pages
 
 - **URL:** https://guspot-demo.pages.dev — demo con datos de ejemplo, sin reservas persistentes ni pagos reales. Tiene `noindex` (no aparece en buscadores).
+- **Desde 2026-10-10** se publica con Supabase configurado (etapa 1): cuentas y garages reales, más los de ejemplo. Sin reservas ni pagos.
 - **Proyecto:** `guspot-demo`, Cloudflare Pages, plan Free, carga directa con Wrangler (sin integración con Git). Rama de producción: `main`.
 - Solo archivos estáticos (sin Pages Functions): según la documentación oficial, las solicitudes a archivos estáticos son gratuitas e ilimitadas.
 
