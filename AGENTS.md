@@ -88,3 +88,5 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - Servidor: Edge Function `supabase/functions/mercadopago` (publicada con `--no-verify-jwt` por el aviso de pago; controla la sesión adentro). Secretos: `MP_CLIENT_ID`, `MP_CLIENT_SECRET`, `MP_TEST_MODE`. El estado del pago se toma SIEMPRE de la API de Mercado Pago, nunca del aviso.
 - Cliente: `src/lib/data/payments.ts`; pantallas: panel de reserva (tarifa + cargo + total), `/reserva/?id=` (pagar, confirmar al volver, cancelar con/sin devolución), `/mis-garages/cobros/` (conectar cuenta; también recibe la vuelta del OAuth).
 - Pasos para activarlo: `docs/pagos.md`.
+- Aplicación de Mercado Pago "GuSpot" (n.º 5830580745068087), creada 2026-10-11, en MODO PRUEBA (`MP_TEST_MODE=true`). Para guardar el Client Secret: `scripts/set-mp-secret.ps1` (lo lee del portapapeles).
+- **Interruptores de prueba APAGADOS (volver a prender antes del lanzamiento)**: `app_settings.require_phone_verification` y `app_settings.require_identity_verification` (migración 20261011170000; pedido del usuario para probar pagos solo).
