@@ -90,6 +90,18 @@ function env(name: string): string {
 
 const testMode = () => Deno.env.get("MP_TEST_MODE") === "true";
 
+/** Guarda el error en public.function_errors (además del log) para poder diagnosticarlo. */
+async function logError(step: string, detail: unknown) {
+  const text = typeof detail === "string" ? detail : JSON.stringify(detail);
+  console.error("mp", step, text);
+  try {
+    const admin = createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"));
+    await admin.from("function_errors").insert({ fn: "mercadopago", step, detail: text.slice(0, 4000) });
+  } catch {
+    // sin registro
+  }
+}
+
 async function oauthToken(body: Record<string, string>) {
   const res = await fetch(`${MP}/oauth/token`, {
     method: "POST",
@@ -98,7 +110,7 @@ async function oauthToken(body: Record<string, string>) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    console.error("mp oauth", res.status, JSON.stringify(data));
+    await logError("oauth", { status: res.status, body: body.grant_type, data });
     return null;
   }
   return data as {
@@ -151,7 +163,7 @@ async function refund(token: string, paymentId: string, key: string): Promise<bo
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", "X-Idempotency-Key": key },
     body: "{}",
   });
-  if (!res.ok) console.error("mp refund", res.status, await res.text());
+  if (!res.ok) await logError("refund", { status: res.status, body: await res.text() });
   return res.ok;
 }
 
@@ -161,7 +173,7 @@ async function applyPayment(admin: SupabaseClient, b: Booking, p: Payment, token
   const pid = String(p.id);
   if (p.status === "approved") {
     if (Math.abs(p.transaction_amount - pesos(b.total_price + b.service_fee)) > 0.01) {
-      console.error("mp amount mismatch", b.id, p.transaction_amount);
+      await logError("amount_mismatch", { booking: b.id, amount: p.transaction_amount });
       return;
     }
     if (b.status === "pendiente_pago") {
@@ -203,7 +215,7 @@ async function syncBooking(admin: SupabaseClient, b: Booking): Promise<void> {
     { headers: { Authorization: `Bearer ${token}` } },
   );
   if (!res.ok) {
-    console.error("mp search", res.status, await res.text());
+    await logError("search", { status: res.status, body: await res.text() });
     return;
   }
   const { results } = (await res.json()) as { results: Payment[] };
@@ -289,7 +301,7 @@ Deno.serve(async (req) => {
       connected_at: new Date().toISOString(),
     });
     if (error) {
-      console.error("mp save account", error.message);
+      await logError("save_account", error.message);
       return json({ error: "provider" }, 502);
     }
     // El trigger de inserción solo corre la primera vez: al reconectar, se marca igual.
@@ -356,7 +368,7 @@ Deno.serve(async (req) => {
     });
     const pref = await res.json().catch(() => ({}));
     if (!res.ok) {
-      console.error("mp preference", res.status, JSON.stringify(pref));
+      await logError("preference", { status: res.status, pref });
       return json({ error: "provider" }, 502);
     }
     await admin.from("bookings").update({ mp_preference_id: pref.id }).eq("id", b.id);
