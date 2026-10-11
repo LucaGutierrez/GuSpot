@@ -126,7 +126,7 @@ function BookingDetail({
           </div>
           <div>
             <dt className="text-ink-500">Vehículo</dt>
-            <dd className="font-medium text-ink-900">{VEHICLE_LABEL[b.vehicle]}</dd>
+            <dd className="font-medium text-ink-900">{b.car || VEHICLE_LABEL[b.vehicle]}</dd>
           </div>
           <div>
             <dt className="text-ink-500">Patente</dt>
@@ -251,7 +251,7 @@ function BookingRow({ b }: { b: RealBooking }) {
         <p className="text-sm text-ink-700">{formatRange(b.start, b.end)}</p>
         <p className="text-xs text-ink-500">
           {b.role === "owner"
-            ? `${b.driverName || "Conductor"} · ${VEHICLE_LABEL[b.vehicle]}${b.plate ? ` · ${b.plate}` : ""}`
+            ? `${b.driverName || "Conductor"} · ${b.car || VEHICLE_LABEL[b.vehicle]}${b.plate ? ` · ${b.plate}` : ""}`
             : b.garageNeighborhood}
         </p>
       </Link>

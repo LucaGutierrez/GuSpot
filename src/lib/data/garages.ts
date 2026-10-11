@@ -87,6 +87,11 @@ function toDataError(error: Pick<PostgrestError, "code" | "message"> | { message
       "Para publicar hacen falta la ubicación en el mapa, al menos una franja de disponibilidad y un precio por hora.",
       "validation",
     );
+  if (message.includes("owner_identity_required"))
+    return new DataError(
+      "Para publicar, primero verificá tu identidad (datos personales, fotos del DNI y selfie) en Tu cuenta → Verificación.",
+      "validation",
+    );
   if (message.includes("photo_limit"))
     return new DataError(`Podés subir hasta ${PHOTO_LIMITS.maxPerGarage} fotos por garage.`, "validation");
   if (code === "23503")

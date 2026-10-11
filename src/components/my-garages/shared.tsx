@@ -111,7 +111,19 @@ export function StatusControl({
           {busy ? "Guardando…" : label}
         </Button>
       </div>
-      {error && <ErrorBox>{error}</ErrorBox>}
+      {error && (
+        <ErrorBox>
+          {error}
+          {error.includes("verificá tu identidad") && (
+            <>
+              {" "}
+              <a href="/verificacion/" className="font-semibold underline">
+                Ir a verificación
+              </a>
+            </>
+          )}
+        </ErrorBox>
+      )}
     </div>
   );
 }

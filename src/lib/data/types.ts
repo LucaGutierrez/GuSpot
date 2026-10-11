@@ -127,6 +127,8 @@ export interface RealBooking {
   paymentStatus: PaymentStatus;
   vehicle: VehicleSize;
   plate: string;
+  /** "Fiat Cronos Gris" (copia del vehículo al reservar). */
+  car: string;
   hours: number;
   total: Centavos;
   createdAt: string; // ISO
@@ -140,3 +142,36 @@ export interface BookingAccess {
   arrivalInstructions: string;
   location: LatLng;
 }
+
+// --- Perfil, identidad y vehículos (src/lib/data/profile.ts) ----------------
+
+export interface Profile {
+  firstName: string;
+  lastName: string;
+  /** Solo números, 7 u 8 dígitos. */
+  dni: string;
+  birthDate: string; // YYYY-MM-DD o ""
+  phone: string;
+  licenseNumber: string;
+  licenseCategory: string;
+  licenseExpiry: string; // YYYY-MM-DD o ""
+  /** Lo cambia solo el sistema de verificación. */
+  identityStatus: "sin_verificar" | "en_revision" | "verificada" | "rechazada";
+  phoneVerified: boolean;
+}
+
+/** Fotos privadas (bucket identity-docs). */
+export type IdentityDoc = "dni-frente" | "dni-dorso" | "selfie" | "licencia-frente" | "licencia-dorso";
+
+export interface Vehicle {
+  id: string;
+  brand: string;
+  model: string;
+  color: string;
+  /** Mayúsculas y números, sin espacios (AB123CD / ABC123). */
+  plate: string;
+  size: VehicleSize;
+}
+
+/** Lo que falta para reservar ("conductor") o publicar ("propietario"). */
+export type Requirement = "datos_personales" | "dni_fotos" | "selfie" | "licencia" | "licencia_vencida" | "vehiculo";

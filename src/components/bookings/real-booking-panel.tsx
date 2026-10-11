@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useId, useState } from "react";
-import type { Space, VehicleSize } from "@/lib/types";
-import { VEHICLE_LABEL, formatARS, formatRange } from "@/lib/format";
+import { useEffect, useId, useState } from "react";
+import type { Space } from "@/lib/types";
+import { formatARS, formatRange } from "@/lib/format";
 import { useAuth } from "@/lib/auth/auth-provider";
-import { DataError } from "@/lib/data/types";
+import { DataError, type Requirement, type Vehicle } from "@/lib/data/types";
 import { createBooking } from "@/lib/data/bookings";
+import { REQUIREMENT_LABEL, listMyVehicles, myMissingRequirements } from "@/lib/data/profile";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { InfoIcon } from "@/components/ui/icons";
@@ -16,7 +17,28 @@ import { PriceBreakdown, rateSummary } from "@/components/driver/price-breakdown
 import { readRange } from "@/components/driver/range";
 import { RangeFields, fieldInput, fieldLabel } from "@/components/driver/range-fields";
 import { useRange } from "@/components/driver/use-range";
-import { VEHICLE_ORDER, fitsVehicle } from "@/components/driver/vehicles";
+import { fitsVehicle } from "@/components/driver/vehicles";
+
+type DriverState =
+  | { state: "loading" }
+  | { state: "error" }
+  | { state: "ready"; missing: Requirement[]; vehicles: Vehicle[] };
+
+/** Requisitos y vehículos del conductor (solo con sesión). */
+function useDriver(enabled: boolean): DriverState {
+  const [data, setData] = useState<DriverState>({ state: "loading" });
+  useEffect(() => {
+    if (!enabled) return;
+    let cancelled = false;
+    Promise.all([myMissingRequirements("conductor"), listMyVehicles()])
+      .then(([missing, vehicles]) => !cancelled && setData({ state: "ready", missing, vehicles }))
+      .catch(() => !cancelled && setData({ state: "error" }));
+    return () => {
+      cancelled = true;
+    };
+  }, [enabled]);
+  return data;
+}
 
 export const TEST_PAYMENT_NOTE =
   "Versión de prueba: la reserva se confirma al instante y no se cobra nada. Pronto se pagará al reservar con tarjeta o Mercado Pago.";
@@ -33,17 +55,19 @@ export function RealBookingPanel({ space }: { space: Space }) {
   const auth = useAuth();
   const { value, setValue, now } = useRange(readRange(params));
   const check = checkBooking(space, value, now);
-  const vehicles = VEHICLE_ORDER.filter((v) => fitsVehicle(space.maxVehicle, v));
-  const [vehicle, setVehicle] = useState<VehicleSize>(vehicles.includes("auto_mediano") ? "auto_mediano" : vehicles[0]);
-  const [plate, setPlate] = useState("");
+  const driver = useDriver(auth.status === "signed-in");
+  const fitting = driver.state === "ready" ? driver.vehicles.filter((v) => fitsVehicle(space.maxVehicle, v.size)) : [];
+  const [chosen, setChosen] = useState<string | null>(null);
+  const vehicleId = chosen && fitting.some((v) => v.id === chosen) ? chosen : (fitting[0]?.id ?? null);
+  const verified = driver.state === "ready" && driver.missing.length === 0;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const ready = check.status.ok && check.quote.ok && !!check.interval;
+  const ready = check.status.ok && check.quote.ok && !!check.interval && verified && !!vehicleId;
   const here = typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/";
 
   async function onReserve() {
-    if (!check.interval) return;
+    if (!check.interval || !vehicleId) return;
     setBusy(true);
     setError(null);
     try {
@@ -51,8 +75,7 @@ export function RealBookingPanel({ space }: { space: Space }) {
         garageId: space.id,
         start: check.interval.start,
         end: check.interval.end,
-        vehicle,
-        plate,
+        vehicleId,
       });
       router.push(`/reserva/?id=${bookingId}&nueva=1`);
     } catch (err) {
@@ -82,38 +105,49 @@ export function RealBookingPanel({ space }: { space: Space }) {
           <RangeFields value={value} onChange={setValue} idPrefix={id} />
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <div>
+        {auth.status === "signed-in" && driver.state === "ready" && driver.missing.length > 0 && (
+          <div className="mt-4 rounded-xl border border-accent-300 bg-accent-100 p-3 text-sm text-ink-900">
+            <p className="font-semibold">Antes de tu primera reserva, verificá tu identidad:</p>
+            <ul className="mt-1 list-disc pl-5">
+              {driver.missing.map((m) => (
+                <li key={m}>{REQUIREMENT_LABEL[m]}</li>
+              ))}
+            </ul>
+            <ButtonLink href={`/verificacion/?volver=${encodeURIComponent(here)}`} className="mt-3 w-full">
+              Completar verificación
+            </ButtonLink>
+          </div>
+        )}
+
+        {verified && (
+          <div className="mt-4">
             <label htmlFor={`${id}-vehiculo`} className={fieldLabel}>
               Tu vehículo
             </label>
-            <select
-              id={`${id}-vehiculo`}
-              className={fieldInput}
-              value={vehicle}
-              onChange={(e) => setVehicle(e.target.value as VehicleSize)}
-            >
-              {vehicles.map((v) => (
-                <option key={v} value={v}>
-                  {VEHICLE_LABEL[v]}
-                </option>
-              ))}
-            </select>
+            {fitting.length > 0 ? (
+              <select
+                id={`${id}-vehiculo`}
+                className={fieldInput}
+                value={vehicleId ?? ""}
+                onChange={(e) => setChosen(e.target.value)}
+              >
+                {fitting.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.brand} {v.model} · {v.plate}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="mt-1 text-sm text-ink-700">
+                Ninguno de tus vehículos entra en este garage.{" "}
+                <a href="/verificacion/#vehiculos" className="font-semibold text-brand-700 hover:underline">
+                  Agregá otro
+                </a>
+                .
+              </p>
+            )}
           </div>
-          <div>
-            <label htmlFor={`${id}-patente`} className={fieldLabel}>
-              Patente <span className="font-normal text-ink-500">(opcional)</span>
-            </label>
-            <input
-              id={`${id}-patente`}
-              className={`${fieldInput} uppercase`}
-              value={plate}
-              maxLength={12}
-              autoComplete="off"
-              onChange={(e) => setPlate(e.target.value)}
-            />
-          </div>
-        </div>
+        )}
 
         <div className="mt-4 space-y-3" aria-live="polite">
           <AvailabilityBadge status={check.status} />

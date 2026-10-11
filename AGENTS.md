@@ -62,3 +62,9 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - Base: `supabase/migrations/20261010140000_bookings.sql`. Todo por funciones: `create_booking` (valida horario, superposición —constraint de exclusión— y calcula el precio igual que `src/lib/pricing.ts`), `cancel_booking`, `busy_periods` (ocupación pública, sin datos personales), `booking_access` (dirección + indicaciones + punto exacto solo para el conductor de una reserva confirmada).
 - Cliente: `src/lib/data/bookings.ts`; pantallas en `src/components/bookings/**`, rutas `/reserva/?id=` y `/mis-reservas/` (con Supabase muestra las reales). El dueño ve "Reservas de tus garages" en `/mis-garages/`.
 - Avisos por email: pendientes (requieren un proveedor de email, p. ej. Resend).
+
+## Seguridad e identidad (2026-10-10, pedido del usuario: "los mismos métodos que DiDi/Uber")
+- Para **reservar**: datos personales (18+), fotos del DNI (frente/dorso), selfie, licencia vigente (datos + fotos) y al menos un vehículo. Para **publicar**: datos personales, DNI y selfie. Lo controla la base (`missing_requirements`, migración 20261010150000).
+- Fotos en el bucket PRIVADO `identity-docs` ("<user_id>/dni-frente|dni-dorso|selfie|licencia-frente|licencia-dorso"); nunca se muestran a otros usuarios. Pantalla: `/verificacion/` (`src/components/account/verification.tsx`), datos en `src/lib/data/profile.ts`.
+- `profiles.identity_status` y `phone_verified` los cambia solo el sistema (sin permiso de escritura del usuario). Pendiente: comparación automática cara-DNI con prueba de vida (Didit), SMS, código de llegada, calificaciones. Aspectos legales (Ley 25.326): a confirmar con un abogado, no inventar.
+- En cada reserva el dueño ve nombre, marca, modelo, color y patente (copia en `bookings`).

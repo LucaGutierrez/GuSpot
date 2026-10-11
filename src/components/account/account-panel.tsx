@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, Container, PageHeader } from "@/components/ui/card";
-import { ParkingIcon } from "@/components/ui/icons";
+import { ParkingIcon, ShieldIcon } from "@/components/ui/icons";
 import { useAuth, type AuthUser } from "@/lib/auth/auth-provider";
 import {
   PASSWORD_MIN_LENGTH,
@@ -67,6 +67,21 @@ function SignedIn({ user }: { user: AuthUser }) {
           </div>
         </div>
         <ButtonLink href="/mis-garages/">Ir a mis garages</ButtonLink>
+      </Card>
+
+      <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
+            <ShieldIcon />
+          </span>
+          <div>
+            <p className="font-semibold text-ink-900">Verificación de identidad</p>
+            <p className="text-sm text-ink-500">DNI, selfie, licencia y vehículos. Necesaria para reservar y publicar.</p>
+          </div>
+        </div>
+        <ButtonLink href="/verificacion/" variant="secondary">
+          Verificarme
+        </ButtonLink>
       </Card>
 
       <NameForm user={user} />

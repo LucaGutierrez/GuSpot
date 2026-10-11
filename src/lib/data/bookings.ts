@@ -34,6 +34,9 @@ const MESSAGES: Record<string, string> = {
   busy: "Alguien reservó ese horario recién. Elegí otro.",
   not_active: "Esta reserva ya estaba cancelada.",
   started: "La reserva ya empezó: no se puede cancelar desde la app.",
+  driver_profile_incomplete: "Antes de reservar completá tu verificación (datos, DNI, selfie, licencia y vehículo).",
+  vehicle_not_found: "Elegí uno de tus vehículos.",
+  vehicle_too_big: "Ese vehículo no entra en este garage.",
 };
 
 function toDataError(error: { message?: string; code?: string }): DataError {
@@ -63,6 +66,9 @@ interface BookingRow {
   payment_status: RealBooking["paymentStatus"];
   vehicle: VehicleSize;
   plate: string;
+  car_brand: string;
+  car_model: string;
+  car_color: string;
   hours: number;
   total_price: number;
   created_at: string;
@@ -70,7 +76,7 @@ interface BookingRow {
 
 const COLUMNS =
   "id, garage_id, driver_id, driver_name, garage_title, garage_neighborhood, start_at, end_at, status, " +
-  "payment_status, vehicle, plate, hours, total_price, created_at";
+  "payment_status, vehicle, plate, car_brand, car_model, car_color, hours, total_price, created_at";
 
 function toBooking(row: BookingRow, me: string): RealBooking {
   return {
@@ -85,6 +91,7 @@ function toBooking(row: BookingRow, me: string): RealBooking {
     paymentStatus: row.payment_status,
     vehicle: row.vehicle,
     plate: row.plate,
+    car: [row.car_brand, row.car_model, row.car_color].filter(Boolean).join(" "),
     hours: row.hours,
     total: row.total_price,
     createdAt: row.created_at,
@@ -97,8 +104,7 @@ export async function createBooking(input: {
   garageId: string;
   start: LocalDateTime;
   end: LocalDateTime;
-  vehicle: VehicleSize;
-  plate: string;
+  vehicleId: string;
 }): Promise<string> {
   const supabase = db();
   await requireUserId(supabase);
@@ -106,8 +112,7 @@ export async function createBooking(input: {
     p_garage_id: input.garageId,
     p_start: input.start,
     p_end: input.end,
-    p_vehicle: input.vehicle,
-    p_plate: input.plate,
+    p_vehicle_id: input.vehicleId,
   });
   if (error) throw toDataError(error);
   return data as string;
