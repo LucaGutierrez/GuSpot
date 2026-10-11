@@ -14,6 +14,7 @@ import { Button, ButtonLink, buttonClass } from "@/components/ui/button";
 import { Card, Container } from "@/components/ui/card";
 import { ChevronLeftIcon, KeyIcon, PinIcon } from "@/components/ui/icons";
 import { MapView } from "@/components/map/map-view";
+import { NavigateButtons } from "@/components/garage/navigate-buttons";
 import { fitsVehicle } from "@/components/driver/vehicles";
 import { useNow } from "@/components/driver/use-now";
 import { ErrorBox, RequireSignIn, SuccessBox } from "@/components/my-garages/shared";
@@ -297,14 +298,7 @@ function ArrivalLoader({ id }: { id: string }) {
               userLocation={null}
             />
           </div>
-          <a
-            href={`https://www.google.com/maps/dir/?api=1&destination=${access.location.lat},${access.location.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={buttonClass("primary", "lg")}
-          >
-            Cómo llegar (Google Maps) ↗
-          </a>
+          <NavigateButtons to={access.location} />
           {garage?.commercial?.contactPhone && (
             <a href={`tel:${garage.commercial.contactPhone}`} className={buttonClass("secondary", "lg")}>
               Llamar al garage

@@ -16,6 +16,7 @@ import { Card, Container, PageHeader } from "@/components/ui/card";
 import { BookingStatusBadge, PaymentStatusBadge } from "@/components/ui/badge";
 import { ChevronLeftIcon, KeyIcon, PinIcon } from "@/components/ui/icons";
 import { MapView } from "@/components/map/map-view";
+import { NavigateButtons } from "@/components/garage/navigate-buttons";
 import { EmptyState } from "@/components/owner/section";
 import { ErrorBox, RequireSignIn, SuccessBox } from "@/components/my-garages/shared";
 import { paymentNote, usePaymentSettings } from "./real-booking-panel";
@@ -24,9 +25,6 @@ type Load<T> = { state: "loading" } | { state: "error"; message: string } | { st
 
 const errText = (err: unknown) => (err instanceof DataError ? err.message : "No pudimos cargar los datos.");
 
-function directionsUrl(p: { lat: number; lng: number }) {
-  return `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
-}
 
 // ---------------------------------------------------------------- /reserva/?id=
 
@@ -240,14 +238,7 @@ function BookingDetail({
               userLocation={null}
             />
           </div>
-          <a
-            href={directionsUrl(access.location)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-brand-600 px-6 font-semibold text-white hover:bg-brand-700"
-          >
-            Abrir en Google Maps ↗
-          </a>
+          <NavigateButtons to={access.location} />
         </Card>
       )}
 
