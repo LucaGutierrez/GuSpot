@@ -19,10 +19,15 @@ export const metadata: Metadata = {
   description:
     "GuSpot: encontrá garages cerca tuyo en CABA con lugares libres en vivo. Avisá que vas o reservá y pagá desde el celular.",
   robots: { index: false, follow: false },
+  applicationName: "GuSpot",
+  // Abierta desde la pantalla de inicio del iPhone: sin la barra de Safari.
+  appleWebApp: { capable: true, title: "GuSpot", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
   themeColor: "#2453e0",
+  // Usa toda la pantalla (los bordes con "notch" y la barra de inicio se respetan con safe-area).
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
