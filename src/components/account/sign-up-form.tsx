@@ -202,8 +202,9 @@ export function SignUpForm() {
             {busy ? "Creando cuenta…" : "Crear cuenta"}
           </Button>
           <p className="text-xs text-ink-500">
-            Después vas a verificar tu identidad con tu DNI y un reconocimiento facial. Los términos de uso y la
-            política de privacidad están a definir.
+            Al crear tu cuenta aceptás los <TextLink href="/terminos/">Términos y condiciones</TextLink> y la{" "}
+            <TextLink href="/privacidad/">Política de privacidad</TextLink>. Después vas a verificar tu identidad con tu
+            DNI y un reconocimiento facial.
           </p>
           <p className="text-center text-sm text-ink-500">
             ¿Ya tenés cuenta? <TextLink href="/ingresar/">Ingresá</TextLink>

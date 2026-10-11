@@ -63,6 +63,9 @@ function Logo() {
       <span className="text-xl">
         Gu<span className="text-brand-600">Spot</span>
       </span>
+      <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-brand-700 uppercase">
+        Beta
+      </span>
     </Link>
   );
 }

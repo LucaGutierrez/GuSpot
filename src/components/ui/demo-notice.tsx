@@ -2,14 +2,14 @@ import type { ReactNode } from "react";
 import { InfoIcon } from "./icons";
 import { isBackendConfigured } from "@/lib/supabase/config";
 
-/** Franja fija en todas las páginas: deja claro que es una versión en desarrollo. */
+/** Franja fija en todas las páginas: GuSpot está en beta (funciona, en prueba). */
 export function DemoBanner() {
   return (
     <div data-app-chrome className="bg-ink-900 px-4 py-2 text-center text-xs text-white sm:text-sm">
       {isBackendConfigured ? (
         <>
-          <strong className="font-semibold text-accent-300">Versión en desarrollo.</strong> La disponibilidad la
-          informa cada garaje. Los pagos son reales: probá con montos chicos.
+          <strong className="font-semibold text-accent-300">GuSpot Beta</strong> · Ya funciona en CABA y estamos
+          sumando garajes. Los pagos con Mercado Pago son reales.
         </>
       ) : (
         <>
