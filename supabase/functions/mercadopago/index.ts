@@ -7,7 +7,9 @@
 // Secretos a configurar en Supabase (Edge Functions → Secrets):
 //   MP_CLIENT_ID      número de la aplicación de Mercado Pago
 //   MP_CLIENT_SECRET  clave secreta de la aplicación
-//   MP_TEST_MODE      "true" mientras se prueba (tokens y pagos de prueba)
+//   MP_TEST_MODE      "true" mientras se prueba. Las pruebas se hacen con CUENTAS DE PRUEBA de
+//                     Mercado Pago (vendedor = garage, comprador = conductor): ellas hacen que la
+//                     plata sea ficticia. No se usan los tokens "TEST-" ni el sandbox viejo, que fallan.
 // SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY ya existen en toda Edge Function.
 //
 // Se publica SIN verificación de JWT (--no-verify-jwt) porque Mercado Pago
@@ -273,7 +275,7 @@ Deno.serve(async (req) => {
       grant_type: "authorization_code",
       code: body.code,
       redirect_uri: body.redirect!,
-      test_token: testMode() ? "true" : "false",
+      test_token: "false",
     });
     if (!t) return json({ error: "connect_failed" }, 400);
     const { error } = await admin.from("mp_accounts").upsert({
@@ -358,7 +360,7 @@ Deno.serve(async (req) => {
       return json({ error: "provider" }, 502);
     }
     await admin.from("bookings").update({ mp_preference_id: pref.id }).eq("id", b.id);
-    return json({ url: (testMode() && pref.sandbox_init_point) || pref.init_point });
+    return json({ url: pref.init_point });
   }
 
   if (body.action === "sync") {
