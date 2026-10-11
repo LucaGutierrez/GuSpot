@@ -186,7 +186,7 @@ function metersBetween(a: LatLng, b: LatLng): number {
 }
 
 /**
- * Sugerencias mientras se escribe, como en las apps de movilidad: varias
+ * Sugerencias mientras se escribe: varias
  * opciones con su barrio para tocar la correcta. Primero las que tienen el
  * punto exacto del edificio, después las calculadas por la altura y, si
  * todavía no se escribió la altura, las calles por barrio. Nunca lanza por

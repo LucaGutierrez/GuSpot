@@ -223,7 +223,7 @@ export function MapView(props: MapViewProps) {
           zoom: EMPTY_ZOOM,
           minZoom: 3,
           maxZoom: 19,
-          // Sin rotación ni inclinación: mapa plano, como en apps de movilidad.
+          // Sin rotación ni inclinación: mapa plano.
           dragRotate: false,
           pitchWithRotate: false,
           touchPitch: false,

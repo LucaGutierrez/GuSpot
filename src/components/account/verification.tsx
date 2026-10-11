@@ -73,7 +73,7 @@ export function VerificationPage() {
     <Container className="max-w-3xl pb-16">
       <PageHeader
         title="Verificación de identidad"
-        subtitle="Como en DiDi o Uber: para reservar o publicar necesitamos saber quién sos. Tus documentos son privados."
+        subtitle="Para reservar o publicar necesitamos saber quién sos. Tus documentos son privados."
       />
       <RequireSignIn back="/verificacion/">{() => <Verification back={back} returning={returning} />}</RequireSignIn>
     </Container>
@@ -262,7 +262,7 @@ function IdentitySection({
   return (
     <Section
       title="Verificá tu identidad"
-      subtitle="Como en DiDi o Uber: sacás fotos de tu DNI y hacés un reconocimiento facial con la cámara para confirmar que sos vos. Lo hace Didit, un servicio especializado."
+      subtitle="Sacás fotos de tu DNI y hacés un reconocimiento facial con la cámara para confirmar que sos vos."
       done={status === "verificada"}
     >
       <p className={`text-sm ${status === "verificada" ? "text-emerald-800" : status === "rechazada" ? "text-red-800" : "text-ink-700"}`}>
