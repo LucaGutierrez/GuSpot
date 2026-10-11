@@ -55,7 +55,7 @@ scripts/copy-map-worker.mjs  copia el worker de MapLibre (predev/prebuild)
 
 ## 2.1 Módulo de mapa
 
-- **Biblioteca:** MapLibre GL JS (`maplibre-gl`, BSD-3). **Mapas base:** instancia pública de OpenFreeMap, estilo positron (solo demo, sin SLA). Detalle, atribución y alternativas: `mapas.md`.
+- **Biblioteca:** MapLibre GL JS (`maplibre-gl`, BSD-3). **Mapas base:** instancia pública de OpenFreeMap, estilo liberty (antes positron) (solo demo, sin SLA). Detalle, atribución y alternativas: `mapas.md`.
 - **Separación:** `src/components/map/` encapsula MapLibre (estilo, atribución, marcadores, punto del conductor). `src/components/explore/` arma las pantallas (búsqueda, lista, tarjeta del espacio seleccionado) y solo conoce el contrato.
 - **Contrato** (`src/components/map/types.ts`, lo mantiene el coordinador; cambiarlo se acuerda antes):
   - `MapMarker { id, position: LatLng, label, ariaLabel }`

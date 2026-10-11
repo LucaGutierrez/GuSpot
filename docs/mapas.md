@@ -8,7 +8,7 @@ Convención: **"Fuente:"** es lo que dice la página (citado o resumido); **"Int
 | Pieza | Elección | Licencia / costo |
 |---|---|---|
 | Biblioteca de mapa | MapLibre GL JS v6 (npm `maplibre-gl`, hoy `^6.13.0`) | BSD-3-Clause (código abierto, uso comercial permitido) |
-| Mapas base (tiles vectoriales + estilo) | Instancia pública de **OpenFreeMap**, estilo *positron*: `https://tiles.openfreemap.org/styles/positron` | Gratis, sin clave ni registro |
+| Mapas base (tiles vectoriales + estilo) | Instancia pública de **OpenFreeMap**, estilo *liberty* (antes *positron*): `https://tiles.openfreemap.org/styles/liberty` | Gratis, sin clave ni registro |
 | Datos del mapa | OpenStreetMap (vía OpenMapTiles) | ODbL, requiere atribución |
 | Búsqueda | Por ciudad/barrio sobre el catálogo propio (`src/lib/search.ts`) | Sin geocodificación |
 
