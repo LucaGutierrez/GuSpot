@@ -17,9 +17,12 @@ export function rateSummary(space: Pick<Space, "hourlyPrice" | "dailyPrice">): s
 export function PriceBreakdown({
   space,
   quote,
+  totalLabel = "Total estimado",
 }: {
   space: Pick<Space, "hourlyPrice" | "dailyPrice">;
   quote: OkQuote;
+  /** Texto de la última fila (p. ej. "Tarifa del garage" si después se suma un cargo). */
+  totalLabel?: string;
 }) {
   const daily = space.dailyPrice ?? space.hourlyPrice * 24;
   const remainder = quote.remainingHours * space.hourlyPrice;
@@ -46,7 +49,9 @@ export function PriceBreakdown({
         </div>
       )}
       <div className="flex justify-between gap-3 border-t border-ink-200 pt-2 font-semibold">
-        <dt className="text-ink-900">Total estimado ({quote.hours} h)</dt>
+        <dt className="text-ink-900">
+          {totalLabel} ({quote.hours} h)
+        </dt>
         <dd className="text-ink-900">{formatARS(quote.total)}</dd>
       </div>
     </dl>

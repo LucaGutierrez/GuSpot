@@ -37,6 +37,9 @@ const MESSAGES: Record<string, string> = {
   driver_profile_incomplete: "Antes de reservar completá tu verificación (datos, DNI, selfie, licencia y vehículo).",
   vehicle_not_found: "Elegí uno de tus vehículos.",
   vehicle_too_big: "Ese vehículo no entra en este garage.",
+  not_reservable: "Este garage no está tomando reservas en este momento.",
+  no_online_payments: "Este garage todavía no cobra reservas online.",
+  paid_booking: "Esta reserva está pagada: cancelala desde su detalle.",
 };
 
 function toDataError(error: { message?: string; code?: string }): DataError {
@@ -71,12 +74,15 @@ interface BookingRow {
   car_color: string;
   hours: number;
   total_price: number;
+  service_fee: number;
+  hold_until: string | null;
+  paid_at: string | null;
   created_at: string;
 }
 
 const COLUMNS =
   "id, garage_id, driver_id, driver_name, garage_title, garage_neighborhood, start_at, end_at, status, " +
-  "payment_status, vehicle, plate, car_brand, car_model, car_color, hours, total_price, created_at";
+  "payment_status, vehicle, plate, car_brand, car_model, car_color, hours, total_price, service_fee, hold_until, paid_at, created_at";
 
 function toBooking(row: BookingRow, me: string): RealBooking {
   return {
@@ -94,12 +100,15 @@ function toBooking(row: BookingRow, me: string): RealBooking {
     car: [row.car_brand, row.car_model, row.car_color].filter(Boolean).join(" "),
     hours: row.hours,
     total: row.total_price,
+    serviceFee: row.service_fee,
+    holdUntil: row.hold_until,
+    paidAt: row.paid_at,
     createdAt: row.created_at,
     role: row.driver_id === me ? "driver" : "owner",
   };
 }
 
-/** Reserva con confirmación automática. Devuelve el id. */
+/** Crea la reserva esperando el pago (guarda el lugar unos minutos). Devuelve el id. */
 export async function createBooking(input: {
   garageId: string;
   start: LocalDateTime;

@@ -80,3 +80,11 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - Marcadores de garage: "Nombre · $X/h" con punto de disponibilidad (`MapMarker.variant = "garage"`, `tone`).
 - Requisitos: conductor = datos + identidad + licencia + vehículo (también para "Voy a este"); quien publica = datos + identidad + **celular verificado** (`profiles.phone_verified`, código por SMS con Didit). La exigencia del celular se prende/apaga con `app_settings.require_phone_verification` (migración 20261011150000); **apagada desde 2026-10-11** hasta que se cargue saldo en Didit.
 - Precio por demanda y reseñas: NO implementados (sin datos de demanda ni forma de verificar visitas todavía).
+
+## Pagos con Mercado Pago (2026-10-11)
+- Decisiones del usuario: la plata va **directo al garage** (modelo marketplace: cada garage conecta su cuenta por OAuth y Mercado Pago divide el pago; GuSpot cobra `marketplace_fee`). La comisión es un **cargo de servicio que paga el conductor** encima de la tarifa (10 %, configurable). **Devolución total hasta 10 min después de pagar**; después se puede cancelar pero sin devolución (se avisa claro).
+- Configuración en `app_settings` (`service_fee_percent`, `refund_window_minutes`, `payment_hold_minutes`); la página la lee con `payment_settings()`.
+- Base: migración `20261011160000_mercadopago.sql`. `create_booking` deja la reserva `pendiente_pago` y guarda el lugar `payment_hold_minutes` (`hold_until`); solo garages con Mercado Pago conectado (`garages.online_payments`, lo mantiene el sistema). Tokens en `mp_accounts` (sin acceso del cliente).
+- Servidor: Edge Function `supabase/functions/mercadopago` (publicada con `--no-verify-jwt` por el aviso de pago; controla la sesión adentro). Secretos: `MP_CLIENT_ID`, `MP_CLIENT_SECRET`, `MP_TEST_MODE`. El estado del pago se toma SIEMPRE de la API de Mercado Pago, nunca del aviso.
+- Cliente: `src/lib/data/payments.ts`; pantallas: panel de reserva (tarifa + cargo + total), `/reserva/?id=` (pagar, confirmar al volver, cancelar con/sin devolución), `/mis-garages/cobros/` (conectar cuenta; también recibe la vuelta del OAuth).
+- Pasos para activarlo: `docs/pagos.md`.

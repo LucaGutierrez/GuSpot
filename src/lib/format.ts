@@ -98,6 +98,7 @@ export const ACCESS_TYPE_LABEL: Record<Exclude<AccessType, "">, string> = {
 
 export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {
   solicitada: "Solicitada",
+  pendiente_pago: "Esperando el pago",
   confirmada: "Confirmada",
   rechazada: "Rechazada",
   expirada: "Expirada",
@@ -106,7 +107,7 @@ export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {
 };
 
 export const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
-  no_disponible: "Pagos aún no disponibles",
+  no_disponible: "Sin pago (prueba)",
   pendiente: "Pago pendiente",
   aprobado: "Pago aprobado",
   rechazado: "Pago rechazado",

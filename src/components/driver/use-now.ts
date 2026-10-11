@@ -30,3 +30,16 @@ const serverSnapshot = () => null;
 export function useNow(): LocalDateTime | null {
   return useSyncExternalStore(subscribe, nowInArgentina, serverSnapshot);
 }
+
+const STEP_MS = 15_000;
+const subscribeClock = (onChange: () => void) => {
+  const t = setInterval(onChange, STEP_MS);
+  return () => clearInterval(t);
+};
+const clockSnapshot = () => Math.floor(Date.now() / STEP_MS) * STEP_MS;
+const clockServer = () => 0;
+
+/** Instante actual (ms) que se actualiza cada 15 s; 0 durante el build. Para cuentas regresivas. */
+export function useNowMs(): number {
+  return useSyncExternalStore(subscribeClock, clockSnapshot, clockServer);
+}

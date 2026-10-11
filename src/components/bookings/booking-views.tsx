@@ -6,9 +6,11 @@ import { useEffect, useMemo, useState } from "react";
 import type { BookingAccess, RealBooking } from "@/lib/data/types";
 import { DataError } from "@/lib/data/types";
 import { cancelBooking, getBooking, getBookingAccess, listMyBookings, listOwnerBookings } from "@/lib/data/bookings";
+import { cancelPaidBooking, startCheckout, syncPayment } from "@/lib/data/payments";
+import type { BookingStatus } from "@/lib/types";
 import { VEHICLE_LABEL, formatARS, formatRange } from "@/lib/format";
 import { toMs } from "@/lib/datetime";
-import { useNow } from "@/components/driver/use-now";
+import { useNow, useNowMs } from "@/components/driver/use-now";
 import { Button } from "@/components/ui/button";
 import { Card, Container, PageHeader } from "@/components/ui/card";
 import { BookingStatusBadge, PaymentStatusBadge } from "@/components/ui/badge";
@@ -16,7 +18,7 @@ import { ChevronLeftIcon, KeyIcon, PinIcon } from "@/components/ui/icons";
 import { MapView } from "@/components/map/map-view";
 import { EmptyState } from "@/components/owner/section";
 import { ErrorBox, RequireSignIn, SuccessBox } from "@/components/my-garages/shared";
-import { TEST_PAYMENT_NOTE } from "./real-booking-panel";
+import { paymentNote, usePaymentSettings } from "./real-booking-panel";
 
 type Load<T> = { state: "loading" } | { state: "error"; message: string } | { state: "ready"; data: T };
 
@@ -28,33 +30,50 @@ function directionsUrl(p: { lat: number; lng: number }) {
 
 // ---------------------------------------------------------------- /reserva/?id=
 
+/** Una reserva esperando el pago cuyo tiempo ya pasó se muestra como vencida. */
+function shownStatus(b: RealBooking, nowMs: number): BookingStatus {
+  if (b.status === "pendiente_pago" && (!b.holdUntil || Date.parse(b.holdUntil) <= nowMs)) return "expirada";
+  return b.status;
+}
+
+const hhmm = (iso: string) =>
+  new Date(iso).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" });
+
 /** Detalle de una reserva real. Lee `?id=`: montarlo dentro de <Suspense>. */
 export function BookingDetailPage() {
   const params = useSearchParams();
   const id = params.get("id") ?? "";
-  const isNew = params.get("nueva") === "1";
+  const fromPayment = params.get("pago") === "1";
   return (
     <Container className="max-w-3xl pt-4 pb-12">
       <Link href="/mis-reservas/" className="inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline">
         <ChevronLeftIcon width={16} height={16} /> Mis reservas
       </Link>
       <div className="mt-4">
-        <RequireSignIn back={`/reserva/?id=${id}`}>{() => <BookingLoader key={id} id={id} isNew={isNew} />}</RequireSignIn>
+        <RequireSignIn back={`/reserva/?id=${id}`}>
+          {() => <BookingLoader key={id} id={id} fromPayment={fromPayment} />}
+        </RequireSignIn>
       </div>
     </Container>
   );
 }
 
-function BookingLoader({ id, isNew }: { id: string; isNew: boolean }) {
+function BookingLoader({ id, fromPayment }: { id: string; fromPayment: boolean }) {
   const [load, setLoad] = useState<Load<{ booking: RealBooking | null; access: BookingAccess | null }>>({
     state: "loading",
   });
   const [tick, setTick] = useState(0);
+  const [tries, setTries] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const booking = await getBooking(id);
+      let booking = await getBooking(id);
+      // Si sigue esperando el pago (p. ej. al volver de Mercado Pago) se consulta el pago.
+      if (booking && booking.role === "driver" && booking.status === "pendiente_pago") {
+        await syncPayment(id).catch(() => {});
+        booking = await getBooking(id);
+      }
       const access =
         booking && booking.role === "driver" && booking.status === "confirmada" ? await getBookingAccess(id) : null;
       return { booking, access };
@@ -64,7 +83,20 @@ function BookingLoader({ id, isNew }: { id: string; isNew: boolean }) {
     return () => {
       cancelled = true;
     };
-  }, [id, tick]);
+  }, [id, tick, tries]);
+
+  // Recién vuelto de pagar: el aviso de Mercado Pago puede tardar unos segundos.
+  const waiting =
+    fromPayment &&
+    load.state === "ready" &&
+    load.data.booking?.status === "pendiente_pago" &&
+    load.data.booking.paymentStatus !== "rechazado" &&
+    tries < 5;
+  useEffect(() => {
+    if (!waiting) return;
+    const t = setTimeout(() => setTries((n) => n + 1), 3000);
+    return () => clearTimeout(t);
+  }, [waiting, tries]);
 
   if (load.state === "loading") return <p className="text-sm text-ink-500">Cargando reserva…</p>;
   if (load.state === "error") return <ErrorBox>{load.message}</ErrorBox>;
@@ -73,7 +105,8 @@ function BookingLoader({ id, isNew }: { id: string; isNew: boolean }) {
     <BookingDetail
       booking={load.data.booking}
       access={load.data.access}
-      isNew={isNew}
+      fromPayment={fromPayment}
+      confirmingPayment={waiting}
       onChanged={() => setTick((t) => t + 1)}
     />
   );
@@ -82,17 +115,22 @@ function BookingLoader({ id, isNew }: { id: string; isNew: boolean }) {
 function BookingDetail({
   booking: b,
   access,
-  isNew,
+  fromPayment,
+  confirmingPayment,
   onChanged,
 }: {
   booking: RealBooking;
   access: BookingAccess | null;
-  isNew: boolean;
+  fromPayment: boolean;
+  confirmingPayment: boolean;
   onChanged: () => void;
 }) {
   const now = useNow();
+  const nowMs = useNowMs();
+  const status = shownStatus(b, nowMs);
   const started = now ? toMs(b.start) <= toMs(now) : false;
-  const canCancel = b.role === "driver" && b.status === "confirmada" && !started;
+  const canCancel = b.role === "driver" && (status === "pendiente_pago" || (b.status === "confirmada" && !started));
+  const settings = usePaymentSettings();
   const marker = useMemo(
     () => (access ? [{ id: b.id, position: access.location, label: "Tu cochera", ariaLabel: "Ubicación del garage" }] : []),
     [access, b.id],
@@ -100,13 +138,31 @@ function BookingDetail({
 
   return (
     <div className="flex flex-col gap-4">
-      {isNew && b.status === "confirmada" && (
-        <SuccessBox>¡Listo! Tu reserva quedó confirmada. Abajo tenés la dirección y cómo entrar.</SuccessBox>
+      {fromPayment && b.status === "confirmada" && b.paymentStatus === "aprobado" && (
+        <SuccessBox>¡Pago aprobado! Tu reserva quedó confirmada. Abajo tenés la dirección y cómo entrar.</SuccessBox>
+      )}
+      {confirmingPayment && (
+        <p className="text-sm text-ink-700" aria-live="polite">
+          Confirmando tu pago con Mercado Pago…
+        </p>
+      )}
+
+      {b.role === "driver" && status === "pendiente_pago" && !confirmingPayment && (
+        <PayNow booking={b} rejected={b.paymentStatus === "rechazado"} />
+      )}
+      {b.role === "driver" && status === "expirada" && (
+        <ErrorBox>
+          Se venció el tiempo para pagar y el lugar se liberó. Si querés, volvé a{" "}
+          <Link href={`/espacio/?id=${b.garageId}`} className="font-semibold underline">
+            reservar este garage
+          </Link>
+          .
+        </ErrorBox>
       )}
 
       <Card className="flex flex-col gap-3 p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <BookingStatusBadge status={b.status} />
+          <BookingStatusBadge status={status} />
           <PaymentStatusBadge status={b.paymentStatus} />
         </div>
         <h1 className="text-xl font-bold text-ink-900 sm:text-2xl">
@@ -121,7 +177,7 @@ function BookingDetail({
             <dd className="font-medium text-ink-900">{b.hours} h</dd>
           </div>
           <div>
-            <dt className="text-ink-500">Total</dt>
+            <dt className="text-ink-500">{b.role === "owner" ? "Tu tarifa" : "Tarifa del garage"}</dt>
             <dd className="font-medium text-ink-900">{formatARS(b.total)}</dd>
           </div>
           <div>
@@ -132,6 +188,18 @@ function BookingDetail({
             <dt className="text-ink-500">Patente</dt>
             <dd className="font-medium text-ink-900">{b.plate || "—"}</dd>
           </div>
+          {b.role === "driver" && b.serviceFee > 0 && (
+            <>
+              <div>
+                <dt className="text-ink-500">Cargo de servicio</dt>
+                <dd className="font-medium text-ink-900">{formatARS(b.serviceFee)}</dd>
+              </div>
+              <div>
+                <dt className="text-ink-500">{b.paymentStatus === "aprobado" ? "Total pagado" : "Total a pagar"}</dt>
+                <dd className="font-medium text-ink-900">{formatARS(b.total + b.serviceFee)}</dd>
+              </div>
+            </>
+          )}
           {b.role === "owner" && (
             <div className="col-span-2">
               <dt className="text-ink-500">Conductor</dt>
@@ -139,7 +207,11 @@ function BookingDetail({
             </div>
           )}
         </dl>
-        <p className="text-xs text-ink-500">{TEST_PAYMENT_NOTE}</p>
+        {b.paymentStatus === "no_disponible" ? (
+          <p className="text-xs text-ink-500">Reserva de prueba, hecha antes de que existieran los pagos: no se cobró nada.</p>
+        ) : (
+          b.role === "driver" && <p className="text-xs text-ink-500">{paymentNote(settings)}</p>
+        )}
       </Card>
 
       {b.role === "driver" && b.status === "confirmada" && access && (
@@ -179,22 +251,23 @@ function BookingDetail({
         </Card>
       )}
 
-      {canCancel && <CancelBooking id={b.id} onDone={onChanged} />}
+      {canCancel && !confirmingPayment && (
+        <CancelBooking booking={b} refundMinutes={settings?.refundWindowMinutes ?? 10} onDone={onChanged} />
+      )}
     </div>
   );
 }
 
-function CancelBooking({ id, onDone }: { id: string; onDone: () => void }) {
-  const [confirming, setConfirming] = useState(false);
+/** Reserva guardada esperando el pago: botón para (volver a) pagar. */
+function PayNow({ booking: b, rejected }: { booking: RealBooking; rejected: boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onCancel() {
+  async function onPay() {
     setBusy(true);
     setError(null);
     try {
-      await cancelBooking(id);
-      onDone();
+      window.location.assign(await startCheckout(b.id));
     } catch (err) {
       setError(errText(err));
       setBusy(false);
@@ -202,12 +275,61 @@ function CancelBooking({ id, onDone }: { id: string; onDone: () => void }) {
   }
 
   return (
+    <Card className="flex flex-col gap-3 border-accent-300 bg-accent-100 p-5">
+      <p className="font-semibold text-ink-900">
+        {rejected ? "Mercado Pago rechazó el pago. Probá con otro medio." : "Falta pagar para confirmar la reserva."}
+      </p>
+      {b.holdUntil && <p className="text-sm text-ink-700">Te guardamos el lugar hasta las {hhmm(b.holdUntil)}.</p>}
+      <Button size="lg" onClick={onPay} disabled={busy}>
+        {busy ? "Abriendo Mercado Pago…" : `Pagar ${formatARS(b.total + b.serviceFee)} con Mercado Pago`}
+      </Button>
+      {error && <ErrorBox>{error}</ErrorBox>}
+    </Card>
+  );
+}
+
+function CancelBooking({
+  booking: b,
+  refundMinutes,
+  onDone,
+}: {
+  booking: RealBooking;
+  refundMinutes: number;
+  onDone: () => void;
+}) {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const paid = b.status === "confirmada" && b.paymentStatus === "aprobado";
+  const refundUntil = paid && b.paidAt ? Date.parse(b.paidAt) + refundMinutes * 60_000 : 0;
+  const nowMs = useNowMs();
+  const withRefund = paid && nowMs < refundUntil;
+
+  async function onCancel() {
+    setBusy(true);
+    setError(null);
+    try {
+      if (b.paymentStatus === "no_disponible") await cancelBooking(b.id);
+      else await cancelPaidBooking(b.id, paid && !withRefund);
+      onDone();
+    } catch (err) {
+      setError(errText(err));
+      setBusy(false);
+    }
+  }
+
+  const question = !paid
+    ? "¿Cancelar la reserva? El lugar queda libre para otros conductores. No se te cobra nada."
+    : withRefund
+      ? `¿Cancelar la reserva? Te devolvemos ${formatARS(b.total + b.serviceFee)} completos al mismo medio de pago.`
+      : "¿Cancelar la reserva? Ya pasó el tiempo para cancelar con devolución: el lugar se libera, pero NO se te devuelve el pago.";
+
+  return (
     <Card className="flex flex-col gap-3 p-5">
       {confirming ? (
         <>
-          <p className="text-sm text-ink-700">
-            ¿Cancelar la reserva? El horario queda libre para otros conductores. En esta prueba no hay cargos.
-          </p>
+          <p className="text-sm text-ink-700">{question}</p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -215,7 +337,7 @@ function CancelBooking({ id, onDone }: { id: string; onDone: () => void }) {
               disabled={busy}
               className="inline-flex h-10 items-center justify-center rounded-xl bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
             >
-              {busy ? "Cancelando…" : "Sí, cancelar"}
+              {busy ? "Cancelando…" : paid && !withRefund ? "Sí, cancelar sin devolución" : "Sí, cancelar"}
             </button>
             <Button variant="secondary" onClick={() => setConfirming(false)} disabled={busy}>
               Volver
@@ -223,10 +345,15 @@ function CancelBooking({ id, onDone }: { id: string; onDone: () => void }) {
           </div>
         </>
       ) : (
-        <div>
-          <Button variant="secondary" onClick={() => setConfirming(true)}>
-            Cancelar reserva
-          </Button>
+        <div className="flex flex-col gap-1">
+          <div>
+            <Button variant="secondary" onClick={() => setConfirming(true)}>
+              {b.status === "pendiente_pago" ? "Cancelar y liberar el lugar" : "Cancelar reserva"}
+            </Button>
+          </div>
+          {withRefund && (
+            <p className="text-xs text-ink-500">Con devolución total hasta las {hhmm(new Date(refundUntil).toISOString())}.</p>
+          )}
         </div>
       )}
       {error && <ErrorBox>{error}</ErrorBox>}
@@ -236,7 +363,7 @@ function CancelBooking({ id, onDone }: { id: string; onDone: () => void }) {
 
 // ---------------------------------------------------------------- listas
 
-function BookingRow({ b }: { b: RealBooking }) {
+function BookingRow({ b, nowMs }: { b: RealBooking; nowMs: number }) {
   return (
     <li>
       <Link
@@ -244,8 +371,10 @@ function BookingRow({ b }: { b: RealBooking }) {
         className="flex flex-col gap-1 rounded-2xl border border-ink-200 bg-white p-4 hover:shadow-md focus-visible:outline-2 focus-visible:outline-brand-500"
       >
         <div className="flex flex-wrap items-center gap-2">
-          <BookingStatusBadge status={b.status} />
-          <span className="text-sm font-semibold text-ink-900">{formatARS(b.total)}</span>
+          <BookingStatusBadge status={shownStatus(b, nowMs)} />
+          <span className="text-sm font-semibold text-ink-900">
+            {formatARS(b.role === "driver" ? b.total + b.serviceFee : b.total)}
+          </span>
         </div>
         <p className="font-semibold text-ink-900">{b.garageTitle}</p>
         <p className="text-sm text-ink-700">{formatRange(b.start, b.end)}</p>
@@ -275,12 +404,16 @@ function useBookings(loader: () => Promise<RealBooking[]>) {
 
 function BookingList({ load, empty }: { load: Load<RealBooking[]>; empty: React.ReactNode }) {
   const now = useNow();
+  const nowMs = useNowMs();
   if (load.state === "loading") return <p className="text-sm text-ink-500">Cargando reservas…</p>;
   if (load.state === "error") return <ErrorBox>{load.message}</ErrorBox>;
   if (load.data.length === 0) return <EmptyState>{empty}</EmptyState>;
   const isPast = (b: RealBooking) => (now ? toMs(b.end) <= toMs(now) : false);
-  const upcoming = load.data.filter((b) => !isPast(b) && b.status === "confirmada");
-  const rest = load.data.filter((b) => !upcoming.includes(b));
+  const active = (b: RealBooking) => ["confirmada", "pendiente_pago"].includes(shownStatus(b, nowMs));
+  // Al dueño no le sirven los intentos de reserva que nunca se pagaron.
+  const visible = load.data.filter((b) => b.role === "driver" || b.status !== "pendiente_pago" || active(b));
+  const upcoming = visible.filter((b) => !isPast(b) && active(b));
+  const rest = visible.filter((b) => !upcoming.includes(b));
   return (
     <div className="flex flex-col gap-6">
       {upcoming.length > 0 && (
@@ -288,7 +421,7 @@ function BookingList({ load, empty }: { load: Load<RealBooking[]>; empty: React.
           <h2 className="text-lg font-semibold text-ink-900">Próximas</h2>
           <ul className="grid gap-3 sm:grid-cols-2">
             {upcoming.map((b) => (
-              <BookingRow key={b.id} b={b} />
+              <BookingRow key={b.id} b={b} nowMs={nowMs} />
             ))}
           </ul>
         </section>
@@ -298,7 +431,7 @@ function BookingList({ load, empty }: { load: Load<RealBooking[]>; empty: React.
           <h2 className="text-lg font-semibold text-ink-900">Anteriores y canceladas</h2>
           <ul className="grid gap-3 sm:grid-cols-2">
             {rest.map((b) => (
-              <BookingRow key={b.id} b={b} />
+              <BookingRow key={b.id} b={b} nowMs={nowMs} />
             ))}
           </ul>
         </section>

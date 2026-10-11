@@ -52,6 +52,7 @@ interface GarageRow {
   contact_phone: string;
   payment_methods: CommercialInfo["paymentMethods"];
   pay_at_garage: boolean;
+  online_payments: boolean;
   max_height_cm: number | null;
   access_type: CommercialInfo["accessType"];
   created_at: string;
@@ -72,7 +73,7 @@ const PUBLIC_COLUMNS =
   "id, owner_id, status, title, description, city, neighborhood, approx_location, type, max_vehicle, " +
   "features, hourly_price, daily_price, min_hours, availability, access_conditions, public_lat, public_lng, " +
   "kind, capacity, available_spots, availability_state, availability_updated_at, accepting_drivers, " +
-  "reservable_spots, contact_phone, payment_methods, pay_at_garage, max_height_cm, access_type, " +
+  "reservable_spots, contact_phone, payment_methods, pay_at_garage, max_height_cm, access_type, online_payments, " +
   "created_at, updated_at, garage_photos(path, position)";
 
 const OWNER_COLUMNS = `${PUBLIC_COLUMNS}, garage_private(address, exact_lat, exact_lng, arrival_instructions)`;
@@ -143,6 +144,7 @@ function commercialOf(row: GarageRow): CommercialInfo {
     contactPhone: row.contact_phone,
     paymentMethods: row.payment_methods,
     payAtGarage: row.pay_at_garage,
+    onlinePayments: row.online_payments,
     maxHeightCm: row.max_height_cm,
     accessType: row.access_type,
   };

@@ -30,6 +30,7 @@ export function DemoBadge({ label = "Demo" }: { label?: string }) {
 
 const bookingTone: Record<BookingStatus, Tone> = {
   solicitada: "warning",
+  pendiente_pago: "warning",
   confirmada: "success",
   rechazada: "danger",
   expirada: "neutral",

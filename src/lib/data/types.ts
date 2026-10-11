@@ -129,7 +129,7 @@ export const PHOTO_LIMITS = {
 
 // --- Reservas reales (src/lib/data/bookings.ts) -----------------------------
 
-/** Reserva real. Confirmación automática; el pago se integra más adelante. */
+/** Reserva real. Se confirma sola cuando Mercado Pago aprueba el pago. */
 export interface RealBooking {
   id: string;
   garageId: string;
@@ -139,15 +139,21 @@ export interface RealBooking {
   driverName: string;
   start: LocalDateTime;
   end: LocalDateTime;
-  status: Extract<BookingStatus, "confirmada" | "cancelada">;
-  /** Hasta integrar Mercado Pago es siempre "no_disponible". */
+  status: Extract<BookingStatus, "pendiente_pago" | "confirmada" | "cancelada">;
+  /** "no_disponible" = reserva de prueba hecha antes de los pagos. */
   paymentStatus: PaymentStatus;
   vehicle: VehicleSize;
   plate: string;
   /** "Fiat Cronos Gris" (copia del vehículo al reservar). */
   car: string;
   hours: number;
+  /** Tarifa del garage. */
   total: Centavos;
+  /** Cargo de servicio de GuSpot (lo paga el conductor). */
+  serviceFee: Centavos;
+  /** Hasta cuándo se guarda el lugar esperando el pago (ISO). */
+  holdUntil: string | null;
+  paidAt: string | null;
   createdAt: string; // ISO
   /** Quién la mira: conductor o dueño del garage. */
   role: "driver" | "owner";

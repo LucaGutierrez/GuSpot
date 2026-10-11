@@ -379,7 +379,7 @@ function CommercialDetail({ space, voy }: { space: Space; voy: boolean }) {
             Llamar al garage
           </a>
         )}
-        {c.reservableSpots > 0 && (
+        {c.reservableSpots > 0 && c.onlinePayments && (
           <details className="rounded-2xl">
             <summary className="cursor-pointer rounded-2xl border border-ink-200 bg-white p-4 text-sm font-semibold text-ink-900">
               ¿Preferís reservar con anticipación?

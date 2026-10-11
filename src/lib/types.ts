@@ -51,6 +51,8 @@ export interface CommercialInfo {
   paymentMethods: PaymentMethod[];
   /** Se paga en el garage (no en GuSpot). */
   payAtGarage: boolean;
+  /** El garage conectó Mercado Pago: puede cobrar reservas online. */
+  onlinePayments: boolean;
   maxHeightCm: number | null;
   accessType: AccessType;
 }
@@ -129,6 +131,7 @@ export interface Space {
 /** Estado de la reserva: independiente del estado del pago. */
 export type BookingStatus =
   | "solicitada"
+  | "pendiente_pago"
   | "confirmada"
   | "rechazada"
   | "expirada"
