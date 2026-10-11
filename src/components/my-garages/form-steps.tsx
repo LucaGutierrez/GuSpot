@@ -7,7 +7,7 @@ import { quote } from "@/lib/pricing";
 import { describeAvailability } from "@/lib/availability";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@/components/ui/icons";
-import { Field, FieldError, describedBy, inputClass } from "../form-fields";
+import { Field, FieldError, describedBy, inputClass } from "@/components/ui/form-fields";
 import {
   newRule,
   parsePesos,
@@ -15,9 +15,9 @@ import {
   type Draft,
   type Errors,
   type RuleDraft,
-} from "./draft";
+} from "./form-draft";
 
-export interface StepProps {
+interface StepProps {
   draft: Draft;
   errors: Errors;
   update: (patch: Partial<Draft>) => void;

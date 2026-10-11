@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { PinIcon } from "@/components/ui/icons";
 import { searchAddress, type AddressMatch } from "@/lib/geocoding";
-import { inputClass } from "@/components/owner/form-fields";
+import { inputClass } from "@/components/ui/form-fields";
 
 /**
  * Campo "calle y altura" con sugerencias mientras se escribe. Al elegir una,

@@ -13,10 +13,10 @@ import { CloseIcon } from "@/components/explore/icons";
 import { LiveBadge, UpdatedNote } from "./live-badge";
 
 /** Enlace a la ficha con el aviso "Voy a este" abierto. */
-export const voyHref = (href: string) => `${href}${href.includes("?") ? "&" : "?"}voy=1`;
+const voyHref = (href: string) => `${href}${href.includes("?") ? "&" : "?"}voy=1`;
 
 /** Zona, disponibilidad, capacidad, precio y servicios de un garaje comercial. */
-export function GarageFacts({ result, live, distance }: { result: SearchResult; live: LiveStatus; distance?: string | null }) {
+function GarageFacts({ result, live, distance }: { result: SearchResult; live: LiveStatus; distance?: string | null }) {
   const { space } = result;
   const c = space.commercial!;
   const services = space.features.slice(0, 3);

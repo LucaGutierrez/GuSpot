@@ -7,12 +7,12 @@
 
 import type { LatLng } from "./types";
 
-export interface Province {
+interface Province {
   id: string; // código de Georef
   name: string;
 }
 
-export const PROVINCES: Province[] = [
+const PROVINCES: Province[] = [
   { id: "02", name: "Ciudad Autónoma de Buenos Aires" },
   { id: "06", name: "Buenos Aires" },
   { id: "10", name: "Catamarca" },

@@ -5,7 +5,7 @@ import { toMs } from "@/lib/datetime";
 import { bookability, type Bookability } from "./availability-status";
 import { rangeToInterval, type RangeValue } from "./range";
 
-export interface BookingCheck {
+interface BookingCheck {
   interval: { start: LocalDateTime; end: LocalDateTime } | null;
   quote: Quote;
   status: Bookability;

@@ -5,7 +5,7 @@ import { DEFAULT_MAP_ZONE } from "./geo";
 
 const KEY = "guspot:ultima-zona";
 
-export function getLastZone(): string | null {
+function getLastZone(): string | null {
   try {
     const value = window.localStorage.getItem(KEY)?.trim();
     return value ? value.slice(0, 80) : null;

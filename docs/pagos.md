@@ -2,7 +2,7 @@
 
 Cómo funciona y qué hay que configurar. Decisiones del usuario (2026-10-11):
 
-- La plata de cada reserva va **directo a la cuenta de Mercado Pago del garage**. GuSpot cobra su parte (cargo de servicio) en el mismo pago, sin manejar plata de terceros.
+- La plata de cada reserva va **directo a la cuenta de Mercado Pago del garaje**. GuSpot cobra su parte (cargo de servicio) en el mismo pago, sin manejar plata de terceros.
 - El **cargo de servicio lo paga el conductor**: 10 % de la tarifa (se cambia en `app_settings.service_fee_percent`).
 - **Cancelación**: devolución total hasta 10 minutos después de pagar (`refund_window_minutes`). Después se puede cancelar sin devolución.
 - El lugar se guarda 15 minutos esperando el pago (`payment_hold_minutes`).
@@ -28,15 +28,15 @@ Con `MP_TEST_MODE=true` no se manda el email del comprador. Lo que hace que la p
 
 ## 3. Probar
 
-Mercado Pago no permite mezclar cuentas reales y de prueba. Para probar se usan **cuentas de prueba** (panel de la app → *Cuentas de prueba*): una "vendedor" para el garage y una "comprador" para el conductor.
+Mercado Pago no permite mezclar cuentas reales y de prueba. Para probar se usan **cuentas de prueba** (panel de la app → *Cuentas de prueba*): una "vendedor" para el garaje y una "comprador" para el conductor.
 
 0. Cerrar TODAS las ventanas de incógnito entre el paso del vendedor y el del comprador (comparten la sesión de Mercado Pago).
-1. Con la cuenta de GuSpot del garage: *Tu cuenta → Cobros con Mercado Pago → Conectar Mercado Pago*, e ingresar con el usuario de prueba **vendedor**.
-2. Con otra cuenta de GuSpot (conductor verificado): reservar ese garage → *Reservar y pagar* → pagar en Mercado Pago con el usuario de prueba **comprador** y una tarjeta de prueba (titular `APRO` = aprobado, `OTHE` = rechazado).
+1. Con la cuenta de GuSpot del garaje: *Tu cuenta → Cobros con Mercado Pago → Conectar Mercado Pago*, e ingresar con el usuario de prueba **vendedor**.
+2. Con otra cuenta de GuSpot (conductor verificado): reservar ese garaje → *Reservar y pagar* → pagar en Mercado Pago con el usuario de prueba **comprador** y una tarjeta de prueba (titular `APRO` = aprobado, `OTHE` = rechazado).
 3. Al volver, la reserva tiene que quedar **Confirmada · Pago aprobado** y mostrar la dirección.
 4. Cancelar dentro de los 10 minutos → devolución total.
 
 ## 4. Lanzamiento
 
-- `MP_TEST_MODE=false` y que cada garage reconecte su cuenta real.
+- `MP_TEST_MODE=false` y que cada garaje reconecte su cuenta real.
 - Revisar con un contador la facturación del cargo de servicio y con un abogado términos y condiciones de cancelación.

@@ -86,15 +86,9 @@ export interface LatLng {
 
 export type ListingStatus = "publicado" | "pausado" | "borrador";
 
-/**
- * Origen del garaje. Los de ejemplo ("demo") y los publicados de verdad
- * ("real") NUNCA se muestran mezclados ni pueden reservarse igual.
- */
-export type SpaceSource = "demo" | "real";
 
 export interface Space {
   id: string;
-  source: SpaceSource;
   /** Garaje comercial o cochera particular (garajes reales). */
   kind?: "comercial" | "particular";
   /** Solo garajes comerciales reales. */
@@ -146,23 +140,3 @@ export type PaymentStatus =
   | "aprobado"
   | "rechazado"
   | "reembolsado";
-
-export interface Booking {
-  id: string;
-  spaceId: string;
-  driverName: string;
-  start: LocalDateTime;
-  end: LocalDateTime;
-  /** Precio calculado al solicitar; no cambia si después cambia la tarifa. */
-  totalPrice: Centavos;
-  status: BookingStatus;
-  paymentStatus: PaymentStatus;
-  vehicle?: string;
-  createdAt: LocalDateTime;
-}
-
-export interface Owner {
-  id: string;
-  displayName: string;
-  memberSince: string;
-}

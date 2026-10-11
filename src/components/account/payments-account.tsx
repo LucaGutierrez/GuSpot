@@ -41,7 +41,7 @@ function useFeePercent() {
 }
 
 /** Tarjeta "Cobro de reservas": conectar o ver la cuenta de Mercado Pago. */
-export function PaymentsCard({ compact = false }: { compact?: boolean }) {
+function PaymentsCard({ compact = false }: { compact?: boolean }) {
   const [tick, setTick] = useState(0);
   const load = useAccount(tick);
   const percent = useFeePercent();

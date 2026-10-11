@@ -5,9 +5,9 @@ import type { LocalDateTime, Space } from "./types";
 import { isOpenAt } from "./availability";
 
 /** Después de este tiempo sin actualizar, se avisa al conductor. Decisión del usuario (2026-10-11). */
-export const STALE_MINUTES = 30;
+const STALE_MINUTES = 30;
 /** Hasta cuántos lugares se considera "quedan pocos". */
-export const FEW_SPOTS = 3;
+const FEW_SPOTS = 3;
 
 export type LiveTone = "ok" | "few" | "none" | "closed";
 

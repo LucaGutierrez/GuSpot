@@ -10,7 +10,7 @@ import {
   validateStep,
   type Draft,
   type Errors,
-} from "@/components/owner/publish-wizard/draft";
+} from "@/components/my-garages/form-draft";
 
 // Formulario de un garaje real: el mismo borrador del asistente de la demo
 // (para reutilizar sus pasos) más el punto exacto elegido en el mapa.

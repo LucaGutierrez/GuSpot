@@ -1,4 +1,4 @@
-// Implementación de `GaragesApi` (contrato en ./types.ts) sobre Supabase.
+// Garajes sobre Supabase (contrato de datos en ./types.ts).
 // La seguridad la imponen las reglas de supabase/migrations: acá solo se
 // valida para dar mensajes claros antes de ir a la base.
 
@@ -12,7 +12,6 @@ import {
   PHOTO_LIMITS,
   type GarageInput,
   type GaragePhoto,
-  type GaragesApi,
   type OwnerGarage,
 } from "./types";
 
@@ -155,7 +154,6 @@ function toSpace(supabase: SupabaseClient, row: GarageRow): Space | null {
   if (!coords) return null;
   return {
     id: row.id,
-    source: "real",
     kind: row.kind,
     commercial: row.kind === "comercial" ? commercialOf(row) : undefined,
     ownerId: row.owner_id,
@@ -225,7 +223,7 @@ function toOwnerGarage(supabase: SupabaseClient, row: OwnerGarageRow): OwnerGara
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$|^24:00$/;
 
 /** Validación previa (mensajes en español). Devuelve null si está todo bien. */
-export function validateGarageInput(input: GarageInput): string | null {
+function validateGarageInput(input: GarageInput): string | null {
   if (input.title.trim().length < 3 || input.title.trim().length > 80) return "El título debe tener entre 3 y 80 caracteres.";
   if (input.description.length > 2000) return "La descripción puede tener hasta 2000 caracteres.";
   if (input.city.trim().length < 2) return "Indicá la ciudad.";
@@ -478,17 +476,3 @@ export async function removeGaragePhoto(garageId: string, path: string): Promise
   const { error: rmError } = await supabase.storage.from(GARAGE_PHOTOS_BUCKET).remove([path]);
   if (rmError) throw toDataError(rmError);
 }
-
-// Verificación en compilación de que se cumple el contrato.
-export const garagesApi: GaragesApi = {
-  listPublishedGarages,
-  getPublishedGarage,
-  listMyGarages,
-  getMyGarage,
-  createGarage,
-  updateGarage,
-  setGarageStatus,
-  deleteGarage,
-  uploadGaragePhoto,
-  removeGaragePhoto,
-};

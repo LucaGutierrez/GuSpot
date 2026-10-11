@@ -46,3 +46,7 @@ next-env.d.ts
 
 # Cache de la CLI de Supabase
 supabase/.temp/
+
+# Configuración local del asistente de código (no se sube)
+CLAUDE.md
+.claude/

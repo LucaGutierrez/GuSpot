@@ -28,20 +28,6 @@ export function combine(date: string, time: string): LocalDateTime {
   return `${date}T${time}`;
 }
 
-/** Fecha de hoy en Argentina, "YYYY-MM-DD". */
-export function todayInArgentina(now: Date = new Date()): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Argentina/Buenos_Aires",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
-}
-
-export function addDays(date: string, days: number): string {
-  return fromMs(toMs(`${date}T00:00`) + days * 24 * HOUR_MS).slice(0, 10);
-}
-
 /** Duración en horas, redondeada hacia arriba a horas enteras. */
 export function durationHours(start: LocalDateTime, end: LocalDateTime): number {
   return Math.ceil((toMs(end) - toMs(start)) / HOUR_MS);

@@ -36,15 +36,15 @@ const timeFmt = new Intl.DateTimeFormat("es-AR", {
   timeZone: "UTC",
 });
 
-export function formatDate(value: LocalDateTime): string {
+function formatDate(value: LocalDateTime): string {
   return dateFmt.format(new Date(toMs(value)));
 }
 
-export function formatTime(value: LocalDateTime): string {
+function formatTime(value: LocalDateTime): string {
   return timeFmt.format(new Date(toMs(value)));
 }
 
-export function formatDateTime(value: LocalDateTime): string {
+function formatDateTime(value: LocalDateTime): string {
   return `${formatDate(value)}, ${formatTime(value)} h`;
 }
 

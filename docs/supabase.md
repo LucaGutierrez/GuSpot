@@ -1,57 +1,28 @@
-# Supabase (Etapa 1: cuentas y garages reales)
+# Supabase
 
-El sitio sigue siendo estático: el navegador habla directo con Supabase con la clave
-**publishable**. La seguridad está en `supabase/migrations/` (RLS + permisos por columna).
+El navegador habla directo con Supabase con la clave **publishable**; la seguridad está en `supabase/migrations/` (reglas por fila, permisos por columna y funciones).
 
-## Puesta en marcha
+## Puesta en marcha (proyecto nuevo)
 
-1. Crear un proyecto en supabase.com (región: São Paulo, la más cercana).
-2. **SQL Editor** → pegar y ejecutar `supabase/migrations/20261009120000_garages.sql`
-   (o, con la CLI: `npx supabase link` + `npx supabase db push`).
-3. **Authentication → Providers → Email**: activado, con "Confirm email" activado.
-4. **Authentication → URL Configuration**:
-   - Site URL: la URL publicada (Cloudflare Pages).
-   - Redirect URLs: `http://localhost:3000/**` y `https://<dominio>/**`.
-5. **Project Settings → API Keys**: copiar la URL y la clave `sb_publishable_…` a `.env.local`
-   (ver `.env.example`). **Nunca** la `sb_secret_…`.
-6. `npm run dev`: con las variables definidas se activan las cuentas; sin ellas, modo demo.
+1. Crear el proyecto (región São Paulo).
+2. Aplicar **todas** las migraciones de `supabase/migrations/`, en orden.
+3. **Authentication → Email**: activado, con confirmación de email.
+4. **Authentication → URL Configuration**: Site URL = la URL publicada; Redirect URLs = `http://localhost:3000/**` y `https://<dominio>/**`.
+5. Copiar la URL y la clave `sb_publishable_…` a `.env.local`. **Nunca** la `sb_secret_…`.
+6. Publicar las funciones `didit` y `mercadopago` y cargar sus secretos ([publicación](publicacion.md), [pagos](pagos.md)).
 
-## Qué protege la base
+## Quién ve qué
 
-| Dato | Quién lo ve | Quién lo escribe |
-|---|---|---|
-| `garages` (título, precio, disponibilidad, punto público…) | Todos, si está `publicado`; el dueño siempre | El dueño (sin `owner_id`, `public_*` ni fechas) |
-| `garage_private` (dirección y punto exactos) | Solo el dueño | Solo el dueño (sin el desplazamiento) |
-| `garage_photos` + bucket `garage-photos` | Fotos de garages visibles (URLs públicas) | El dueño; máx. 6, JPG/PNG/WebP, 5 MB |
-
-- **Punto público**: lo calcula la base al guardar el punto exacto, desplazado 100–200 m con un
-  ángulo y distancia aleatorios fijados una vez por garage (estable y no deducible del id).
-- **Publicar** exige ubicación, al menos una franja de disponibilidad y precio por hora > 0
-  (lo valida un trigger; el cliente muestra el mensaje).
-- Las URLs de fotos son públicas aunque el garage esté en borrador (nombres aleatorios, no listables).
-
-## Pendiente de verificar con un proyecto real
-
-La migración se escribió sin un Postgres a mano: hay que correrla una vez y probar con dos
-cuentas que una no ve la dirección ni puede editar los garages de la otra.
-
-## Pantallas de la etapa 1
-
-| Ruta | Qué hace |
+| Dato | Quién lo ve |
 |---|---|
-| `/crear-cuenta/`, `/ingresar/`, `/recuperar/`, `/recuperar/nueva/` | Alta con confirmación por email, ingreso y recuperación de contraseña. Aceptan `?volver=<ruta interna>`. |
-| `/cuenta/` | Nombre, cambio de contraseña, cerrar sesión. |
-| `/mis-garages/` | Garages propios con estado (borrador / publicado / pausado). |
-| `/mis-garages/nuevo/` | Alta (queda en borrador). Punto exacto marcado en el mapa. |
-| `/mis-garages/editar/?id=` | Edición, fotos (hasta 6), publicar/pausar, eliminar. |
-| `/espacio/?id=` | Detalle público de un garage real publicado (sin reservas todavía). |
+| Garaje publicado (nombre, precio, horario, lugares, punto del mapa) | Todos |
+| Dirección escrita e indicaciones de llegada | El dueño; el conductor con reserva pagada o con aviso "Voy a este" |
+| Datos personales, licencia, vehículos | La propia persona; el garaje ve nombre, foto, vehículo y seguro de quien reserva o avisa |
+| Fotos de DNI, selfie y licencia (bucket privado) | Solo la propia persona |
+| Tokens de Mercado Pago | Solo el servidor |
 
-**Búsqueda (`/`)**: con Supabase configurado muestra solo los garages reales publicados (para
-todos, con o sin cuenta); sin Supabase, solo los de ejemplo. Al abrir, busca primero cerca de la
-persona si da su ubicación; al mover el mapa ofrece "Buscar en esta zona".
+## Requisitos (`missing_requirements`)
 
-**Dirección del garage**: se busca por calle y altura (Georef, API oficial y gratuita de
-datos.gob.ar; respaldo Photon/OpenStreetMap). Ver `src/lib/geocoding.ts`.
-
-**Publicar el sitio**: `npm run deploy:demo` compila con lo que haya en `.env.local`. Con las
-variables de Supabase definidas, el sitio publicado tendrá cuentas y garages reales.
+- **Conductor** (reservar o "Voy a este"): datos personales (18+), identidad verificada, licencia vigente con el número del DNI, al menos un vehículo con seguro vigente.
+- **Quien publica**: datos personales, identidad verificada y celular verificado.
+- Las exigencias de identidad y celular se pueden apagar para pruebas en `app_settings` (`require_identity_verification`, `require_phone_verification`).

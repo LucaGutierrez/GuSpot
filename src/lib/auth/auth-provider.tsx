@@ -10,7 +10,7 @@ import { isBackendConfigured } from "../supabase/config";
  * - "disabled": modo demo (Supabase no configurado), no hay cuentas.
  * - "loading": todavía no se sabe (primer render / build estático).
  */
-export type AuthState =
+type AuthState =
   | { status: "disabled" }
   | { status: "loading" }
   | { status: "signed-out" }

@@ -2,8 +2,8 @@
 
 import type { AccessType, PaymentMethod, SpaceType, VehicleSize } from "@/lib/types";
 import { ACCESS_TYPE_LABEL, PAYMENT_METHOD_LABEL, SPACE_TYPE_LABEL, VEHICLE_LABEL } from "@/lib/format";
-import { Field, describedBy, inputClass } from "@/components/owner/form-fields";
-import type { Errors } from "@/components/owner/publish-wizard/draft";
+import { Field, describedBy, inputClass } from "@/components/ui/form-fields";
+import type { Errors } from "@/components/my-garages/form-draft";
 import type { GarageDraft } from "./garage-draft";
 
 type Props = { draft: GarageDraft; errors: Errors; update: (patch: Partial<GarageDraft>) => void };

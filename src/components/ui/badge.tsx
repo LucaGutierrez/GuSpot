@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { BookingStatus, ListingStatus, PaymentStatus } from "@/lib/types";
 import { BOOKING_STATUS_LABEL, PAYMENT_STATUS_LABEL } from "@/lib/format";
 
-type Tone = "neutral" | "brand" | "success" | "warning" | "danger" | "demo";
+type Tone = "neutral" | "brand" | "success" | "warning" | "danger";
 
 const tones: Record<Tone, string> = {
   neutral: "bg-ink-100 text-ink-700",
@@ -10,7 +10,6 @@ const tones: Record<Tone, string> = {
   success: "bg-emerald-50 text-emerald-700",
   warning: "bg-accent-100 text-accent-700",
   danger: "bg-red-50 text-red-700",
-  demo: "bg-fuchsia-50 text-fuchsia-700 ring-1 ring-fuchsia-200",
 };
 
 export function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {

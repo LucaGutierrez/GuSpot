@@ -31,7 +31,7 @@ function redirect(path: string): string {
   return `${window.location.origin}${path}`;
 }
 
-export interface SignUpData {
+interface SignUpData {
   email: string;
   password: string;
   firstName: string;
@@ -101,11 +101,4 @@ export async function updatePassword(password: string): Promise<AuthResult> {
   if (!supabase) return NOT_CONFIGURED;
   const { error } = await supabase.auth.updateUser({ password });
   return error ? { ok: false, message: friendly(error) } : { ok: true, message: "Listo, actualizamos tu contraseña." };
-}
-
-export async function updateDisplayName(displayName: string): Promise<AuthResult> {
-  const supabase = getSupabase();
-  if (!supabase) return NOT_CONFIGURED;
-  const { error } = await supabase.auth.updateUser({ data: { display_name: displayName.trim() } });
-  return error ? { ok: false, message: friendly(error) } : { ok: true, message: "Guardamos tu nombre." };
 }

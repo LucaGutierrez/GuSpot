@@ -22,7 +22,7 @@ import { ErrorBox, RequireSignIn, SuccessBox } from "@/components/my-garages/sha
 const errText = (err: unknown) => (err instanceof DataError ? err.message : "Algo salió mal. Probá de nuevo.");
 const ETAS = [5, 10, 15, 20, 30, 45];
 
-export const NOT_A_RESERVATION =
+const NOT_A_RESERVATION =
   "Avisar que vas no es una reserva: el lugar no queda guardado. El garaje recibe tu aviso para prepararse.";
 
 // ---------------------------------------------------------------- "Voy a este" (en la ficha)

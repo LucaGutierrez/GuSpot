@@ -40,7 +40,7 @@ function AccountButton() {
 }
 
 /** Símbolo de GuSpot: la G dibujada como un garaje (ver public/brand/ y docs/marca.md). */
-export function LogoMark({ className = "" }: { className?: string }) {
+function LogoMark({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 512 512" aria-hidden="true" className={className}>
       <rect width="512" height="512" rx="112" className="fill-brand-600" />
@@ -56,7 +56,7 @@ export function LogoMark({ className = "" }: { className?: string }) {
   );
 }
 
-export function Logo() {
+function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-ink-900">
       <LogoMark className="h-8 w-8" />

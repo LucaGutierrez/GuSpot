@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from "react";
 
 /** Mismo corte que `md:` de Tailwind: menos de 768 px es celular. */
-export const MOBILE_QUERY = "(max-width: 767px)";
+const MOBILE_QUERY = "(max-width: 767px)";
 
 function subscribe(onChange: () => void) {
   const mql = window.matchMedia(MOBILE_QUERY);

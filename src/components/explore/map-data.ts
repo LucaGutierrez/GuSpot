@@ -5,11 +5,6 @@ import { DEFAULT_CENTER, centroid } from "@/lib/geo";
 import { formatARS } from "@/lib/format";
 import { isBookable, liveOf } from "@/components/driver/filters";
 
-/** Resultados que se pueden solicitar en el período (los únicos que van al mapa). */
-export function bookableResults(results: SearchResult[]): SearchResult[] {
-  return results.filter(isBookable);
-}
-
 /** Marcadores del mapa: solo disponibles con precio; el label es el total del período. */
 export function toMarkers(results: SearchResult[]): MapMarker[] {
   return results.flatMap((r) => {

@@ -2,7 +2,7 @@ import type { AvailabilityRule, Feature, PhotoVariant, SpaceType, VehicleSize } 
 
 // Estado del asistente de publicación (solo en memoria) y sus validaciones.
 
-export const OTHER_CITY = "__otra__";
+const OTHER_CITY = "__otra__";
 
 export interface RuleDraft {
   key: number;
@@ -33,16 +33,6 @@ export interface Draft {
 }
 
 export type Errors = Record<string, string>;
-
-export const STEPS = [
-  "Datos básicos",
-  "Ubicación",
-  "Características",
-  "Fotos",
-  "Precio",
-  "Disponibilidad",
-  "Revisión",
-] as const;
 
 let ruleKey = 0;
 export function newRule(partial: Partial<RuleDraft> = {}): RuleDraft {

@@ -87,7 +87,7 @@ export function FormMessage({ result }: { result: AuthResult | null }) {
   );
 }
 
-/** Modo demo: no hay cuentas. */
+/** Copia del sitio sin conexión al servidor: no hay cuentas. */
 export function AccountsDisabled() {
   return (
     <div className="space-y-4">

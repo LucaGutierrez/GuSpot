@@ -19,7 +19,7 @@ export interface SearchResult {
   quote: Quote;
 }
 
-export function normalize(text: string): string {
+function normalize(text: string): string {
   return text
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
@@ -32,7 +32,7 @@ const ZONE_ALIASES: [RegExp, string][] = [
   [/\b(ciudad (autonoma )?de buenos aires|capital federal|buenos aires)\b/g, "caba"],
 ];
 
-export function matchesZone(space: Space, zona: string): boolean {
+function matchesZone(space: Space, zona: string): boolean {
   let q = normalize(zona);
   for (const [re, to] of ZONE_ALIASES) q = q.replace(re, to);
   if (!q) return true;
@@ -48,7 +48,7 @@ export interface Area {
   west: number;
 }
 
-export function inArea(space: Space, a: Area): boolean {
+function inArea(space: Space, a: Area): boolean {
   const { lat, lng } = space.coords;
   return lat <= a.north && lat >= a.south && lng <= a.east && lng >= a.west;
 }

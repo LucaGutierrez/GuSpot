@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 export const inputClass =
   "block w-full rounded-xl border border-ink-300 bg-white px-3 py-2.5 text-base text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-2 focus:outline-offset-0 focus:outline-brand-200 disabled:bg-ink-100 disabled:text-ink-500 aria-[invalid=true]:border-red-500 sm:text-sm";
 
-export function fieldIds(id: string) {
+function fieldIds(id: string) {
   return { hint: `${id}-ayuda`, error: `${id}-error` };
 }
 
@@ -57,19 +57,5 @@ export function FieldError({ id, message }: { id?: string; message?: string }) {
     <p id={id} className="text-sm font-medium text-red-700">
       {message}
     </p>
-  );
-}
-
-/** Lista de definición compacta para mostrar datos (tarifas, ubicación, etc.). */
-export function InfoList({ items }: { items: { label: string; value: ReactNode }[] }) {
-  return (
-    <dl className="divide-y divide-ink-100">
-      {items.map((item) => (
-        <div key={item.label} className="flex flex-col gap-0.5 py-2.5 sm:flex-row sm:gap-4">
-          <dt className="text-sm text-ink-500 sm:w-44 sm:shrink-0">{item.label}</dt>
-          <dd className="text-sm font-medium text-ink-900">{item.value}</dd>
-        </div>
-      ))}
-    </dl>
   );
 }

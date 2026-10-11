@@ -18,7 +18,7 @@ import { BookingStatusBadge, PaymentStatusBadge } from "@/components/ui/badge";
 import { ChevronLeftIcon, KeyIcon, PinIcon } from "@/components/ui/icons";
 import { MapView } from "@/components/map/map-view";
 import { NavigateButtons } from "@/components/garage/navigate-buttons";
-import { EmptyState } from "@/components/owner/section";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorBox, RequireSignIn, SuccessBox } from "@/components/my-garages/shared";
 import { paymentNote, usePaymentSettings } from "./real-booking-panel";
 

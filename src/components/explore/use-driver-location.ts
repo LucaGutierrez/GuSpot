@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import type { LatLng } from "@/lib/types";
 
-export type LocationState =
+type LocationState =
   | { status: "idle" }
   | { status: "locating" }
   | { status: "ok"; coords: LatLng }

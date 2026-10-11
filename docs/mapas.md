@@ -3,7 +3,7 @@
 Fuentes: páginas oficiales consultadas el **9 de octubre de 2026**. Precios, planes y condiciones cambian: revisá los enlaces antes de decidir.
 Convención: **"Fuente:"** es lo que dice la página (citado o resumido); **"Interpretación:"** es lectura nuestra, no asesoramiento legal.
 
-## 1. Decisión actual (demo)
+## 1. Decisión actual
 
 | Pieza | Elección | Licencia / costo |
 |---|---|---|
@@ -12,9 +12,9 @@ Convención: **"Fuente:"** es lo que dice la página (citado o resumido); **"Int
 | Datos del mapa | OpenStreetMap (vía OpenMapTiles) | ODbL, requiere atribución |
 | Búsqueda | Por ciudad/barrio sobre el catálogo propio (`src/lib/search.ts`) | Sin geocodificación |
 
-Por qué: permite mostrar el mapa en la demo **sin crear cuentas, sin claves y sin tarjeta**, con una biblioteca abierta que sirve igual con cualquier proveedor de tiles vectoriales.
+Por qué: permite mostrar el mapa **sin crear cuentas, sin claves y sin tarjeta**, con una biblioteca abierta que sirve igual con cualquier proveedor de tiles vectoriales.
 
-**Decidido (usuario, 2026-10-09):** OpenFreeMap para la demo. Según su documentación: uso comercial permitido, sin límite de vistas, **sin SLA**. Limitación anotada: si OpenFreeMap se cae o se discontinúa, la demo se queda sin mapa (la lista y la búsqueda siguen andando). Para producción hace falta otro proveedor (§7, pendiente). Cambiar de proveedor: §4.1.
+**Decidido (usuario, 2026-10-09):** OpenFreeMap para esta etapa. Según su documentación: uso comercial permitido, sin límite de vistas, **sin SLA**. Limitación anotada: si OpenFreeMap se cae o se discontinúa, el sitio se queda sin mapa (la lista y la búsqueda siguen andando). Para producción hace falta otro proveedor (§7, pendiente). Cambiar de proveedor: §4.1.
 
 Pantallas (decidido 2026-10-09): **la búsqueda en el mapa es la pantalla principal** en celular y escritorio, en `/`.
 - **Celular:** mapa a pantalla completa, con marcadores de precio y una tarjeta inferior al tocar uno.
@@ -22,7 +22,7 @@ Pantallas (decidido 2026-10-09): **la búsqueda en el mapa es la pantalla princi
 - `/buscar/` es un alias que redirige a `/` conservando la búsqueda. El contenido del antiguo inicio está en `/como-funciona/`.
 - **Zona inicial:** la última zona buscada (guardada en el navegador de la persona, ver §5) o **CABA** si no buscó ninguna.
 
-## 2. OpenFreeMap: qué es gratis y por qué es SOLO para la demo
+## 2. OpenFreeMap: qué es gratis y por qué es solo para esta etapa
 
 **Fuente** ([openfreemap.org](https://openfreemap.org/), [quick start](https://openfreemap.org/quick_start/), [términos](https://openfreemap.org/tos/), [privacidad](https://openfreemap.org/privacy/)):
 - "OpenFreeMap lets you display custom maps on your website and apps for free."
@@ -37,7 +37,7 @@ Pantallas (decidido 2026-10-09): **la búsqueda en el mapa es la pantalla princi
 - Privacidad: no guardan IPs en los logs de acceso salvo incidentes de seguridad (máx. 30 días); logs borrados a los 7 días; sin cookies; pueden usar Cloudflare como CDN.
 
 **Interpretación:**
-- Para la demo es ideal: $0, sin cuenta, sin límites declarados.
+- Para esta etapa es ideal: $0, sin cuenta, sin límites declarados.
 - **No es adecuado tal cual para el lanzamiento comercial.** Aunque el uso comercial está permitido, no hay SLA ni soporte, depende de donaciones a un proyecto comunitario y puede discontinuarse sin aviso. Si el mapa es la pantalla principal en celular, una caída de OpenFreeMap deja la app sin su pantalla principal y no hay a quién reclamar.
 - Para producción: proveedor con condiciones comerciales y SLA, o self-hosting (OpenFreeMap o Protomaps). Ver §7.
 
@@ -51,7 +51,7 @@ Pantallas (decidido 2026-10-09): **la búsqueda en el mapa es la pantalla princi
 **Fuente** ([openstreetmap.org/copyright](https://www.openstreetmap.org/copyright)): los datos de OSM están bajo la **ODbL**; hay que dar crédito a "OpenStreetMap and its contributors", dejar claro que los datos están bajo la Open Database License y enlazar a la página de copyright; en mapas navegables el ejemplo muestra el crédito en una esquina del mapa. Si se alteran o se construye sobre los datos y se distribuye el resultado, debe ser bajo la misma licencia (*share-alike*).
 OpenFreeMap pide además "© OpenMapTiles".
 
-En la demo: el control de atribución de MapLibre (que toma el texto del estilo) debe quedar **visible** sobre el mapa, sin taparlo con la barra de búsqueda, la tarjeta inferior ni la barra de navegación móvil. Texto esperado: "OpenFreeMap © OpenMapTiles Data from OpenStreetMap", con enlace a [openstreetmap.org/copyright](https://www.openstreetmap.org/copyright). Si se cambia de proveedor, cambia el texto: usar el que pida ese proveedor.
+El control de atribución de MapLibre (que toma el texto del estilo) debe quedar **visible** sobre el mapa, sin taparlo con la barra de búsqueda, la tarjeta inferior ni la barra de navegación móvil. Texto esperado: "OpenFreeMap © OpenMapTiles Data from OpenStreetMap", con enlace a [openstreetmap.org/copyright](https://www.openstreetmap.org/copyright). Si se cambia de proveedor, cambia el texto: usar el que pida ese proveedor.
 
 **Interpretación:** mostrar marcadores propios sobre el mapa no convierte nuestros datos de cocheras en "derivados" de OSM; pero si en el futuro se mezclaran datos de OSM con datos propios en una base, revisar el *share-alike* de la ODbL.
 
@@ -59,10 +59,10 @@ En la demo: el control de atribución de MapLibre (que toma el texto del estilo)
 
 - **Carga solo en el cliente.** El mapa usa APIs del navegador (WebGL, workers): el componente se carga del lado del cliente; en el HTML estático pre-generado no hay mapa. Se muestra un estado de carga y un mensaje si falla (sin conexión, WebGL no disponible, tiles caídos); la lista y la búsqueda siguen funcionando sin mapa.
 - **Worker.** MapLibre procesa los tiles en un web worker. Como el bundler no lo empaqueta solo, `scripts/copy-map-worker.mjs` copia `node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs` a `public/vendor/` antes de `npm run dev` y `npm run build` (scripts `predev`/`prebuild` de `package.json`). Así el sitio estático sirve el worker desde su propio dominio. Si se agrega `public/vendor/` al `.gitignore`, el build lo regenera igual.
-- **Conexión.** El estilo, los tiles, las fuentes de etiquetas y los íconos se piden al proveedor (en la demo, `tiles.openfreemap.org`) desde el navegador del visitante. Sin conexión a ese dominio, el mapa no se dibuja.
-- **Contrato.** `src/components/map/types.ts` (`MapViewProps`, `MapMarker`) define la interfaz entre el componente de mapa (`src/components/map/`) y las pantallas que lo usan (`src/components/explore/`). Lo mantiene el coordinador. Resumen: marcadores con `label` (precio) y `ariaLabel`; selección con `selectedId`/`onSelect`; `fitKey` para reencuadrar; `fallbackCenter`; `userLocation` opcional; `padding` para que nada quede tapado.
-- **Coordenadas.** `Space.coords` (`src/lib/types.ts`, WGS84) es el **punto público** (§6). Utilidades en `src/lib/geo.ts`: centro por defecto (Obelisco), zona inicial (`DEFAULT_MAP_ZONE = "CABA"`), distancia aproximada (Haversine) y su formato ("≈ 450 m"), `approximatePoint`.
-- **Alto en escritorio.** `src/components/chrome-height.tsx` (`ChromeHeight`, montado en el layout) mide el banner de demo y el encabezado (elementos con `data-app-chrome`) y publica la suma en la variable CSS `--app-top`; la vista lista + mapa usa `calc(100dvh - var(--app-top))` o equivalente para no quedar cortada. En móvil, la barra inferior expone su alto en `--mobile-nav-height`.
+- **Conexión.** El estilo, los tiles, las fuentes de etiquetas y los íconos se piden al proveedor (hoy, `tiles.openfreemap.org`) desde el navegador del visitante. Sin conexión a ese dominio, el mapa no se dibuja.
+- **Contrato.** `src/components/map/types.ts` (`MapViewProps`, `MapMarker`) define la interfaz entre el componente de mapa (`src/components/map/`) y las pantallas que lo usan (`src/components/explore/`). Resumen: marcadores con `label` (precio) y `ariaLabel`; selección con `selectedId`/`onSelect`; `fitKey` para reencuadrar; `fallbackCenter`; `userLocation` opcional; `padding` para que nada quede tapado.
+- **Coordenadas.** `Space.coords` (`src/lib/types.ts`, WGS84) es el **punto público** (§6). Utilidades en `src/lib/geo.ts`: centro por defecto (Obelisco), zona inicial (`DEFAULT_MAP_ZONE = "CABA"`), distancia aproximada (Haversine) y su formato ("≈ 450 m").
+- **Alto en escritorio.** `src/components/chrome-height.tsx` (`ChromeHeight`, montado en el layout) mide el banner superior y el encabezado (elementos con `data-app-chrome`) y publica la suma en la variable CSS `--app-top`; la vista lista + mapa usa `calc(100dvh - var(--app-top))` o equivalente para no quedar cortada. En móvil, la barra inferior expone su alto en `--mobile-nav-height`.
 
 ### 4.1 Cambiar de proveedor
 
@@ -91,7 +91,7 @@ Proveedores que no usan MapLibre (Google Maps): hay que reescribir `src/componen
 - **Nunca se pide automáticamente** (decidido 2026-10-09). Solo al tocar el botón para usar la ubicación del dispositivo (permiso explícito del navegador).
 - **Zona inicial sin ubicación:** la última zona buscada, guardada en el `localStorage` del navegador de la persona (`src/lib/last-zone.ts`, clave `guspot:ultima-zona`, máx. 80 caracteres) solo como comodidad; si no hay o el almacenamiento está bloqueado, CABA. Es texto de la zona buscada, no coordenadas, y no sale del navegador.
 - Los datos de la Ciudad usan "CABA"; la búsqueda acepta "Buenos Aires" y "Capital Federal" como sinónimos.
-- Se usa únicamente en el navegador para centrar el mapa y calcular distancias aproximadas. **No se guarda ni se envía** a ningún servidor (la demo no tiene servidor). Al recargar la página se pierde.
+- Se usa únicamente en el navegador para centrar el mapa y calcular distancias aproximadas. **No se guarda ni se envía** a ningún servidor (no hay servidor propio). Al recargar la página se pierde.
 - Si el conductor rechaza el permiso o falla, la app sigue funcionando con búsqueda por ciudad/barrio.
 - La geolocalización del navegador solo funciona en **HTTPS** (o `localhost`).
 - Las solicitudes de tiles las hace el navegador del visitante a OpenFreeMap (un tercero); la zona del mapa que se mira se puede inferir de los tiles pedidos. Ver la [política de privacidad de OpenFreeMap](https://openfreemap.org/privacy/).
@@ -99,10 +99,8 @@ Proveedores que no usan MapLibre (Google Maps): hay que reescribir `src/componen
 
 ## 6. Ubicación pública de las cocheras (decidido 2026-10-09)
 
-- **Punto público aproximado:** se desplaza el punto exacto entre **100 y 200 m**, en una dirección y distancia que dependen solo de un hash del id del espacio (`approximatePoint` en `src/lib/geo.ts`, FNV-1a). Es **estable**: siempre el mismo punto, así que no se puede promediar para encontrar el real. Las distancias calculadas con él se muestran como aproximadas ("≈").
-- **Dirección exacta:** se muestra al conductor recién cuando la reserva está **confirmada y pagada**. En la demo (sin pagos) queda oculta siempre; se usa `approxLocation` (texto) y el punto aproximado.
+- **Dirección exacta:** la ven el conductor con reserva **confirmada y pagada** o con aviso "Voy a este". El punto del mapa es público y exacto.
 - **Producción:** el desplazamiento se calcula **en el servidor** y la coordenada exacta **nunca se envía al navegador** antes de ese momento.
-- **Demo:** los puntos "exactos" son **ficticios** y están en el código (`src/lib/demo-data.ts`, que expone `coords: approximatePoint(space.id, exactCoords)`); no corresponden a cocheras ni direcciones reales. Al ser un sitio estático, no hay forma de ocultarlos del navegador: por eso son inventados.
 
 ## 7. Opciones para producción (solo descripción, nada elegido)
 

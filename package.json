@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy:demo": "npm run build && wrangler pages deploy out --project-name guspot-demo --branch main --commit-dirty=true"
+    "deploy": "npm run build && wrangler pages deploy out --project-name guspot-demo --branch main --commit-dirty=true"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",

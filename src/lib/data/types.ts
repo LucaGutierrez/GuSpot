@@ -17,7 +17,6 @@ import type {
   LocalDateTime,
   PaymentMethod,
   PaymentStatus,
-  Space,
   SpaceType,
   VehicleSize,
 } from "../types";
@@ -95,30 +94,6 @@ export class DataError extends Error {
     super(message);
     this.name = "DataError";
   }
-}
-
-/**
- * Funciones que exporta src/lib/data/garages.ts. Todas lanzan `DataError`
- * ante un problema. Requieren sesión salvo las de lectura pública.
- */
-export interface GaragesApi {
-  /** Garajes PUBLICADOS por cualquier propietario, como `Space` con `source: "real"` y `coords` = punto público. Sin datos privados. */
-  listPublishedGarages(): Promise<Space[]>;
-  /** Uno publicado (o null si no existe o no está publicado). */
-  getPublishedGarage(id: string): Promise<Space | null>;
-
-  listMyGarages(): Promise<OwnerGarage[]>;
-  getMyGarage(id: string): Promise<OwnerGarage | null>;
-  /** Crea en estado "borrador". */
-  createGarage(input: GarageInput): Promise<{ id: string }>;
-  updateGarage(id: string, input: GarageInput): Promise<void>;
-  /** Publicar exige ubicación, al menos una franja de disponibilidad y precio > 0 (lo valida también la base). */
-  setGarageStatus(id: string, status: ListingStatus): Promise<void>;
-  deleteGarage(id: string): Promise<void>;
-
-  /** Máx. 6 fotos por garaje, JPG/PNG/WebP, hasta 5 MB cada una. */
-  uploadGaragePhoto(garageId: string, file: File): Promise<GaragePhoto>;
-  removeGaragePhoto(garageId: string, path: string): Promise<void>;
 }
 
 export const PHOTO_LIMITS = {

@@ -7,7 +7,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabase } from "../supabase/client";
 import { DataError, type IdentityDoc, type Profile, type Requirement, type Vehicle } from "./types";
 
-export const IDENTITY_BUCKET = "identity-docs";
+const IDENTITY_BUCKET = "identity-docs";
 
 function db(): SupabaseClient {
   const supabase = getSupabase();

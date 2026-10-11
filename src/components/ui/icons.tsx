@@ -28,9 +28,6 @@ export const SearchIcon = (p: IconProps) => (
 export const PinIcon = (p: IconProps) => (
   <Icon {...p}><path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11Z" /><circle cx="12" cy="10" r="2.5" /></Icon>
 );
-export const CalendarIcon = (p: IconProps) => (
-  <Icon {...p}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></Icon>
-);
 export const ClockIcon = (p: IconProps) => (
   <Icon {...p}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Icon>
 );

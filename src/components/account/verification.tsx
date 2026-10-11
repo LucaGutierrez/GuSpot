@@ -30,7 +30,7 @@ import {
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, Container, PageHeader } from "@/components/ui/card";
 import { CameraIcon, CheckIcon } from "@/components/ui/icons";
-import { Field, inputClass } from "@/components/owner/form-fields";
+import { Field, inputClass } from "@/components/ui/form-fields";
 import { VEHICLE_ORDER } from "@/components/driver/vehicles";
 import { useNow } from "@/components/driver/use-now";
 import { ErrorBox, RequireSignIn, SuccessBox } from "@/components/my-garages/shared";

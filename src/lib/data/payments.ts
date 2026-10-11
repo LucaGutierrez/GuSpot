@@ -121,7 +121,7 @@ export async function getMyPaymentAccount(): Promise<PaymentAccount> {
 }
 
 const STATE_KEY = "guspot:mp-state";
-export const CONNECT_RETURN_PATH = "/mis-garages/cobros/";
+const CONNECT_RETURN_PATH = "/mis-garages/cobros/";
 
 function redirectUri() {
   return `${window.location.origin}${CONNECT_RETURN_PATH}`;
