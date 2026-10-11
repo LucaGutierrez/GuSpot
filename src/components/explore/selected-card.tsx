@@ -106,8 +106,9 @@ export function SelectedCard({
         </span>
       </p>
       <p className="mt-1 text-[11px] leading-snug text-ink-500">
-        Ubicación aproximada (±200 m). La dirección exacta se comparte cuando la reserva está
-        confirmada y pagada.
+        {space.source === "real"
+          ? "La dirección y cómo entrar se comparten cuando la reserva está confirmada."
+          : "Ubicación aproximada (±200 m). La dirección exacta se comparte cuando la reserva está confirmada y pagada."}
       </p>
 
       <div className="mt-3 flex items-end justify-between gap-3">

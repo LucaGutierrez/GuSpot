@@ -200,9 +200,9 @@ function Results({
             <p className="text-sm text-ink-500">Período: {formatRange(period.start, period.end)}</p>
           )}
           <p className="text-xs text-ink-500">
-            En el mapa aparecen solo los espacios disponibles en ese período, en una ubicación
-            aproximada (±200 m). La dirección exacta se comparte cuando la reserva esté confirmada
-            y pagada.
+            {real
+              ? "En el mapa aparecen solo los garages disponibles en ese período. La dirección y cómo entrar se comparten cuando la reserva esté confirmada."
+              : "En el mapa aparecen solo los espacios disponibles en ese período, en una ubicación aproximada (±200 m). La dirección exacta se comparte cuando la reserva esté confirmada y pagada."}
           </p>
 
           {spaces === null ? (

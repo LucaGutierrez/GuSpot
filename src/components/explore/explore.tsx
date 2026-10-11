@@ -175,7 +175,7 @@ export function Explore() {
   };
   const distanceFor = (r: SearchResult) =>
     userCoords
-      ? `${formatDistance(distanceKm(userCoords, r.space.coords))} de vos (ubicación aproximada)`
+      ? `${formatDistance(distanceKm(userCoords, r.space.coords))} de vos`
       : null;
 
   // --- Medidas para que el mapa no quede tapado -----------------------------

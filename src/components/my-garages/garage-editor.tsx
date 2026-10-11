@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
-import type { ListingStatus, LatLng } from "@/lib/types";
+import type { ListingStatus } from "@/lib/types";
 import type { GaragePhoto, OwnerGarage } from "@/lib/data/types";
 import { createGarage, deleteGarage, updateGarage } from "@/lib/data/garages";
 import { Button } from "@/components/ui/button";
@@ -41,12 +41,10 @@ function LocationFields({
   draft,
   errors,
   update,
-  publicLocation,
 }: {
   draft: GarageDraft;
   errors: Errors;
   update: (patch: Partial<GarageDraft>) => void;
-  publicLocation: LatLng | null;
 }) {
   // Por ahora GuSpot funciona solo en CABA (decisión del 2026-10-10). Para sumar
   // provincias, volver a mostrar un selector con PROVINCES de src/lib/geocoding.ts.
@@ -106,12 +104,11 @@ function LocationFields({
             <LocationPicker
               value={draft.exactLocation}
               onChange={(p) => update({ exactLocation: p })}
-              publicLocation={publicLocation}
             />
           )}
           <p className="text-xs text-ink-500">
-            Si el pin no quedó justo en la entrada, arrastralo. En el mapa público se muestra un punto
-            aproximado, a 100–200 m del real.
+            Si el pin no quedó justo en la entrada, arrastralo. Este es el punto que van a ver todos en
+            el mapa; la dirección escrita y las indicaciones son privadas.
           </p>
         </div>
       ) : (
@@ -265,7 +262,7 @@ export function GarageEditor({ garage, justCreated = false }: { garage: OwnerGar
           <BasicsStep {...stepProps} />
         </Section>
         <Section title="Ubicación" subtitle="La dirección y el punto exacto son privados: solo los ves vos.">
-          <LocationFields draft={draft} errors={errors} update={update} publicLocation={garage?.publicLocation ?? null} />
+          <LocationFields draft={draft} errors={errors} update={update} />
         </Section>
         <Section title="Características y condiciones">
           <FeaturesStep {...stepProps} />

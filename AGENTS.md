@@ -38,7 +38,7 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - Biblioteca: MapLibre GL JS (`maplibre-gl`, BSD-3). Mapas base: instancia pública de OpenFreeMap (sin clave, sin SLA): **solo apta para la demo**. Ver docs/mapas.md.
 - El worker de MapLibre se copia a `public/vendor/` con `predev`/`prebuild` (scripts/copy-map-worker.mjs).
 - Contrato entre el mapa y las pantallas: `src/components/map/types.ts` (lo mantiene el coordinador).
-- `Space.coords` es el punto PÚBLICO: desplazado 100–200 m de forma estable (`approximatePoint` en src/lib/geo.ts). Las distancias calculadas con él son aproximadas ("≈").
+- `Space.coords` es el punto PÚBLICO. Garages reales: desde 2026-10-10 es el punto EXACTO (decisión del usuario; migración 20261010130000). Garages de ejemplo: desplazado 100–200 m (`approximatePoint` en src/lib/geo.ts).
 - Proveedor de mapas: solo en `src/components/map/config.ts` (o `NEXT_PUBLIC_MAP_STYLE_URL`).
 - Al abrir el mapa sin búsqueda explícita se busca primero **cerca de la persona** (~2 km): si ya dio permiso, directo; si no, se explica antes de que el navegador pregunte; si dice "Ahora no", no se vuelve a ofrecer solo (localStorage `guspot:ubicacion`). Sin ubicación: la última zona buscada (`src/lib/last-zone.ts`) o CABA.
 - "Buscar en esta zona": al mover el mapa se ofrece buscar dentro del rectángulo visible (`MapViewProps.onUserMove`, `searchSpaces(..., area)`).
@@ -52,6 +52,6 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - Datos reales: contrato en `src/lib/data/types.ts` (lo mantiene el coordinador), implementación en `src/lib/data/garages.ts`.
 - `Space.source` ("demo" | "real"): garages de ejemplo y reales NUNCA se mezclan en la misma lista/mapa; los de ejemplo siempre con etiqueta "Ejemplo". Con Supabase configurado la búsqueda muestra SOLO los reales (`src/components/explore/space-source.tsx`).
 - Dirección del garage: se escribe y se elige de sugerencias (Georef de datos.gob.ar, respaldo Photon/OSM; `src/lib/geocoding.ts`, sin clave). El pin se puede ajustar en el mapa y hay enlace a Google Maps. Google Maps Platform descartado por ahora (exige tarjeta).
-- Datos privados (dirección exacta, punto exacto) solo los ve el propietario. El punto público se calcula en la base (100–200 m, estable).
+- Datos privados (dirección escrita, indicaciones de llegada) solo los ve el propietario; el conductor, con reserva confirmada (etapa de reservas). El punto del mapa es público y exacto.
 - Rutas reales: `/ingresar/`, `/crear-cuenta/`, `/recuperar/`, `/recuperar/nueva/`, `/cuenta/`, `/mis-garages/`, `/mis-garages/nuevo/`, `/mis-garages/editar/?id=`, `/espacio/?id=` (detalle de garage real; ruta con query porque el sitio es estático). Las pantallas de demo (`/propietarios/**`, `/espacios/[id]/`, `/mis-reservas/`) se conservan como demostración.
 - Fuera de alcance en esta etapa: reservas reales, pagos, Mercado Pago, comisiones, códigos de llegada, app nativa.

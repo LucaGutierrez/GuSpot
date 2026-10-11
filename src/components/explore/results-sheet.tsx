@@ -208,7 +208,7 @@ export function ResultsSheet({
         )}
         <p className="mt-4 text-xs text-ink-500">
           {real
-            ? "Garages publicados por sus dueños, en una ubicación aproximada (100–200 m). Todavía no se puede reservar ni pagar."
+            ? "Garages publicados por sus dueños. Todavía no se puede reservar ni pagar."
             : "Datos de demostración: espacios, precios y ubicaciones son de ejemplo. Solicitar no reserva ni cobra nada."}
         </p>
       </div>

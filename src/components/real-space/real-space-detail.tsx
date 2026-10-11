@@ -89,7 +89,7 @@ function Detail({ space }: { space: Space }) {
         id: space.id,
         position: space.coords,
         label: formatARS(space.hourlyPrice),
-        ariaLabel: `${space.title}: ubicación aproximada`,
+        ariaLabel: `${space.title}: ubicación`,
       },
     ],
     [space],
@@ -110,8 +110,8 @@ function Detail({ space }: { space: Space }) {
             </span>
           </p>
           <p className="text-sm text-ink-500">
-            Ubicación aproximada (100–200 m). La dirección exacta se comparte solo con una reserva
-            confirmada y pagada.
+            La dirección y las indicaciones para entrar se comparten cuando la reserva esté
+            confirmada.
           </p>
         </header>
 
@@ -179,7 +179,7 @@ function Detail({ space }: { space: Space }) {
 
         <section aria-labelledby="mapa">
           <h2 id="mapa" className="text-lg font-semibold text-ink-900">
-            Zona aproximada
+            Ubicación
           </h2>
           <div className="relative mt-3 h-64 overflow-hidden rounded-2xl border border-ink-200">
             <MapView

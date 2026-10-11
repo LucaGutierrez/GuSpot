@@ -26,7 +26,7 @@ export interface GarageInput {
   approxLocation: string;
   /** PRIVADO: dirección exacta. Solo la ve el propietario (y, en una etapa futura, el conductor con reserva confirmada y pagada). */
   address: string;
-  /** PRIVADO: punto exacto elegido en el mapa. El público se calcula en la base (100–200 m). */
+  /** PRIVADO: punto exacto elegido en el mapa. Desde 2026-10-10 el punto público es igual al exacto (lo copia la base). */
   exactLocation: LatLng;
   /** PRIVADO: cómo entrar y dónde estacionar ("portón negro, 2º subsuelo, cochera 14"). Mismas reglas que `address`. */
   arrivalInstructions: string;
