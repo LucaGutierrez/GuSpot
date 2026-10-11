@@ -36,6 +36,7 @@ npm install
 cp .env.example .env.local   # completar URL y clave publishable de Supabase
 npm run dev                  # http://localhost:3000
 npm run lint
+npm run test:security        # pruebas de seguridad de la base (locales)
 npm run build                # genera out/
 npm run deploy               # build + publicación en Cloudflare Pages
 ```
@@ -60,3 +61,4 @@ docs/               arquitectura, pagos, Supabase, mapas, marca y publicación
 - [Mapas](docs/mapas.md)
 - [Publicación](docs/publicacion.md)
 - [Marca](docs/marca.md)
+- [Seguridad](docs/seguridad.md)

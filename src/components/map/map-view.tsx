@@ -59,6 +59,8 @@ interface MarkerRecord {
   marker: Marker;
   el: HTMLButtonElement;
   pill: HTMLSpanElement;
+  badge: HTMLSpanElement;
+  name: HTMLSpanElement;
   data: MapMarker;
 }
 
@@ -99,14 +101,51 @@ function fitPadding(map: MapLibreMap, p: Padding): Padding {
   return pad;
 }
 
-function createMarkerElement(): { el: HTMLButtonElement; pill: HTMLSpanElement } {
+interface MarkerParts {
+  el: HTMLButtonElement;
+  /** Precio (texto). */
+  pill: HTMLSpanElement;
+  badge: HTMLSpanElement;
+  name: HTMLSpanElement;
+}
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/** Símbolo de GuSpot (la G con techo) para el ícono de los garajes. */
+function garageGlyph(): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 512 512");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS(SVG_NS, "path");
+  path.setAttribute("d", "M398 214 256 104 114 214v186h284v-96H284");
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke", "currentColor");
+  path.setAttribute("stroke-width", "56");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+  svg.appendChild(path);
+  return svg;
+}
+
+// Todo el texto va con textContent: el nombre lo escribe el dueño del garaje.
+function createMarkerElement(): MarkerParts {
   const el = document.createElement("button");
   el.type = "button";
   el.className = "gs-map-marker";
+  const name = document.createElement("span");
+  name.className = "gs-map-name";
+  const body = document.createElement("span");
+  body.className = "gs-map-pill";
+  const icon = document.createElement("span");
+  icon.className = "gs-map-icon";
+  icon.appendChild(garageGlyph());
   const pill = document.createElement("span");
-  pill.className = "gs-map-pill";
-  el.appendChild(pill);
-  return { el, pill };
+  pill.className = "gs-map-price";
+  const badge = document.createElement("span");
+  badge.className = "gs-map-badge";
+  body.append(icon, pill, badge);
+  el.append(name, body);
+  return { el, pill, badge, name };
 }
 
 /** Encuadra todos los marcadores (y la ubicación si corresponde). Devuelve false si el contenedor no tiene tamaño. */
@@ -337,19 +376,23 @@ export function MapView(props: MapViewProps) {
       seen.add(data.id);
       const existing = records.get(data.id);
       if (!existing) {
-        const { el, pill } = createMarkerElement();
+        const { el, pill, badge, name } = createMarkerElement();
         pill.textContent = data.label;
+        badge.textContent = data.badge ?? "";
+        name.textContent = data.name ?? "";
         el.setAttribute("aria-label", data.ariaLabel);
         applyVariant(el, data);
         attachMarkerHandlers(el, data.id, propsRef);
         const marker = new ml.Marker({ element: el, anchor: "bottom" })
           .setLngLat(toLngLat(data.position))
           .addTo(map);
-        records.set(data.id, { marker, el, pill, data });
+        records.set(data.id, { marker, el, pill, badge, name, data });
         continue;
       }
       const prev = existing.data;
       if (prev.label !== data.label) existing.pill.textContent = data.label;
+      if (prev.badge !== data.badge) existing.badge.textContent = data.badge ?? "";
+      if (prev.name !== data.name) existing.name.textContent = data.name ?? "";
       if (prev.ariaLabel !== data.ariaLabel) existing.el.setAttribute("aria-label", data.ariaLabel);
       if (prev.variant !== data.variant || prev.tone !== data.tone) applyVariant(existing.el, data);
       if (prev.position.lat !== data.position.lat || prev.position.lng !== data.position.lng) {

@@ -88,6 +88,19 @@ function env(name: string): string {
   return v;
 }
 
+/**
+ * Límite de uso (tabla rate_limits, función rate_limit_hit). Si la base no
+ * responde, se rechaza: estas acciones tienen costo (SMS, verificaciones, pagos).
+ */
+async function allowed(admin: SupabaseClient, key: string, max: number, windowSeconds: number): Promise<boolean> {
+  const { data, error } = await admin.rpc("rate_limit_hit", { p_key: key, p_max: max, p_window_seconds: windowSeconds });
+  if (error) {
+    console.error("rate_limit_hit", error.message);
+    return false;
+  }
+  return data === true;
+}
+
 const testMode = () => Deno.env.get("MP_TEST_MODE") === "true";
 
 /** Guarda el error en public.function_errors (además del log) para poder diagnosticarlo. */
@@ -230,7 +243,7 @@ async function loadBooking(admin: SupabaseClient, id: unknown): Promise<Booking 
   return data;
 }
 
-Deno.serve(async (req) => {
+async function handle(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "method" }, 405);
 
@@ -239,8 +252,11 @@ Deno.serve(async (req) => {
 
   // ------------------------------------------------------------ aviso de Mercado Pago
   if (url.searchParams.get("webhook") === "1") {
+    // Sin sesión (lo llama Mercado Pago). No confía en el contenido del aviso:
+    // solo consulta la API, y solo para reservas que todavía pueden cambiar.
     const b = await loadBooking(admin, url.searchParams.get("booking"));
-    if (b) await syncBooking(admin, b);
+    const pending = b && (b.status === "pendiente_pago" || (b.status === "cancelada" && b.payment_status !== "reembolsado"));
+    if (b && pending && (await allowed(admin, `mp:webhook:${b.id}`, 30, 3_600))) await syncBooking(admin, b);
     return json({ ok: true });
   }
 
@@ -264,6 +280,20 @@ Deno.serve(async (req) => {
     body = await req.json();
   } catch {
     return json({ error: "bad_request" }, 400);
+  }
+
+  // Límites por persona.
+  const LIMITS: Record<string, [number, number]> = {
+    connect_url: [10, 3_600],
+    connect_finish: [10, 3_600],
+    disconnect: [10, 3_600],
+    checkout: [20, 3_600],
+    sync: [120, 3_600],
+    cancel: [20, 3_600],
+  };
+  const limit = LIMITS[body.action ?? ""];
+  if (limit && !(await allowed(admin, `mp:${body.action}:${user.id}`, limit[0], limit[1]))) {
+    return json({ error: "too_many" }, 429);
   }
 
   // ------------------------------------------------------------ conectar la cuenta del garage
@@ -426,4 +456,20 @@ Deno.serve(async (req) => {
   }
 
   return json({ error: "bad_request" }, 400);
+}
+
+// Solo las páginas de GuSpot pueden llamar a esta función desde el navegador.
+const SITE_ORIGINS = [/^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev$/, /^http:\/\/localhost:3000$/];
+
+Deno.serve(async (req) => {
+  const res = await handle(req);
+  const origin = req.headers.get("Origin") ?? "";
+  const headers = new Headers(res.headers);
+  if (SITE_ORIGINS.some((re) => re.test(origin))) {
+    headers.set("Access-Control-Allow-Origin", origin);
+    headers.set("Vary", "Origin");
+  } else {
+    headers.delete("Access-Control-Allow-Origin");
+  }
+  return new Response(res.body, { status: res.status, headers });
 });

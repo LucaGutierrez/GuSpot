@@ -28,6 +28,7 @@ const MESSAGES: Record<string, string> = {
   just_paid: "El pago se acaba de aprobar. Revisá la reserva antes de cancelar.",
   refund_failed: "No pudimos hacer la devolución en este momento. Probá de nuevo en unos minutos.",
   no_refund: "Ya pasó el tiempo para cancelar con devolución.",
+  too_many: "Hiciste muchos intentos seguidos. Esperá un rato y probá de nuevo.",
 };
 
 async function callMP<T = Record<string, unknown>>(body: Record<string, unknown>): Promise<T> {

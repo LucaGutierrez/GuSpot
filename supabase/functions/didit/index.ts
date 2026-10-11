@@ -12,7 +12,7 @@
 //   { action: "phone_send" }       manda un código por SMS al celular del perfil
 //   { action: "phone_check", code } controla el código y marca profiles.phone_verified
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const DIDIT = "https://verification.didit.me/v3";
 const ALLOWED_CALLBACK = [/^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev\//, /^http:\/\/localhost:3000\//];
@@ -28,9 +28,22 @@ const json = (body: unknown, status = 200) =>
 
 const digits = (s: unknown) => String(s ?? "").replace(/\D/g, "");
 
+/**
+ * Límite de uso (tabla rate_limits, función rate_limit_hit). Si la base no
+ * responde, se rechaza: estas acciones tienen costo (SMS, verificaciones, pagos).
+ */
+async function allowed(admin: SupabaseClient, key: string, max: number, windowSeconds: number): Promise<boolean> {
+  const { data, error } = await admin.rpc("rate_limit_hit", { p_key: key, p_max: max, p_window_seconds: windowSeconds });
+  if (error) {
+    console.error("rate_limit_hit", error.message);
+    return false;
+  }
+  return data === true;
+}
+
 type IdentityStatus = "sin_verificar" | "en_revision" | "verificada" | "rechazada";
 
-Deno.serve(async (req) => {
+async function handle(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "method" }, 405);
 
@@ -56,6 +69,18 @@ Deno.serve(async (req) => {
     .select("first_name, last_name, dni_number, birth_date, phone, identity_status")
     .eq("id", user.id)
     .maybeSingle();
+
+  // Límites por persona (las acciones de Didit tienen costo).
+  const LIMITS: Record<string, [number, number]> = {
+    start: [5, 86_400],
+    sync: [60, 3_600],
+    phone_send: [5, 3_600],
+    phone_check: [10, 3_600],
+  };
+  const limit = LIMITS[body.action ?? ""];
+  if (limit && !(await allowed(admin, `didit:${body.action}:${user.id}`, limit[0], limit[1]))) {
+    return json({ error: "too_many" }, 429);
+  }
 
   // ------------------------------------------------------------------ start
   if (body.action === "start") {
@@ -187,4 +212,20 @@ Deno.serve(async (req) => {
   }
 
   return json({ error: "bad_request" }, 400);
+}
+
+// Solo las páginas de GuSpot pueden llamar a esta función desde el navegador.
+const SITE_ORIGINS = [/^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev$/, /^http:\/\/localhost:3000$/];
+
+Deno.serve(async (req) => {
+  const res = await handle(req);
+  const origin = req.headers.get("Origin") ?? "";
+  const headers = new Headers(res.headers);
+  if (SITE_ORIGINS.some((re) => re.test(origin))) {
+    headers.set("Access-Control-Allow-Origin", origin);
+    headers.set("Vary", "Origin");
+  } else {
+    headers.delete("Access-Control-Allow-Origin");
+  }
+  return new Response(res.body, { status: res.status, headers });
 });

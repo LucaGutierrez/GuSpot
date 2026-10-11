@@ -244,35 +244,88 @@
   }
 }
 
-/* ---------- Garages comerciales: marca oscura con nombre y precio + punto de disponibilidad ---------- */
+/* ---------- Partes del marcador (precio, ícono, estado y nombre) ---------- */
+
+.gs-map-icon,
+.gs-map-badge:empty,
+.gs-map-name {
+  display: none;
+}
+
+/* ---------- Garajes: ícono de color (disponibilidad) + precio + estado ---------- */
+
+.gs-map-marker.is-garage {
+  --gs-tone: #10b981;
+  position: relative;
+}
+.gs-map-marker[data-tone="few"] { --gs-tone: #f59e0b; }
+.gs-map-marker[data-tone="none"] { --gs-tone: #ef4444; }
+.gs-map-marker[data-tone="closed"] { --gs-tone: #8d95a5; }
+
 .gs-map-marker.is-garage .gs-map-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  max-width: 220px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  background: var(--gs-ink-900);
-  border-color: var(--gs-ink-900);
+  padding: 3px 9px 3px 3px;
+}
+.gs-map-marker.is-garage .gs-map-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--gs-tone);
   color: #fff;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.35);
+}
+.gs-map-marker.is-garage .gs-map-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.gs-map-marker.is-garage .gs-map-badge {
+  padding-left: 6px;
+  border-left: 1px solid var(--gs-ink-200);
+  color: var(--gs-ink-500);
+  font-size: 11px;
   font-weight: 600;
 }
-.gs-map-marker.is-garage .gs-map-pill::before { border-top-color: var(--gs-ink-900); }
-.gs-map-marker.is-garage .gs-map-pill::after { border-top-color: var(--gs-ink-900); }
-.gs-map-marker[data-tone] .gs-map-pill {
-  --gs-dot: #8d95a5;
+.gs-map-marker[data-tone="none"] .gs-map-badge { color: #b91c1c; }
+.gs-map-marker[data-tone="closed"] .gs-map-pill { opacity: 0.8; }
+.gs-map-marker[data-tone="closed"] .gs-map-price,
+.gs-map-marker[data-tone="none"] .gs-map-price {
+  color: var(--gs-ink-500);
 }
-.gs-map-marker[data-tone="ok"] .gs-map-pill { --gs-dot: #10b981; }
-.gs-map-marker[data-tone="few"] .gs-map-pill { --gs-dot: #fbbf24; }
-.gs-map-marker[data-tone="none"] .gs-map-pill { --gs-dot: #ef4444; }
-.gs-map-marker[data-tone="closed"] .gs-map-pill { --gs-dot: #8d95a5; opacity: 0.85; }
-.gs-map-marker[data-tone] .gs-map-pill {
-  background-image: radial-gradient(circle at 12px 50%, var(--gs-dot) 4px, transparent 5px);
-  padding-left: 22px;
-}
+
+/* Elegido: azul de la marca, un poco más grande y con el nombre arriba. */
 .gs-map-marker.is-garage.is-selected .gs-map-pill {
-  background-color: var(--gs-brand-600);
-  border-color: var(--gs-brand-700);
+  opacity: 1;
 }
-.gs-map-marker.is-garage.is-selected .gs-map-pill::before { border-top-color: var(--gs-brand-700); }
-.gs-map-marker.is-garage.is-selected .gs-map-pill::after { border-top-color: var(--gs-brand-600); }
+.gs-map-marker.is-garage.is-selected .gs-map-price {
+  color: #fff;
+}
+.gs-map-marker.is-garage.is-selected .gs-map-badge {
+  border-left-color: rgb(255 255 255 / 0.4);
+  color: rgb(255 255 255 / 0.9);
+}
+.gs-map-marker.is-garage.is-selected .gs-map-icon {
+  box-shadow: 0 0 0 2px #fff;
+}
+.gs-map-marker.is-garage.is-selected .gs-map-name:not(:empty) {
+  display: block;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: var(--gs-ink-900);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgb(18 23 34 / 0.25);
+  pointer-events: none;
+}

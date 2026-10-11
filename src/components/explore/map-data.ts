@@ -16,10 +16,12 @@ export function toMarkers(results: SearchResult[]): MapMarker[] {
         {
           id: r.space.id,
           position: r.space.coords,
-          label: `${r.space.title} · ${price}`,
+          label: price,
           ariaLabel: `${r.space.title}, ${r.space.neighborhood}. ${price}. ${live.label}.`,
           variant: "garage" as const,
           tone: live.tone,
+          badge: shortStatus(live.tone, r.space.commercial?.availableSpots ?? null),
+          name: r.space.title,
         },
       ];
     }
@@ -34,6 +36,14 @@ export function toMarkers(results: SearchResult[]): MapMarker[] {
       },
     ];
   });
+}
+
+/** Estado corto para el marcador: "5 libres", "Lleno", "Cerrado". */
+function shortStatus(tone: NonNullable<MapMarker["tone"]>, spots: number | null): string {
+  if (tone === "closed") return "Cerrado";
+  if (tone === "none") return "Lleno";
+  if (spots !== null && spots > 0) return spots === 1 ? "1 libre" : `${spots} libres`;
+  return tone === "few" ? "Pocos" : "Libre";
 }
 
 /** Centro a usar sin marcadores: el de los espacios de la zona o el de referencia. */

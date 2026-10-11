@@ -13,8 +13,12 @@ export interface MapMarker {
   ariaLabel: string;
   /** Garaje comercial (marca distinta de las cocheras particulares). */
   variant?: "garage" | "cochera";
-  /** Disponibilidad: se dibuja como punto de color (el texto va en la ficha). */
+  /** Disponibilidad: color del ícono del garaje. */
   tone?: "ok" | "few" | "none" | "closed";
+  /** Estado corto junto al precio ("5 libres", "Lleno", "Cerrado"). */
+  badge?: string;
+  /** Nombre del garaje: se muestra arriba del marcador cuando está elegido. */
+  name?: string;
 }
 
 /** Rectángulo visible del mapa (grados). */

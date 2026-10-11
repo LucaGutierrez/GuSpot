@@ -1,0 +1,11 @@
+# Encabezados de seguridad (Cloudflare Pages los agrega a cada respuesta).
+# Si se suma un servicio externo nuevo (API, imágenes, mapa), agregarlo a la
+# Content-Security-Policy o el navegador lo va a bloquear.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://qdyncjxfigrsigzongqh.supabase.co https://tiles.openfreemap.org; font-src 'self' data:; connect-src 'self' https://qdyncjxfigrsigzongqh.supabase.co wss://qdyncjxfigrsigzongqh.supabase.co https://tiles.openfreemap.org https://apis.datos.gob.ar https://photon.komoot.io; worker-src 'self' blob:; manifest-src 'self'; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(self), camera=(self), microphone=(), payment=(), usb=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Cross-Origin-Opener-Policy: same-origin
