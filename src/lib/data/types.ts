@@ -148,6 +148,8 @@ export interface RealBooking {
   car: string;
   /** "La Caja · póliza 123 · vence 01/01/2027" (copia al reservar). */
   carInsurance: string;
+  /** Foto de perfil del conductor (URL pública o ""). */
+  driverAvatarUrl: string;
   hours: number;
   /** Tarifa del garage. */
   total: Centavos;
@@ -228,6 +230,8 @@ export interface ArrivalNotice {
   plate: string;
   /** Seguro del vehículo (copia al avisar). */
   carInsurance: string;
+  /** Foto de perfil del conductor (URL pública o ""). */
+  driverAvatarUrl: string;
   etaMinutes: number;
   status: ArrivalStatus;
   createdAt: string; // ISO

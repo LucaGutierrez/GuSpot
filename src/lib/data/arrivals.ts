@@ -8,6 +8,7 @@
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 import { getSupabase } from "../supabase/client";
 import { DataError, type ArrivalNotice, type ArrivalStatus, type BookingAccess } from "./types";
+import { avatarUrl } from "./profile";
 
 function db(): SupabaseClient {
   const supabase = getSupabase();
@@ -47,13 +48,14 @@ interface Row {
   car: string;
   plate: string;
   car_insurance: string;
+  driver_avatar: string;
   eta_minutes: number;
   status: ArrivalStatus;
   created_at: string;
   updated_at: string;
 }
 
-const COLUMNS = "id, garage_id, driver_name, car, plate, car_insurance, eta_minutes, status, created_at, updated_at";
+const COLUMNS = "id, garage_id, driver_name, car, plate, car_insurance, driver_avatar, eta_minutes, status, created_at, updated_at";
 
 function toNotice(r: Row): ArrivalNotice {
   return {
@@ -63,6 +65,7 @@ function toNotice(r: Row): ArrivalNotice {
     car: r.car,
     plate: r.plate,
     carInsurance: r.car_insurance,
+    driverAvatarUrl: avatarUrl(r.driver_avatar),
     etaMinutes: r.eta_minutes,
     status: r.status,
     createdAt: r.created_at,

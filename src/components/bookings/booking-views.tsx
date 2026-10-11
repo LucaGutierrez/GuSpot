@@ -12,6 +12,7 @@ import { VEHICLE_LABEL, formatARS, formatRange } from "@/lib/format";
 import { toMs } from "@/lib/datetime";
 import { useNow, useNowMs } from "@/components/driver/use-now";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
 import { Card, Container, PageHeader } from "@/components/ui/card";
 import { BookingStatusBadge, PaymentStatusBadge } from "@/components/ui/badge";
 import { ChevronLeftIcon, KeyIcon, PinIcon } from "@/components/ui/icons";
@@ -207,7 +208,10 @@ function BookingDetail({
           {b.role === "owner" && (
             <div className="col-span-2">
               <dt className="text-ink-500">Conductor</dt>
-              <dd className="font-medium text-ink-900">{b.driverName || "Sin nombre"}</dd>
+              <dd className="mt-1 flex items-center gap-2 font-medium text-ink-900">
+                <Avatar url={b.driverAvatarUrl} name={b.driverName || "Conductor"} size={32} />
+                {b.driverName || "Sin nombre"}
+              </dd>
             </div>
           )}
         </dl>

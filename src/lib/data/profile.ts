@@ -121,6 +121,71 @@ export function normalizePhone(value: string): string {
 // --- Documentos -------------------------------------------------------------
 
 /** Achica la foto (máx. 1600 px, JPEG) para que suba rápido desde el celular. */
+const AVATAR_BUCKET = "avatars";
+
+/** URL pública de una foto de perfil ("" si no tiene). */
+export function avatarUrl(path: string): string {
+  const supabase = getSupabase();
+  if (!path || !supabase) return "";
+  return supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path).data.publicUrl;
+}
+
+/** Recorte cuadrado centrado de 512 px (JPEG). */
+async function squareAvatar(file: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(file);
+  const side = Math.min(bitmap.width, bitmap.height);
+  const size = Math.min(512, side);
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  canvas
+    .getContext("2d")
+    ?.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, size, size);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+  if (!blob) throw new DataError("No pudimos leer esa foto. Probá con otra.", "validation");
+  return blob;
+}
+
+/** Ruta de mi foto de perfil ("" si no tengo). */
+export async function getMyAvatarPath(): Promise<string> {
+  const supabase = db();
+  const me = await requireUserId(supabase);
+  const { data } = await supabase.from("profiles").select("avatar_path").eq("id", me).maybeSingle<{ avatar_path: string }>();
+  return data?.avatar_path ?? "";
+}
+
+async function setAvatarPath(supabase: ReturnType<typeof db>, me: string, path: string): Promise<void> {
+  const { data: updated, error } = await supabase.from("profiles").update({ avatar_path: path }).eq("id", me).select("id");
+  if (error) throw toDataError(error);
+  if (updated.length === 0) {
+    const { error: insError } = await supabase.from("profiles").insert({ id: me, avatar_path: path });
+    if (insError) throw toDataError(insError);
+  }
+}
+
+/** Sube una foto de perfil nueva (reemplaza la anterior). Devuelve la ruta. */
+export async function uploadAvatar(file: File): Promise<string> {
+  if (!file.type.startsWith("image/")) throw new DataError("Tiene que ser una foto.", "validation");
+  const supabase = db();
+  const me = await requireUserId(supabase);
+  const previous = await getMyAvatarPath();
+  const body = await squareAvatar(file);
+  const path = `${me}/${crypto.randomUUID()}.jpg`;
+  const { error } = await supabase.storage.from(AVATAR_BUCKET).upload(path, body, { contentType: "image/jpeg" });
+  if (error) throw toDataError(error);
+  await setAvatarPath(supabase, me, path);
+  if (previous) await supabase.storage.from(AVATAR_BUCKET).remove([previous]);
+  return path;
+}
+
+export async function removeAvatar(): Promise<void> {
+  const supabase = db();
+  const me = await requireUserId(supabase);
+  const previous = await getMyAvatarPath();
+  await setAvatarPath(supabase, me, "");
+  if (previous) await supabase.storage.from(AVATAR_BUCKET).remove([previous]);
+}
+
 async function shrink(file: File): Promise<Blob> {
   try {
     const bitmap = await createImageBitmap(file);

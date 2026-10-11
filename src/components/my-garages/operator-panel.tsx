@@ -9,6 +9,7 @@ import { getMyGarage, updateLiveAvailability } from "@/lib/data/garages";
 import { listGarageArrivals, setArrivalStatus, subscribeArrivals } from "@/lib/data/arrivals";
 import { agoText } from "@/lib/live";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
 import { Card, Container } from "@/components/ui/card";
 import { ChevronLeftIcon } from "@/components/ui/icons";
 import { ErrorBox, RequireSignIn, errorMessage } from "./shared";
@@ -276,12 +277,15 @@ function Arrivals({ garageId, now }: { garageId: string; now: number }) {
             return (
               <li key={a.id} className="flex flex-col gap-3 rounded-xl border border-brand-200 bg-brand-50 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
+                  <div className="flex items-start gap-3">
+                    <Avatar url={a.driverAvatarUrl} name={a.driverName || "Conductor"} size={44} />
+                    <div>
                     <p className="font-semibold text-ink-900">{a.driverName || "Conductor"}</p>
                     <p className="text-sm text-ink-700">
                       {a.car} · <span className="font-mono font-semibold">{a.plate}</span>
                     </p>
                     {a.carInsurance && <p className="text-xs text-ink-500">Seguro: {a.carInsurance}</p>}
+                    </div>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-ink-900">{left > 0 ? `Llega en ~${left} min` : "Debería estar llegando"}</p>

@@ -9,6 +9,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Interval, LocalDateTime, VehicleSize } from "../types";
 import { getSupabase } from "../supabase/client";
 import { DataError, type BookingAccess, type RealBooking } from "./types";
+import { avatarUrl } from "./profile";
 
 function db(): SupabaseClient {
   const supabase = getSupabase();
@@ -74,6 +75,7 @@ interface BookingRow {
   car_model: string;
   car_color: string;
   car_insurance: string;
+  driver_avatar: string;
   hours: number;
   total_price: number;
   service_fee: number;
@@ -84,7 +86,7 @@ interface BookingRow {
 
 const COLUMNS =
   "id, garage_id, driver_id, driver_name, garage_title, garage_neighborhood, start_at, end_at, status, " +
-  "payment_status, vehicle, plate, car_brand, car_model, car_color, car_insurance, hours, total_price, service_fee, hold_until, paid_at, created_at";
+  "payment_status, vehicle, plate, car_brand, car_model, car_color, car_insurance, driver_avatar, hours, total_price, service_fee, hold_until, paid_at, created_at";
 
 function toBooking(row: BookingRow, me: string): RealBooking {
   return {
@@ -101,6 +103,7 @@ function toBooking(row: BookingRow, me: string): RealBooking {
     plate: row.plate,
     car: [row.car_brand, row.car_model, row.car_color].filter(Boolean).join(" "),
     carInsurance: row.car_insurance,
+    driverAvatarUrl: avatarUrl(row.driver_avatar),
     hours: row.hours,
     total: row.total_price,
     serviceFee: row.service_fee,

@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, Container, PageHeader } from "@/components/ui/card";
-import { CarIcon, ChevronLeftIcon, ChevronRightIcon, KeyIcon, ParkingIcon, ShieldIcon, TicketIcon, WalletIcon } from "@/components/ui/icons";
+import { CameraIcon, CarIcon, ChevronLeftIcon, ChevronRightIcon, KeyIcon, ParkingIcon, ShieldIcon, TicketIcon, WalletIcon } from "@/components/ui/icons";
 import { useAuth, type AuthUser } from "@/lib/auth/auth-provider";
 import { PASSWORD_MIN_LENGTH, signOut, updatePassword, type AuthResult } from "@/lib/auth/actions";
 import type { Profile, Requirement } from "@/lib/data/types";
-import { getMyProfile, myMissingRequirements } from "@/lib/data/profile";
+import { avatarUrl, getMyAvatarPath, getMyProfile, myMissingRequirements, removeAvatar, uploadAvatar } from "@/lib/data/profile";
 import { RequireSignIn } from "@/components/my-garages/shared";
 import { AccountsDisabled, Field, FormMessage, Loading, ShowPassword } from "./form-parts";
 
@@ -117,12 +117,7 @@ function SignedIn({ user }: { user: AuthUser }) {
   return (
     <div className="flex flex-col gap-5">
       <Card className="flex items-center gap-4 p-5">
-        <span
-          aria-hidden="true"
-          className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand-100 text-xl font-bold text-brand-700"
-        >
-          {fullName.charAt(0).toUpperCase()}
-        </span>
+        <AvatarPicker initial={fullName.charAt(0).toUpperCase()} />
         <div className="min-w-0">
           <p className="truncate text-lg font-semibold text-ink-900">{fullName}</p>
           <p className="truncate text-sm text-ink-500">{user.email}</p>
@@ -195,6 +190,84 @@ function SignedIn({ user }: { user: AuthUser }) {
       <Button variant="secondary" size="lg" onClick={onSignOut} disabled={leaving} className="w-full">
         {leaving ? "Cerrando sesión…" : "Cerrar sesión"}
       </Button>
+    </div>
+  );
+}
+
+/** Foto de perfil: tocás la foto para cambiarla. La ve el garaje cuando reservás o avisás que vas. */
+function AvatarPicker({ initial }: { initial: string }) {
+  const [path, setPath] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMyAvatarPath()
+      .then((p) => !cancelled && setPath(p))
+      .catch(() => !cancelled && setPath(""));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function onFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    try {
+      setPath(await uploadAvatar(file));
+    } catch {
+      setError("No pudimos subir la foto. Probá con otra.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onRemove() {
+    setBusy(true);
+    setError(null);
+    try {
+      await removeAvatar();
+      setPath("");
+    } catch {
+      setError("No pudimos quitar la foto.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const url = path ? avatarUrl(path) : "";
+  return (
+    <div className="flex shrink-0 flex-col items-center gap-1">
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={busy || path === null}
+        aria-label={url ? "Cambiar foto de perfil" : "Agregar foto de perfil"}
+        className="relative grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-brand-100 text-xl font-bold text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-70"
+      >
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element -- sitio estático, sin optimización de imágenes
+          <img src={url} alt="" className="h-full w-full object-cover" />
+        ) : (
+          initial
+        )}
+        <span className="absolute right-0 bottom-0 grid h-6 w-6 place-items-center rounded-full bg-brand-600 text-white ring-2 ring-white">
+          <CameraIcon width={13} height={13} />
+        </span>
+      </button>
+      <input ref={inputRef} type="file" accept="image/*" className="sr-only" tabIndex={-1} onChange={onFile} />
+      {busy ? (
+        <span className="text-xs text-ink-500">Subiendo…</span>
+      ) : url ? (
+        <button type="button" onClick={onRemove} className="text-xs font-semibold text-ink-500 hover:underline">
+          Quitar
+        </button>
+      ) : null}
+      {error && <span role="alert" className="max-w-24 text-center text-xs text-red-700">{error}</span>}
     </div>
   );
 }
