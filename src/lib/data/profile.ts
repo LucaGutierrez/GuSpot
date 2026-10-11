@@ -91,7 +91,7 @@ export async function saveMyProfile(p: Omit<Profile, "identityStatus" | "phoneVe
     last_name: p.lastName.trim(),
     dni_number: p.dni.replace(/\D/g, ""),
     birth_date: p.birthDate || null,
-    phone: p.phone.replace(/[^\d+]/g, ""),
+    phone: normalizePhone(p.phone),
     license_number: p.licenseNumber.trim(),
     license_category: p.licenseCategory,
     license_expiry: p.licenseExpiry || null,
@@ -101,6 +101,18 @@ export async function saveMyProfile(p: Omit<Profile, "identityStatus" | "phoneVe
     ? await supabase.from("profiles").update(row).eq("id", me)
     : await supabase.from("profiles").insert({ id: me, ...row });
   if (error) throw toDataError(error);
+}
+
+/** Celular argentino a formato internacional: "11 2345-6789" / "011 15 2345 6789" → "+541123456789". */
+export function normalizePhone(value: string): string {
+  const raw = value.trim();
+  if (!raw) return "";
+  if (raw.startsWith("+")) return `+${raw.replace(/\D/g, "")}`;
+  let d = raw.replace(/\D/g, "").replace(/^0/, "");
+  // Quitar el "15" de los celulares escritos a la antigua (11 15 2345 6789).
+  // Solo si sobra el 15: código de área + 15 + número = 12 dígitos.
+  if (d.length === 12) d = d.replace(/^(\d{2,4})15(\d{6,8})$/, "$1$2");
+  return `+54${d}`;
 }
 
 // --- Documentos -------------------------------------------------------------

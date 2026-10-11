@@ -16,6 +16,7 @@ import {
   listMyVehicles,
   myMissingRequirements,
   myUploadedDocs,
+  normalizePhone,
   normalizePlate,
   saveMyProfile,
   startIdentityCheck,
@@ -405,7 +406,7 @@ function PersonalForm({ profile, onSaved }: { profile: Profile; onSaved: (p: Pro
     setBusy(true);
     setResult(null);
     try {
-      const phone = form.phone.trim().startsWith("+") ? form.phone : `+54${form.phone.replace(/\D/g, "").replace(/^0/, "")}`;
+      const phone = normalizePhone(form.phone);
       const next = { ...form, phone };
       await saveMyProfile(next);
       onSaved({ ...next, phone: phone.replace(/[^\d+]/g, ""), dni: form.dni.replace(/\D/g, "") });

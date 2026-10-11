@@ -31,14 +31,39 @@ function redirect(path: string): string {
   return `${window.location.origin}${path}`;
 }
 
-export async function signUp(email: string, password: string, displayName: string): Promise<AuthResult> {
+export interface SignUpData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  /** Solo números. */
+  dni: string;
+  birthDate: string; // YYYY-MM-DD
+  /** +54… */
+  phone: string;
+}
+
+/**
+ * Crea la cuenta. Los datos personales viajan en los metadatos y la base los
+ * copia al perfil (migración 20261011130000_signup_profile.sql).
+ */
+export async function signUp(input: SignUpData): Promise<AuthResult> {
   const supabase = getSupabase();
   if (!supabase) return NOT_CONFIGURED;
+  const firstName = input.firstName.trim();
+  const lastName = input.lastName.trim();
   const { data, error } = await supabase.auth.signUp({
-    email: email.trim(),
-    password,
+    email: input.email.trim(),
+    password: input.password,
     options: {
-      data: { display_name: displayName.trim() },
+      data: {
+        display_name: `${firstName} ${lastName}`.trim(),
+        first_name: firstName,
+        last_name: lastName,
+        dni: input.dni,
+        birth_date: input.birthDate,
+        phone: input.phone,
+      },
       emailRedirectTo: redirect("/ingresar/?confirmado=1"),
     },
   });
