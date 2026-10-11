@@ -78,5 +78,5 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - **"Voy a este"**: aviso de llegada (`arrival_notices`, `notify_arrival`, `update_arrival`, `arrival_access`), NO reserva lugar y se dice siempre. Pantalla `/aviso/?id=`. El garage lo recibe por Supabase Realtime con el panel abierto (email/SMS/push: pendiente).
 - **Reservas** en garages comerciales: hasta `reservable_spots` superpuestas (lo controla `create_booking` con el garage bloqueado).
 - Marcadores de garage: "Nombre · $X/h" con punto de disponibilidad (`MapMarker.variant = "garage"`, `tone`).
-- Requisitos: conductor = datos + identidad + licencia + vehículo (también para "Voy a este"); quien publica = datos + identidad + **celular verificado** (`profiles.phone_verified`; SMS pendiente de proveedor).
+- Requisitos: conductor = datos + identidad + licencia + vehículo (también para "Voy a este"); quien publica = datos + identidad + **celular verificado** (`profiles.phone_verified`, código por SMS con Didit). La exigencia del celular se prende/apaga con `app_settings.require_phone_verification` (migración 20261011150000); **apagada desde 2026-10-11** hasta que se cargue saldo en Didit.
 - Precio por demanda y reseñas: NO implementados (sin datos de demanda ni forma de verificar visitas todavía).
