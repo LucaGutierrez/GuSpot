@@ -9,6 +9,8 @@
 // Acciones (POST, con la sesión de la persona):
 //   { action: "start", callback }  crea la sesión en Didit y devuelve { url }
 //   { action: "sync" }             consulta el resultado y actualiza profiles.identity_status
+//   { action: "phone_send" }       manda un código por SMS al celular del perfil
+//   { action: "phone_check", code } controla el código y marca profiles.phone_verified
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -42,7 +44,7 @@ Deno.serve(async (req) => {
   const user = auth?.user;
   if (!user) return json({ error: "not_signed_in" }, 401);
 
-  let body: { action?: string; callback?: string } = {};
+  let body: { action?: string; callback?: string; code?: string } = {};
   try {
     body = await req.json();
   } catch {
@@ -132,6 +134,56 @@ Deno.serve(async (req) => {
       await admin.from("profiles").update({ identity_status: next }).eq("id", user.id);
     }
     return json({ status: next ?? profile?.identity_status ?? "sin_verificar", provider_status: d.status, reason });
+  }
+
+  // ------------------------------------------------------------------ celular
+  if (body.action === "phone_send") {
+    const phone = String(profile?.phone ?? "");
+    if (!/^\+[0-9]{8,15}$/.test(phone)) return json({ error: "phone_missing" }, 400);
+    const res = await fetch(`${DIDIT}/phone/send/`, {
+      method: "POST",
+      headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        phone_number: phone,
+        vendor_data: user.id,
+        options: { code_size: 6, locale: "es", preferred_channel: "sms" },
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 403 && /top-up|credits/i.test(JSON.stringify(data))) return json({ error: "phone_disabled" }, 503);
+    if (res.status === 429) return json({ error: "too_many" }, 429);
+    if (res.status === 400) return json({ error: "phone_invalid" }, 400);
+    if (!res.ok) {
+      console.error("didit phone send", res.status, JSON.stringify(data));
+      return json({ error: "provider" }, 502);
+    }
+    if (data.status === "Blocked") return json({ error: "blocked" }, 400);
+    return json({ sent: true });
+  }
+
+  if (body.action === "phone_check") {
+    const phone = String(profile?.phone ?? "");
+    const code = String(body.code ?? "").replace(/\D/g, "");
+    if (!/^\+[0-9]{8,15}$/.test(phone)) return json({ error: "phone_missing" }, 400);
+    if (!/^[0-9]{4,8}$/.test(code)) return json({ error: "wrong_code" }, 400);
+    const res = await fetch(`${DIDIT}/phone/check/`, {
+      method: "POST",
+      headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({ phone_number: phone, code, disposable_number_action: "DECLINE" }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 429) return json({ error: "too_many" }, 429);
+    if (!res.ok) {
+      console.error("didit phone check", res.status, JSON.stringify(data));
+      return json({ error: "provider" }, 502);
+    }
+    if (data.status === "Approved") {
+      await admin.from("profiles").update({ phone_verified: true }).eq("id", user.id);
+      return json({ verified: true });
+    }
+    if (data.status === "Failed") return json({ error: "wrong_code" }, 400);
+    if (data.status === "Declined") return json({ error: "declined" }, 400);
+    return json({ error: "expired" }, 400);
   }
 
   return json({ error: "bad_request" }, 400);

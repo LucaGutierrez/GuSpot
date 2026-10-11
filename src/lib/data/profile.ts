@@ -216,6 +216,17 @@ async function callDidit(body: Record<string, unknown>): Promise<Record<string, 
       // sin cuerpo
     }
     if (code === "datos_personales") throw new DataError("Primero guardá tus datos personales.", "validation");
+    const phoneMessages: Record<string, string> = {
+      phone_disabled: "El envío de códigos por SMS todavía no está habilitado. Probá más tarde.",
+      phone_missing: "Primero guardá tu celular en Datos personales.",
+      phone_invalid: "Ese número no puede recibir SMS. Revisalo en Datos personales.",
+      too_many: "Hiciste muchos intentos seguidos. Esperá un rato y probá de nuevo.",
+      wrong_code: "El código no es correcto.",
+      expired: "El código venció. Pedí uno nuevo.",
+      declined: "No pudimos verificar ese número.",
+      blocked: "No pudimos enviar el código a ese número.",
+    };
+    if (phoneMessages[code]) throw new DataError(phoneMessages[code], "validation");
     if (code === "not_configured")
       throw new DataError("La verificación todavía no está configurada. Probá más tarde.", "not_configured");
     throw new DataError("No pudimos conectar con el servicio de verificación. Probá de nuevo.", "network");
@@ -236,6 +247,16 @@ export async function syncIdentityCheck(): Promise<{ status: Profile["identitySt
   return { status: (data.status as Profile["identityStatus"]) ?? "sin_verificar", reason: data.reason ?? "" };
 }
 
+/** Manda un código por SMS al celular guardado en el perfil. */
+export async function sendPhoneCode(): Promise<void> {
+  await callDidit({ action: "phone_send" });
+}
+
+/** Controla el código. Si es correcto, el celular queda verificado. */
+export async function checkPhoneCode(code: string): Promise<void> {
+  await callDidit({ action: "phone_check", code });
+}
+
 // --- Requisitos -------------------------------------------------------------
 
 export async function myMissingRequirements(role: "conductor" | "propietario"): Promise<Requirement[]> {
@@ -249,6 +270,7 @@ export async function myMissingRequirements(role: "conductor" | "propietario"): 
 export const REQUIREMENT_LABEL: Record<Requirement, string> = {
   datos_personales: "Datos personales (nombre, DNI, fecha de nacimiento —18 años o más— y celular)",
   identidad: "Verificar tu identidad (DNI + reconocimiento facial)",
+  telefono: "Verificar tu celular con un código",
   dni_fotos: "Fotos del DNI (frente y dorso)",
   selfie: "Selfie para verificar que sos vos",
   licencia: "Licencia de conducir (datos y fotos de frente y dorso)",

@@ -19,6 +19,8 @@ import {
   normalizePhone,
   normalizePlate,
   saveMyProfile,
+  checkPhoneCode,
+  sendPhoneCode,
   startIdentityCheck,
   syncIdentityCheck,
   uploadIdentityDoc,
@@ -133,6 +135,14 @@ function Verification({ back, returning }: { back: string | null; returning: boo
         }}
       />
 
+      <PhoneSection
+        profile={profile}
+        onVerified={() => {
+          setProfile((p) => (p ? { ...p, phoneVerified: true } : p));
+          refreshMissing().catch(() => {});
+        }}
+      />
+
       <IdentitySection
         profile={profile}
         returning={returning}
@@ -203,6 +213,88 @@ function StatusCard({
         </ButtonLink>
       )}
     </Card>
+  );
+}
+
+function PhoneSection({ profile, onVerified }: { profile: Profile; onVerified: () => void }) {
+  const [sent, setSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [busy, setBusy] = useState<"send" | "check" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const phone = profile.phone;
+  const shown = phone.startsWith("+54") ? `+54 ${phone.slice(3)}` : phone;
+
+  async function onSend() {
+    setBusy("send");
+    setError(null);
+    try {
+      await sendPhoneCode();
+      setSent(true);
+      setCode("");
+    } catch (err) {
+      setError(errText(err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function onCheck(e: FormEvent) {
+    e.preventDefault();
+    setBusy("check");
+    setError(null);
+    try {
+      await checkPhoneCode(code);
+      onVerified();
+    } catch (err) {
+      setError(errText(err));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <Section title="Tu celular" subtitle="Te mandamos un código por SMS para confirmar que es tuyo." done={profile.phoneVerified}>
+      {!phone ? (
+        <p className="text-sm text-ink-500">Primero guardá tu celular en Datos personales.</p>
+      ) : profile.phoneVerified ? (
+        <p className="flex items-center gap-2 text-sm text-emerald-800">
+          <CheckIcon className="shrink-0" /> {shown} verificado.
+        </p>
+      ) : !sent ? (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-ink-700">
+            Vamos a mandar un código a <strong>{shown}</strong>.
+          </p>
+          <Button className="w-full sm:w-fit" onClick={onSend} disabled={busy !== null}>
+            {busy === "send" ? "Enviando…" : "Enviarme el código"}
+          </Button>
+        </div>
+      ) : (
+        <form onSubmit={onCheck} noValidate className="flex flex-col gap-3">
+          <p className="text-sm text-ink-700">
+            Escribí el código que te llegó a <strong>{shown}</strong>. Vence en 5 minutos.
+          </p>
+          <input
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            aria-label="Código de verificación"
+            maxLength={8}
+            className={`${inputClass} max-w-48 text-center text-lg tracking-[0.3em]`}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={busy !== null || code.length < 4}>
+              {busy === "check" ? "Verificando…" : "Verificar"}
+            </Button>
+            <Button variant="secondary" onClick={onSend} disabled={busy !== null}>
+              Reenviar código
+            </Button>
+          </div>
+        </form>
+      )}
+      {error && <ErrorBox>{error}</ErrorBox>}
+    </Section>
   );
 }
 
@@ -410,7 +502,14 @@ function PersonalForm({ profile, onSaved }: { profile: Profile; onSaved: (p: Pro
       const phone = normalizePhone(form.phone);
       const next = { ...form, phone };
       await saveMyProfile(next);
-      onSaved({ ...next, phone: phone.replace(/[^\d+]/g, ""), dni: form.dni.replace(/\D/g, "") });
+      const savedPhone = phone.replace(/[^\d+]/g, "");
+      onSaved({
+        ...next,
+        phone: savedPhone,
+        dni: form.dni.replace(/\D/g, ""),
+        // Cambiar el celular anula su verificación (lo hace también la base).
+        phoneVerified: savedPhone === profile.phone ? profile.phoneVerified : false,
+      });
       setResult({ ok: true, text: "Guardamos tus datos." });
     } catch (err) {
       setResult({ ok: false, text: errText(err) });

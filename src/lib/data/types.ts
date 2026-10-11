@@ -194,6 +194,7 @@ export interface Vehicle {
 export type Requirement =
   | "datos_personales"
   | "identidad"
+  | "telefono"
   | "dni_fotos"
   | "selfie"
   | "licencia"
