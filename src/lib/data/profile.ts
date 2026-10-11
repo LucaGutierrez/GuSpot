@@ -175,11 +175,36 @@ export async function listMyVehicles(): Promise<Vehicle[]> {
   await requireUserId(supabase);
   const { data, error } = await supabase
     .from("vehicles")
-    .select("id, brand, model, color, plate, size")
+    .select("id, brand, model, color, plate, size, insurer, insurance_policy, insurance_expiry")
     .order("created_at")
-    .returns<Vehicle[]>();
+    .returns<(Omit<Vehicle, "insurancePolicy" | "insuranceExpiry"> & { insurance_policy: string; insurance_expiry: string | null })[]>();
   if (error) throw toDataError(error);
-  return data;
+  return data.map(({ insurance_policy, insurance_expiry, ...v }) => ({
+    ...v,
+    insurancePolicy: insurance_policy,
+    insuranceExpiry: insurance_expiry ?? "",
+  }));
+}
+
+/** Seguro vigente (compañía, póliza y vencimiento hoy o después). */
+export function isInsured(v: Pick<Vehicle, "insurer" | "insurancePolicy" | "insuranceExpiry">, today: string): boolean {
+  return !!v.insurer.trim() && !!v.insurancePolicy.trim() && !!v.insuranceExpiry && v.insuranceExpiry >= today;
+}
+
+const insuranceRow = (v: Pick<Vehicle, "insurer" | "insurancePolicy" | "insuranceExpiry">) => ({
+  insurer: v.insurer.trim(),
+  insurance_policy: v.insurancePolicy.trim(),
+  insurance_expiry: v.insuranceExpiry || null,
+});
+
+export async function updateVehicleInsurance(
+  id: string,
+  v: Pick<Vehicle, "insurer" | "insurancePolicy" | "insuranceExpiry">,
+): Promise<void> {
+  const supabase = db();
+  await requireUserId(supabase);
+  const { error } = await supabase.from("vehicles").update(insuranceRow(v)).eq("id", id);
+  if (error) throw toDataError(error);
 }
 
 export async function addVehicle(v: Omit<Vehicle, "id">): Promise<void> {
@@ -191,6 +216,7 @@ export async function addVehicle(v: Omit<Vehicle, "id">): Promise<void> {
     color: v.color.trim(),
     plate: normalizePlate(v.plate),
     size: v.size,
+    ...insuranceRow(v),
   });
   if (error) throw toDataError(error);
 }
@@ -276,4 +302,6 @@ export const REQUIREMENT_LABEL: Record<Requirement, string> = {
   licencia: "Licencia de conducir (datos y fotos de frente y dorso)",
   licencia_vencida: "Tu licencia de conducir está vencida",
   vehiculo: "Al menos un vehículo",
+  seguro: "El seguro vigente de tu vehículo (compañía, póliza y vencimiento)",
+  licencia_dni: "El número de tu licencia tiene que ser el mismo que el de tu DNI",
 };

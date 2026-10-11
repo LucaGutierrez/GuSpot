@@ -186,6 +186,12 @@ function BookingDetail({
             <dt className="text-ink-500">Patente</dt>
             <dd className="font-medium text-ink-900">{b.plate || "—"}</dd>
           </div>
+          {b.carInsurance && (
+            <div className="col-span-2 sm:col-span-4">
+              <dt className="text-ink-500">Seguro</dt>
+              <dd className="font-medium text-ink-900">{b.carInsurance}</dd>
+            </div>
+          )}
           {b.role === "driver" && b.serviceFee > 0 && (
             <>
               <div>

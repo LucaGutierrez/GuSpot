@@ -7,7 +7,7 @@ import type { Space } from "@/lib/types";
 import { DataError, type ArrivalNotice, type BookingAccess, type Requirement, type Vehicle } from "@/lib/data/types";
 import { getArrival, getArrivalAccess, notifyArrival, setArrivalStatus, subscribeArrivals } from "@/lib/data/arrivals";
 import { getPublishedGarage } from "@/lib/data/garages";
-import { REQUIREMENT_LABEL, listMyVehicles, myMissingRequirements } from "@/lib/data/profile";
+import { REQUIREMENT_LABEL, isInsured, listMyVehicles, myMissingRequirements } from "@/lib/data/profile";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { liveStatus } from "@/lib/live";
 import { Button, ButtonLink, buttonClass } from "@/components/ui/button";
@@ -55,7 +55,7 @@ export function ArrivalPanel({ space, autoOpen }: { space: Space; autoOpen: bool
 
   if (!live) return null;
   const here = typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/";
-  const fitting = driver.state === "ready" ? driver.vehicles.filter((v) => fitsVehicle(space.maxVehicle, v.size)) : [];
+  const fitting = driver.state === "ready" ? driver.vehicles.filter((v) => fitsVehicle(space.maxVehicle, v.size) && isInsured(v, now ? now.slice(0, 10) : "")) : [];
   const vehicleId = chosen && fitting.some((v) => v.id === chosen) ? chosen : (fitting[0]?.id ?? null);
 
   async function onConfirm() {
@@ -107,9 +107,9 @@ export function ArrivalPanel({ space, autoOpen }: { space: Space; autoOpen: bool
         </div>
       ) : fitting.length === 0 ? (
         <p className="text-sm text-ink-700">
-          Ninguno de tus vehículos entra en este garage.{" "}
+          Ninguno de tus vehículos con seguro vigente entra en este garage.{" "}
           <Link href="/cuenta/vehiculos/" className="font-semibold text-brand-700 hover:underline">
-            Agregá otro
+            Revisá tus vehículos
           </Link>
           .
         </p>

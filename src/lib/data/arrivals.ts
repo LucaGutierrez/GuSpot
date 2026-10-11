@@ -28,6 +28,7 @@ const MESSAGES: Record<string, string> = {
   own_garage: "Es tu propio garage.",
   not_accepting: "Este garage no está recibiendo conductores en este momento.",
   vehicle_not_found: "Elegí uno de tus vehículos.",
+  insurance_missing: "Ese vehículo no tiene el seguro vigente cargado. Completalo en Tu cuenta → Mis vehículos.",
   forbidden: "No podés hacer esto.",
   closed_notice: "Este aviso ya terminó.",
 };
@@ -45,13 +46,14 @@ interface Row {
   driver_name: string;
   car: string;
   plate: string;
+  car_insurance: string;
   eta_minutes: number;
   status: ArrivalStatus;
   created_at: string;
   updated_at: string;
 }
 
-const COLUMNS = "id, garage_id, driver_name, car, plate, eta_minutes, status, created_at, updated_at";
+const COLUMNS = "id, garage_id, driver_name, car, plate, car_insurance, eta_minutes, status, created_at, updated_at";
 
 function toNotice(r: Row): ArrivalNotice {
   return {
@@ -60,6 +62,7 @@ function toNotice(r: Row): ArrivalNotice {
     driverName: r.driver_name,
     car: r.car,
     plate: r.plate,
+    carInsurance: r.car_insurance,
     etaMinutes: r.eta_minutes,
     status: r.status,
     createdAt: r.created_at,

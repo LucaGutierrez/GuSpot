@@ -37,6 +37,7 @@ const MESSAGES: Record<string, string> = {
   driver_profile_incomplete: "Antes de reservar completá tu verificación (datos, DNI, selfie, licencia y vehículo).",
   vehicle_not_found: "Elegí uno de tus vehículos.",
   vehicle_too_big: "Ese vehículo no entra en este garage.",
+  insurance_missing: "Ese vehículo no tiene el seguro vigente cargado. Completalo en Tu cuenta → Mis vehículos.",
   not_reservable: "Este garage no está tomando reservas en este momento.",
   no_online_payments: "Este garage todavía no cobra reservas online.",
   paid_booking: "Esta reserva está pagada: cancelala desde su detalle.",
@@ -72,6 +73,7 @@ interface BookingRow {
   car_brand: string;
   car_model: string;
   car_color: string;
+  car_insurance: string;
   hours: number;
   total_price: number;
   service_fee: number;
@@ -82,7 +84,7 @@ interface BookingRow {
 
 const COLUMNS =
   "id, garage_id, driver_id, driver_name, garage_title, garage_neighborhood, start_at, end_at, status, " +
-  "payment_status, vehicle, plate, car_brand, car_model, car_color, hours, total_price, service_fee, hold_until, paid_at, created_at";
+  "payment_status, vehicle, plate, car_brand, car_model, car_color, car_insurance, hours, total_price, service_fee, hold_until, paid_at, created_at";
 
 function toBooking(row: BookingRow, me: string): RealBooking {
   return {
@@ -98,6 +100,7 @@ function toBooking(row: BookingRow, me: string): RealBooking {
     vehicle: row.vehicle,
     plate: row.plate,
     car: [row.car_brand, row.car_model, row.car_color].filter(Boolean).join(" "),
+    carInsurance: row.car_insurance,
     hours: row.hours,
     total: row.total_price,
     serviceFee: row.service_fee,

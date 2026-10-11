@@ -281,6 +281,7 @@ function Arrivals({ garageId, now }: { garageId: string; now: number }) {
                     <p className="text-sm text-ink-700">
                       {a.car} · <span className="font-mono font-semibold">{a.plate}</span>
                     </p>
+                    {a.carInsurance && <p className="text-xs text-ink-500">Seguro: {a.carInsurance}</p>}
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-ink-900">{left > 0 ? `Llega en ~${left} min` : "Debería estar llegando"}</p>

@@ -146,6 +146,8 @@ export interface RealBooking {
   plate: string;
   /** "Fiat Cronos Gris" (copia del vehículo al reservar). */
   car: string;
+  /** "La Caja · póliza 123 · vence 01/01/2027" (copia al reservar). */
+  carInsurance: string;
   hours: number;
   /** Tarifa del garage. */
   total: Centavos;
@@ -194,6 +196,10 @@ export interface Vehicle {
   /** Mayúsculas y números, sin espacios (AB123CD / ABC123). */
   plate: string;
   size: VehicleSize;
+  /** Seguro del vehículo: compañía, número de póliza y vencimiento ("YYYY-MM-DD" o ""). */
+  insurer: string;
+  insurancePolicy: string;
+  insuranceExpiry: string;
 }
 
 /** Lo que falta para reservar ("conductor") o publicar ("propietario"). */
@@ -205,7 +211,9 @@ export type Requirement =
   | "selfie"
   | "licencia"
   | "licencia_vencida"
-  | "vehiculo";
+  | "vehiculo"
+  | "seguro"
+  | "licencia_dni";
 
 // --- Avisos de llegada: "Voy a este" (src/lib/data/arrivals.ts) -------------
 
@@ -218,6 +226,8 @@ export interface ArrivalNotice {
   driverName: string;
   car: string;
   plate: string;
+  /** Seguro del vehículo (copia al avisar). */
+  carInsurance: string;
   etaMinutes: number;
   status: ArrivalStatus;
   createdAt: string; // ISO

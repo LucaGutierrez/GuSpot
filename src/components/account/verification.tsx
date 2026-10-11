@@ -20,6 +20,8 @@ import {
   normalizePlate,
   saveMyProfile,
   checkPhoneCode,
+  isInsured,
+  updateVehicleInsurance,
   sendPhoneCode,
   startIdentityCheck,
   syncIdentityCheck,
@@ -30,6 +32,7 @@ import { Card, Container, PageHeader } from "@/components/ui/card";
 import { CameraIcon, CheckIcon } from "@/components/ui/icons";
 import { Field, inputClass } from "@/components/owner/form-fields";
 import { VEHICLE_ORDER } from "@/components/driver/vehicles";
+import { useNow } from "@/components/driver/use-now";
 import { ErrorBox, RequireSignIn, SuccessBox } from "@/components/my-garages/shared";
 import { safeNext } from "./form-parts";
 import { BackToAccount } from "./account-panel";
@@ -187,7 +190,7 @@ function StatusCard({
         <ul className="list-disc pl-9 text-sm text-ink-700">
           {list.map((m) => (
             <li key={m}>
-              {m === "vehiculo" ? (
+              {m === "vehiculo" || m === "seguro" ? (
                 <Link href="/cuenta/vehiculos/" className="font-semibold text-brand-700 hover:underline">
                   {REQUIREMENT_LABEL[m]}
                 </Link>
@@ -563,7 +566,8 @@ function LicenseSection({
   onDocUploaded: (doc: IdentityDoc) => void;
 }) {
   const [form, setForm] = useState({
-    licenseNumber: profile.licenseNumber,
+    // En Argentina el número de licencia es el del DNI: se propone ese.
+    licenseNumber: profile.licenseNumber || profile.dni,
     licenseCategory: profile.licenseCategory,
     licenseExpiry: profile.licenseExpiry,
   });
@@ -578,6 +582,13 @@ function LicenseSection({
     e.preventDefault();
     if (!form.licenseNumber.trim() || !form.licenseCategory || !form.licenseExpiry) {
       setResult({ ok: false, text: "Completá número, categoría y vencimiento." });
+      return;
+    }
+    if (form.licenseNumber.replace(/\D/g, "") !== profile.dni.replace(/\D/g, "")) {
+      setResult({
+        ok: false,
+        text: "El número de la licencia tiene que ser el mismo que el de tu DNI. Si tu DNI está mal cargado, corregilo en Datos personales.",
+      });
       return;
     }
     setBusy(true);
@@ -598,7 +609,7 @@ function LicenseSection({
     <Section title="Licencia de conducir" subtitle="Necesaria para reservar. Si solo publicás garages, no hace falta." done={done}>
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-3">
-          <Field id="lc-numero" label="Número">
+          <Field id="lc-numero" label="Número" hint="Es el mismo número que tu DNI.">
             <input id="lc-numero" className={inputClass} value={form.licenseNumber} onChange={(e) => setForm((f) => ({ ...f, licenseNumber: e.target.value }))} />
           </Field>
           <Field id="lc-categoria" label="Categoría">
@@ -634,7 +645,7 @@ export function VehiclesPage() {
   return (
     <Container className="max-w-2xl pb-16">
       <BackToAccount />
-      <PageHeader title="Mis vehículos" subtitle="Reservás con uno de tus vehículos. El dueño del garage ve marca, modelo, color y patente." />
+      <PageHeader title="Mis vehículos" subtitle="Reservás con uno de tus vehículos, con el seguro vigente. El garage ve marca, modelo, color, patente y seguro." />
       <RequireSignIn back="/cuenta/vehiculos/">{() => <VehiclesLoader />}</RequireSignIn>
     </Container>
   );
@@ -658,7 +669,19 @@ function VehiclesLoader() {
 }
 
 function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange: (v: Vehicle[]) => void }) {
-  const empty = { brand: "", model: "", color: "", plate: "", size: "auto_mediano" as VehicleSize };
+  const empty = {
+    brand: "",
+    model: "",
+    color: "",
+    plate: "",
+    size: "auto_mediano" as VehicleSize,
+    insurer: "",
+    insurancePolicy: "",
+    insuranceExpiry: "",
+  };
+  const now = useNow();
+  const today = now ? now.slice(0, 10) : "";
+  const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState(empty);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -672,6 +695,11 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
     }
     if (!/^[A-Z0-9]{6,8}$/.test(normalizePlate(form.plate))) {
       setError("La patente no es válida (ej.: AB123CD o ABC123).");
+      return;
+    }
+    const insuranceError = checkInsurance(form, today);
+    if (insuranceError) {
+      setError(insuranceError);
       return;
     }
     setBusy(true);
@@ -701,11 +729,11 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
   }
 
   return (
-    <Section id="vehiculos" title="Tus vehículos" done={vehicles.length > 0}>
+    <Section id="vehiculos" title="Tus vehículos" done={vehicles.some((v) => isInsured(v, today))}>
       {vehicles.length > 0 && (
         <ul className="flex flex-col gap-2">
           {vehicles.map((v) => (
-            <li key={v.id} className="flex items-center justify-between gap-3 rounded-xl border border-ink-200 p-3">
+            <li key={v.id} className="flex items-start justify-between gap-3 rounded-xl border border-ink-200 p-3">
               <div>
                 <p className="font-semibold text-ink-900">
                   {v.brand} {v.model} {v.color && <span className="font-normal text-ink-500">· {v.color}</span>}
@@ -713,6 +741,17 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
                 <p className="text-sm text-ink-700">
                   {v.plate} · {VEHICLE_LABEL[v.size]}
                 </p>
+                <InsuranceStatus vehicle={v} today={today} onEdit={() => setEditing(editing === v.id ? null : v.id)} />
+                {editing === v.id && (
+                  <InsuranceForm
+                    vehicle={v}
+                    today={today}
+                    onSaved={async () => {
+                      setEditing(null);
+                      onChange(await listMyVehicles());
+                    }}
+                  />
+                )}
               </div>
               <button
                 type="button"
@@ -750,11 +789,133 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
             </select>
           </Field>
         </div>
+        <InsuranceFields
+          idPrefix="vh"
+          value={form}
+          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+        />
         {error && <ErrorBox>{error}</ErrorBox>}
         <Button type="submit" variant="secondary" className="w-fit" disabled={busy}>
           {busy ? "Agregando…" : "Agregar vehículo"}
         </Button>
       </form>
     </Section>
+  );
+}
+
+// ---------------------------------------------------------------- seguro del vehículo
+
+type InsuranceValue = Pick<Vehicle, "insurer" | "insurancePolicy" | "insuranceExpiry">;
+
+function checkInsurance(v: InsuranceValue, today: string): string | null {
+  if (!v.insurer.trim() || !v.insurancePolicy.trim() || !v.insuranceExpiry) {
+    return "Completá los datos del seguro: compañía, número de póliza y vencimiento.";
+  }
+  if (today && v.insuranceExpiry < today) return "El seguro está vencido: cargá la póliza vigente.";
+  return null;
+}
+
+const formatDay = (d: string) => (d ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}` : "");
+
+function InsuranceFields({
+  idPrefix,
+  value,
+  onChange,
+}: {
+  idPrefix: string;
+  value: InsuranceValue;
+  onChange: (patch: Partial<InsuranceValue>) => void;
+}) {
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="text-sm font-semibold text-ink-900">Seguro del vehículo</legend>
+      <p className="text-xs text-ink-500">Lo ve el garage junto con tu auto, por si pasa algo.</p>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <Field id={`${idPrefix}-aseguradora`} label="Compañía">
+          <input
+            id={`${idPrefix}-aseguradora`}
+            className={inputClass}
+            placeholder="La Caja"
+            maxLength={60}
+            value={value.insurer}
+            onChange={(e) => onChange({ insurer: e.target.value })}
+          />
+        </Field>
+        <Field id={`${idPrefix}-poliza`} label="N.º de póliza">
+          <input
+            id={`${idPrefix}-poliza`}
+            className={inputClass}
+            maxLength={40}
+            value={value.insurancePolicy}
+            onChange={(e) => onChange({ insurancePolicy: e.target.value })}
+          />
+        </Field>
+        <Field id={`${idPrefix}-vence-seguro`} label="Vence">
+          <input
+            id={`${idPrefix}-vence-seguro`}
+            type="date"
+            className={inputClass}
+            value={value.insuranceExpiry}
+            onChange={(e) => onChange({ insuranceExpiry: e.target.value })}
+          />
+        </Field>
+      </div>
+    </fieldset>
+  );
+}
+
+function InsuranceStatus({ vehicle: v, today, onEdit }: { vehicle: Vehicle; today: string; onEdit: () => void }) {
+  const ok = isInsured(v, today);
+  const expired = !!v.insuranceExpiry && !!today && v.insuranceExpiry < today;
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
+      {ok ? (
+        <span className="text-emerald-700">
+          Seguro: {v.insurer} · vence {formatDay(v.insuranceExpiry)} ✓
+        </span>
+      ) : (
+        <span className="font-semibold text-red-700">{expired ? "Seguro vencido" : "Falta el seguro"}</span>
+      )}
+      <button type="button" onClick={onEdit} className="font-semibold text-brand-700 hover:underline">
+        {ok ? "Cambiar" : "Cargar seguro"}
+      </button>
+    </p>
+  );
+}
+
+function InsuranceForm({ vehicle, today, onSaved }: { vehicle: Vehicle; today: string; onSaved: () => void }) {
+  const [value, setValue] = useState<InsuranceValue>({
+    insurer: vehicle.insurer,
+    insurancePolicy: vehicle.insurancePolicy,
+    insuranceExpiry: vehicle.insuranceExpiry,
+  });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onSave() {
+    const problem = checkInsurance(value, today);
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await updateVehicleInsurance(vehicle.id, value);
+      onSaved();
+    } catch (err) {
+      setError(errText(err));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 flex flex-col gap-3 rounded-xl bg-ink-50 p-3">
+      <InsuranceFields idPrefix={`seg-${vehicle.id}`} value={value} onChange={(patch) => setValue((v) => ({ ...v, ...patch }))} />
+      {error && <ErrorBox>{error}</ErrorBox>}
+      <Button type="button" variant="secondary" className="w-fit" onClick={onSave} disabled={busy}>
+        {busy ? "Guardando…" : "Guardar seguro"}
+      </Button>
+    </div>
   );
 }

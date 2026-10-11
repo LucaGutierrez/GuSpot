@@ -112,7 +112,7 @@ function SignedIn({ user }: { user: AuthUser }) {
     ? `${profile.firstName} ${profile.lastName}`.trim()
     : user.displayName;
   const status = profile ? STATUS[profile.identityStatus] : null;
-  const vehiclesMissing = missing?.includes("vehiculo");
+  const vehiclesMissing = missing?.includes("vehiculo") || missing?.includes("seguro");
 
   return (
     <div className="flex flex-col gap-5">
