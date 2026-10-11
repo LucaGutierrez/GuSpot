@@ -43,3 +43,6 @@ next-env.d.ts
 
 # worker de MapLibre copiado en predev/prebuild
 /public/vendor/
+
+# Cache de la CLI de Supabase
+supabase/.temp/
