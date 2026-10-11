@@ -1,7 +1,6 @@
 import type { LocalDateTime, Space } from "./types";
 import { checkAvailability, type AvailabilityResult } from "./availability";
 import { quote, type Quote } from "./pricing";
-import { publishedSpaces } from "./demo-data";
 import { combine, isValidLocal } from "./datetime";
 
 /** Parámetros de búsqueda tal como viajan en la URL de la búsqueda (/). */
@@ -63,8 +62,8 @@ export function toRange(p: SearchParams): { start: LocalDateTime; end: LocalDate
 /** Busca en una lista de garages. Disponibles primero, luego por precio. */
 export function searchSpaces(
   p: SearchParams,
-  /** Lista donde buscar: por defecto los garages de ejemplo. Nunca mezclar reales y de ejemplo. */
-  source: Space[] = publishedSpaces(),
+  /** Garages publicados donde buscar. */
+  source: Space[],
   /** Si se indica, busca dentro de este rectángulo del mapa en lugar de por `zona`. */
   area?: Area | null,
 ): SearchResult[] {

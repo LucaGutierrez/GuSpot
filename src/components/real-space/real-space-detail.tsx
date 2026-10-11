@@ -46,8 +46,8 @@ export function RealSpaceDetail() {
         <Loader key={id} id={id} voy={voy} />
       ) : (
         <div className="mt-6">
-          <DemoNotice title="Esta versión es solo una demostración">
-            Todavía no hay garages reales. Podés ver los de ejemplo en la búsqueda.
+          <DemoNotice title="No disponible en esta versión">
+            Esta copia del sitio no está conectada al servidor.
           </DemoNotice>
         </div>
       )}

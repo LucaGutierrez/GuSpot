@@ -1,19 +1,14 @@
 "use client";
 
-import type { Feature, PhotoVariant, SpaceType, VehicleSize } from "@/lib/types";
-import { FEATURE_LABEL, SPACE_TYPE_LABEL, VEHICLE_LABEL, formatARS } from "@/lib/format";
+import type { Feature } from "@/lib/types";
+import { FEATURE_LABEL, formatARS } from "@/lib/format";
 import { HOUR_MS, fromMs, toMs } from "@/lib/datetime";
 import { quote } from "@/lib/pricing";
 import { describeAvailability } from "@/lib/availability";
-import { DemoNotice } from "@/components/ui/demo-notice";
 import { Button } from "@/components/ui/button";
-import { SpacePhoto } from "@/components/ui/space-photo";
-import { CameraIcon, PinIcon, PlusIcon } from "@/components/ui/icons";
+import { PlusIcon } from "@/components/ui/icons";
 import { Field, FieldError, describedBy, inputClass } from "../form-fields";
-import { PhotoPlaceholder } from "../space-cards";
 import {
-  OTHER_CITY,
-  demoCities,
   newRule,
   parsePesos,
   toRules,
@@ -28,180 +23,7 @@ export interface StepProps {
   update: (patch: Partial<Draft>) => void;
 }
 
-const SPACE_TYPES = Object.keys(SPACE_TYPE_LABEL) as SpaceType[];
-const VEHICLES = Object.keys(VEHICLE_LABEL) as VehicleSize[];
 const FEATURES = Object.keys(FEATURE_LABEL) as Feature[];
-
-// ---------------------------------------------------------------- (a) Datos básicos
-
-export function BasicsStep({ draft, errors, update }: StepProps) {
-  return (
-    <div className="flex flex-col gap-5">
-      <Field
-        id="title"
-        label="Título"
-        hint="Algo corto y claro, por ejemplo: “Cochera cubierta cerca de Plaza Serrano”."
-        error={errors.title}
-      >
-        <input
-          id="title"
-          className={inputClass}
-          value={draft.title}
-          maxLength={100}
-          onChange={(e) => update({ title: e.target.value })}
-          aria-invalid={!!errors.title}
-          aria-describedby={describedBy("title", true, errors.title)}
-        />
-      </Field>
-      <Field
-        id="description"
-        label="Descripción"
-        hint="Contá cómo es el lugar y cómo se ingresa. No incluyas la dirección exacta."
-        error={errors.description}
-      >
-        <textarea
-          id="description"
-          rows={4}
-          className={inputClass}
-          value={draft.description}
-          onChange={(e) => update({ description: e.target.value })}
-          aria-invalid={!!errors.description}
-          aria-describedby={describedBy("description", true, errors.description)}
-        />
-      </Field>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="type" label="Tipo de espacio" error={errors.type}>
-          <select
-            id="type"
-            className={inputClass}
-            value={draft.type}
-            onChange={(e) => update({ type: e.target.value as SpaceType | "" })}
-            aria-invalid={!!errors.type}
-            aria-describedby={describedBy("type", false, errors.type)}
-          >
-            <option value="">Elegí una opción</option>
-            {SPACE_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {SPACE_TYPE_LABEL[t]}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field
-          id="maxVehicle"
-          label="Vehículo máximo"
-          hint="El vehículo más grande que entra cómodo."
-          error={errors.maxVehicle}
-        >
-          <select
-            id="maxVehicle"
-            className={inputClass}
-            value={draft.maxVehicle}
-            onChange={(e) => update({ maxVehicle: e.target.value as VehicleSize | "" })}
-            aria-invalid={!!errors.maxVehicle}
-            aria-describedby={describedBy("maxVehicle", true, errors.maxVehicle)}
-          >
-            <option value="">Elegí una opción</option>
-            {VEHICLES.map((v) => (
-              <option key={v} value={v}>
-                {VEHICLE_LABEL[v]}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------- (b) Ubicación
-
-export function LocationStep({ draft, errors, update }: StepProps) {
-  return (
-    <div className="flex flex-col gap-5">
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="city" label="Ciudad" error={errors.city}>
-          <select
-            id="city"
-            className={inputClass}
-            value={draft.city}
-            onChange={(e) => update({ city: e.target.value })}
-            aria-invalid={!!errors.city}
-            aria-describedby={describedBy("city", false, errors.city)}
-          >
-            <option value="">Elegí una ciudad</option>
-            {demoCities().map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-            <option value={OTHER_CITY}>Otra</option>
-          </select>
-        </Field>
-        {draft.city === OTHER_CITY && (
-          <Field id="otherCity" label="¿Qué ciudad?" error={errors.otherCity}>
-            <input
-              id="otherCity"
-              className={inputClass}
-              value={draft.otherCity}
-              onChange={(e) => update({ otherCity: e.target.value })}
-              aria-invalid={!!errors.otherCity}
-              aria-describedby={describedBy("otherCity", false, errors.otherCity)}
-            />
-          </Field>
-        )}
-        <Field id="neighborhood" label="Barrio" error={errors.neighborhood}>
-          <input
-            id="neighborhood"
-            className={inputClass}
-            value={draft.neighborhood}
-            onChange={(e) => update({ neighborhood: e.target.value })}
-            aria-invalid={!!errors.neighborhood}
-            aria-describedby={describedBy("neighborhood", false, errors.neighborhood)}
-          />
-        </Field>
-      </div>
-      <Field
-        id="approxLocation"
-        label="Referencia aproximada (pública)"
-        hint="Es lo que ven todos antes de reservar. Ejemplo: “A ~3 cuadras de Plaza Serrano”."
-        error={errors.approxLocation}
-      >
-        <input
-          id="approxLocation"
-          className={inputClass}
-          value={draft.approxLocation}
-          onChange={(e) => update({ approxLocation: e.target.value })}
-          aria-invalid={!!errors.approxLocation}
-          aria-describedby={describedBy("approxLocation", true, errors.approxLocation)}
-        />
-      </Field>
-      <Field
-        id="exactAddress"
-        label="Dirección exacta (privada)"
-        hint="Solo se comparte con conductores con reserva confirmada y pagada. En el mapa se muestra un punto aproximado (100–200 m)."
-        error={errors.exactAddress}
-      >
-        <input
-          id="exactAddress"
-          className={inputClass}
-          value={draft.exactAddress}
-          autoComplete="street-address"
-          onChange={(e) => update({ exactAddress: e.target.value })}
-          aria-invalid={!!errors.exactAddress}
-          aria-describedby={describedBy("exactAddress", true, errors.exactAddress)}
-        />
-      </Field>
-      <div className="flex items-center gap-3 rounded-xl border border-dashed border-ink-300 bg-ink-50 p-4 text-sm text-ink-500">
-        <PinIcon className="shrink-0" />
-        <span>
-          <strong className="font-semibold text-ink-700">Mapa: próximamente.</strong> Por ahora no se puede
-          marcar la ubicación en un mapa.
-        </span>
-      </div>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------- (c) Características
 
@@ -282,77 +104,6 @@ export function FeaturesStep({ draft, errors, update }: StepProps) {
         </Button>
       </fieldset>
     </div>
-  );
-}
-
-// ---------------------------------------------------------------- (d) Fotos
-
-const PHOTO_OPTIONS: { variant: PhotoVariant; label: string }[] = [
-  { variant: "garage", label: "Garage" },
-  { variant: "cochera", label: "Cochera" },
-  { variant: "patio", label: "Patio" },
-  { variant: "subsuelo", label: "Subsuelo" },
-  { variant: "porton", label: "Portón" },
-];
-
-export function PhotosStep({ draft, update }: StepProps) {
-  return (
-    <div className="flex flex-col gap-5">
-      <div
-        aria-disabled="true"
-        className="flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-ink-300 bg-ink-50 p-6 text-center text-ink-500"
-      >
-        <CameraIcon width={32} height={32} />
-        <p className="text-sm">Arrastrá tus fotos acá o elegilas desde tu dispositivo.</p>
-        <Button variant="secondary" disabled>
-          Elegir fotos
-        </Button>
-      </div>
-      <DemoNotice title="La carga de fotos todavía no está disponible">
-        Mientras tanto, podés elegir una ilustración de muestra para ver cómo quedaría la publicación. No es
-        una foto real de tu espacio.
-      </DemoNotice>
-      <fieldset>
-        <legend className="mb-3 text-sm font-medium text-ink-900">Ilustración de muestra para la vista previa</legend>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {PHOTO_OPTIONS.map((o) => (
-            <PhotoChoice
-              key={o.variant}
-              label={o.label}
-              checked={draft.photo === o.variant}
-              onSelect={() => update({ photo: o.variant })}
-            >
-              <SpacePhoto variant={o.variant} label="Muestra" className="aspect-[16/10] w-full" />
-            </PhotoChoice>
-          ))}
-          <PhotoChoice label="Sin ilustración" checked={draft.photo === null} onSelect={() => update({ photo: null })}>
-            <PhotoPlaceholder className="aspect-[16/10] w-full" />
-          </PhotoChoice>
-        </div>
-      </fieldset>
-    </div>
-  );
-}
-
-function PhotoChoice({
-  label,
-  checked,
-  onSelect,
-  children,
-}: {
-  label: string;
-  checked: boolean;
-  onSelect: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="flex cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-ink-200 bg-white has-[:checked]:border-brand-600 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-500">
-      {children}
-      <span className="flex items-center gap-2 px-3 py-2 text-sm text-ink-900">
-        <input type="radio" name="photo" className="accent-brand-600" checked={checked} onChange={onSelect} />
-        {label}
-      </span>
-    </label>
   );
 }
 

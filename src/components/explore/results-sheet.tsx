@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useId } from "react";
 import type { SearchResult } from "@/lib/search";
 import { SPACE_TYPE_LABEL, formatARS } from "@/lib/format";
-import { cities } from "@/lib/demo-data";
 import { Button } from "@/components/ui/button";
 import { SpacePhoto } from "@/components/ui/space-photo";
 import { CommercialCard } from "@/components/garage/garage-summary";
@@ -20,7 +19,6 @@ export function ResultsSheet({
   available,
   unavailable,
   zona,
-  real = false,
   loading = false,
   failed = false,
   noZoneMatch,
@@ -31,14 +29,11 @@ export function ResultsSheet({
   hrefFor,
   distanceFor,
   onChangeSearch,
-  onPickCity,
   onClearFilters,
 }: {
   available: SearchResult[];
   unavailable: SearchResult[];
   zona: string;
-  /** Garages reales publicados (no los de ejemplo). */
-  real?: boolean;
   loading?: boolean;
   failed?: boolean;
   noZoneMatch: boolean;
@@ -49,7 +44,6 @@ export function ResultsSheet({
   hrefFor: (id: string) => string;
   distanceFor: (r: SearchResult) => string | null;
   onChangeSearch: () => void;
-  onPickCity: (city: string) => void;
   onClearFilters: () => void;
 }) {
   const id = useId();
@@ -68,7 +62,7 @@ export function ResultsSheet({
     );
   }
 
-  if (real && n === 0 && unavailable.length === 0) {
+  if (n === 0 && unavailable.length === 0) {
     return (
       <div className="rounded-t-2xl border-t border-ink-200 bg-white p-4 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <p className="font-semibold text-ink-900">
@@ -77,7 +71,7 @@ export function ResultsSheet({
             : "Ningún garage coincide con los filtros elegidos."}
         </p>
         <p className="mt-1 text-sm text-ink-500">
-          {noZoneMatch ? "Probá con otra zona o mirá los garages de ejemplo." : "Probá ampliar los filtros o cambiar la zona."}
+          {noZoneMatch ? "Probá con otra zona o buscá cerca tuyo." : "Probá ampliar los filtros o cambiar la zona."}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {filtersActive && (
@@ -85,49 +79,8 @@ export function ResultsSheet({
               Limpiar filtros
             </Button>
           )}
-          <Button onClick={onChangeSearch}>Cambiar zona u horario</Button>
+          <Button onClick={onChangeSearch}>Cambiar zona</Button>
         </div>
-      </div>
-    );
-  }
-
-  if (n === 0 && unavailable.length === 0) {
-    return (
-      <div className="rounded-t-2xl border-t border-ink-200 bg-white p-4 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
-        <p className="font-semibold text-ink-900">
-          {noZoneMatch
-            ? `No encontramos espacios en «${zona}».`
-            : "Ningún espacio coincide con los filtros elegidos."}
-        </p>
-        <p className="mt-1 text-sm text-ink-500">
-          {noZoneMatch
-            ? "En la demo hay espacios de ejemplo en estas ciudades:"
-            : "Probá ampliar los filtros o cambiar la zona."}
-        </p>
-        {noZoneMatch ? (
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {cities().map(({ city }) => (
-              <li key={city}>
-                <button
-                  type="button"
-                  onClick={() => onPickCity(city)}
-                  className="inline-flex rounded-full border border-ink-200 bg-white px-3 py-1.5 text-sm font-medium text-ink-900 hover:bg-ink-100 focus-visible:outline-2 focus-visible:outline-brand-500"
-                >
-                  {city}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {filtersActive && (
-              <Button variant="secondary" onClick={onClearFilters}>
-                Limpiar filtros
-              </Button>
-            )}
-            <Button onClick={onChangeSearch}>Cambiar zona u horario</Button>
-          </div>
-        )}
       </div>
     );
   }
@@ -149,13 +102,12 @@ export function ResultsSheet({
         <span>
           <span className="block font-semibold text-ink-900">
             {n === 0
-              ? "No hay garages disponibles en ese horario"
+              ? "No hay garages con lugar ahora"
               : `${n} ${n === 1 ? "disponible" : "disponibles"}`}
           </span>
           {!expanded && unavailable.length > 0 && (
             <span className="block text-xs text-ink-500">
-              {unavailable.length} {unavailable.length === 1 ? "espacio no está" : "espacios no están"}{" "}
-              disponibles en ese horario
+              {unavailable.length} {unavailable.length === 1 ? "garage sin lugar o cerrado" : "garages sin lugar o cerrados"}
             </span>
           )}
         </span>
@@ -175,7 +127,7 @@ export function ResultsSheet({
       {!expanded && n === 0 && (
         <div className="px-4 pb-4">
           <Button onClick={onChangeSearch} className="w-full">
-            Cambiar horario o zona
+            Cambiar zona
           </Button>
         </div>
       )}
@@ -193,10 +145,10 @@ export function ResultsSheet({
         {unavailable.length > 0 && (
           <section aria-labelledby={`${id}-nodisp`} className="mt-5">
             <h3 id={`${id}-nodisp`} className="text-sm font-semibold text-ink-900">
-              {real ? "Sin lugar o cerrados ahora" : "No disponibles en ese horario"}
+              Sin lugar o cerrados ahora
             </h3>
             <p className="mt-0.5 text-xs text-ink-500">
-              {real ? "Se ven en el mapa con su estado." : "No aparecen en el mapa. Probá con otro horario."}
+              Se ven en el mapa con su estado.
             </p>
             <ul className="mt-3 space-y-3">
               {unavailable.map((r) => (
@@ -208,9 +160,8 @@ export function ResultsSheet({
           </section>
         )}
         <p className="mt-4 text-xs text-ink-500">
-          {real
-            ? "La disponibilidad la informa cada garage. Avisar que vas no reserva el lugar: para asegurártelo, reservá y pagá desde la ficha del garage."
-            : "Datos de demostración: espacios, precios y ubicaciones son de ejemplo. Solicitar no reserva ni cobra nada."}
+          La disponibilidad la informa cada garage. Avisar que vas no reserva el lugar: para asegurártelo, reservá y pagá
+          desde la ficha del garage.
         </p>
       </div>
     </div>

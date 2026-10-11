@@ -18,7 +18,7 @@ import { ResultsSheet } from "./results-sheet";
 import { SearchPanel, type ExploreQuery } from "./search-panel";
 import { SelectedCard } from "./selected-card";
 import { CommercialSelectedCard } from "@/components/garage/garage-summary";
-import { SourceBadge, spaceHref, useSearchSource } from "./space-source";
+import { spaceHref, useSearchSource } from "./space-source";
 import { useDriverLocation } from "./use-driver-location";
 import { useInitialZone } from "./use-initial-zone";
 import { useElementHeight, useLockBodyScroll } from "./use-element-height";
@@ -142,8 +142,7 @@ export function Explore() {
   useLockBodyScroll();
 
   // --- Resultados -----------------------------------------------------------
-  const { mode, spaces, failed } = useSearchSource();
-  const real = mode === "reales";
+  const { spaces, failed } = useSearchSource();
   const zoneResults = useMemo(() => searchSpaces(search, spaces ?? [], area), [search, spaces, area]);
   const results = useMemo(
     () => zoneResults.filter((r) => matchesFilters(r, filters)),
@@ -166,7 +165,7 @@ export function Explore() {
     ? Math.min(...zoneResults.map((r) => distanceKm(userCoords, r.space.coords)))
     : Infinity;
   const userIsNear = nearestKm <= FAR_KM;
-  const fitKey = `${params.toString()}|${zona}|${filters.tipo}|${filters.vehiculo}|${fitNonce}|${mode}|${spaces?.length ?? -1}`;
+  const fitKey = `${params.toString()}|${zona}|${filters.tipo}|${filters.vehiculo}|${fitNonce}|${spaces?.length ?? -1}`;
 
   const selectedIndex = onMap.findIndex((r) => r.space.id === selectedId);
   const selected = selectedIndex >= 0 ? onMap[selectedIndex] : null;
@@ -279,7 +278,7 @@ export function Explore() {
   } else if (location.status === "unsupported") {
     notice = "Tu navegador no permite compartir la ubicación. Podés seguir buscando por zona.";
   } else if (!area && userCoords && zoneResults.length > 0 && !userIsNear) {
-    notice = `Los garages ${real ? "publicados" : "de ejemplo"} están en ${zona}; mostramos esa zona.`;
+    notice = `Los garages publicados están en ${zona}; mostramos esa zona.`;
   }
   const showNotice = notice !== null && notice !== dismissedNotice;
 
@@ -338,7 +337,6 @@ export function Explore() {
         </button>
 
         <div className="flex flex-wrap items-center gap-2">
-          <SourceBadge />
           <span
             className="pointer-events-auto rounded-full bg-white px-2.5 py-0.5 text-xs font-medium text-ink-900 shadow-sm ring-1 ring-ink-200"
             aria-live="polite"
@@ -475,7 +473,6 @@ export function Explore() {
             available={available}
             unavailable={unavailable}
             zona={nearMe ? "tu zona" : area ? "esta zona del mapa" : zona}
-            real={real}
             loading={spaces === null}
             failed={failed}
             noZoneMatch={zoneResults.length === 0}
@@ -486,7 +483,6 @@ export function Explore() {
             hrefFor={hrefFor}
             distanceFor={distanceFor}
             onChangeSearch={() => setPanelOpen(true)}
-            onPickCity={(city) => runSearch({ zona: city, range, filters })}
             onClearFilters={() => {
               setFilters(NO_FILTERS);
               refit();

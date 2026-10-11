@@ -105,7 +105,7 @@ export function SearchPanel({
         <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
           <div>
             <label htmlFor={`${id}-zona`} className={fieldLabel}>
-              Zona (ciudad o barrio)
+              Zona o barrio
             </label>
             <div className="relative">
               <PinIcon className="pointer-events-none absolute top-1/2 left-3 mt-0.5 -translate-y-1/2 text-ink-400" />
@@ -115,7 +115,7 @@ export function SearchPanel({
                 list={`${id}-zonas`}
                 autoComplete="off"
                 enterKeyHint="search"
-                placeholder="Ej.: Palermo, Córdoba, Rosario"
+                placeholder="Ej.: Palermo, Microcentro, Recoleta"
                 value={zona}
                 onChange={(e) => setZona(e.target.value)}
                 className={`${fieldInput} pl-10`}

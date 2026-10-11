@@ -1,160 +1,146 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { cities, publishedSpaces } from "@/lib/demo-data";
-import { searchQuery } from "@/lib/search";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, Container } from "@/components/ui/card";
-import { DemoBadge } from "@/components/ui/badge";
 import {
   CheckIcon,
-  ChevronRightIcon,
   KeyIcon,
   ParkingIcon,
   PinIcon,
   SearchIcon,
+  ShieldIcon,
   TicketIcon,
+  WalletIcon,
 } from "@/components/ui/icons";
-import { MapIcon } from "@/components/explore/icons";
 
 export const metadata: Metadata = {
   title: "Cómo funciona",
-  description:
-    "Cómo buscar y solicitar una cochera en GuSpot, y cómo publicar la tuya (versión de demostración).",
+  description: "Cómo encontrar estacionamiento en GuSpot y cómo sumar tu garage.",
 };
 
-const STEPS = [
+const DRIVER_STEPS = [
   {
     icon: SearchIcon,
-    title: "Buscá",
-    text: "Elegí zona, día y horario. Ves el precio total del período antes de decidir.",
+    title: "Buscá cerca tuyo",
+    text: "En el mapa ves los garages de la zona con su precio por hora y si tienen lugar, informado en vivo por cada garage.",
+  },
+  {
+    icon: PinIcon,
+    title: "¿Vas ahora? Avisá que vas",
+    text: "Con “Voy a este” el garage sabe que llegás y te ve en su panel. Ves la dirección y cómo entrar. Avisar no reserva el lugar.",
   },
   {
     icon: TicketIcon,
-    title: "Solicitá",
-    text: "Mandá la solicitud con tu vehículo y un mensaje para el propietario.",
-  },
-  {
-    icon: KeyIcon,
-    title: "El propietario confirma",
-    text: "Cuando acepta, la reserva queda confirmada. La dirección exacta se comparte cuando la reserva esté confirmada y pagada.",
+    title: "¿Querés asegurarte el lugar? Reservá",
+    text: "Elegí desde ahora o para otro día, y pagá con Mercado Pago. La reserva se confirma sola cuando se aprueba el pago.",
   },
 ];
 
-export default function ComoFuncionaPage() {
-  const spaces = publishedSpaces();
-  const byCity = cities().map(({ city, neighborhoods }) => ({
-    city,
-    neighborhoods,
-    count: spaces.filter((s) => s.city === city).length,
-  }));
+const GARAGE_STEPS = [
+  {
+    icon: ParkingIcon,
+    title: "Publicá tu garage",
+    text: "Cargá ubicación, tarifas, horario, capacidad y fotos. Verificamos tu identidad y tu celular antes de publicar.",
+  },
+  {
+    icon: KeyIcon,
+    title: "Actualizá tu disponibilidad",
+    text: "Desde el panel sumás o restás lugares con un toque, pausás la recepción y ves quién va en camino.",
+  },
+  {
+    icon: WalletIcon,
+    title: "Cobrá las reservas",
+    text: "Conectá tu cuenta de Mercado Pago: el pago de cada reserva entra directo en tu cuenta.",
+  },
+];
 
-  // La búsqueda en el mapa es la pantalla principal ("/"); esta página explica
-  // el servicio y lleva de vuelta al mapa.
+function Steps({ steps }: { steps: typeof DRIVER_STEPS }) {
+  return (
+    <ol className="grid gap-4 md:grid-cols-3">
+      {steps.map(({ icon: Icon, title, text }, i) => (
+        <li key={title}>
+          <Card className="h-full p-5">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
+                <Icon />
+              </span>
+              <span className="text-sm font-semibold text-ink-500">Paso {i + 1}</span>
+            </div>
+            <h3 className="mt-3 font-semibold text-ink-900">{title}</h3>
+            <p className="mt-1 text-sm text-ink-700">{text}</p>
+          </Card>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+export default function ComoFuncionaPage() {
   return (
     <>
       <section className="bg-gradient-to-b from-brand-50 to-ink-50">
         <Container className="py-10 md:py-16">
           <div className="max-w-2xl">
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-brand-700">
-              <ParkingIcon /> Cocheras de propietarios en Argentina
+              <ParkingIcon /> Estacionamiento en CABA
             </p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink-900 sm:text-5xl">
-              Estacioná cerca, con precio claro
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink-900 md:text-4xl">
+              Encontrá dónde estacionar, con lugar y precio a la vista
             </h1>
-            <p className="mt-4 max-w-prose text-lg text-ink-700">
-              Encontrá una cochera por horas o por día, mirá el total antes de solicitar y
-              esperá la confirmación del propietario.
+            <p className="mt-3 text-lg text-ink-700">
+              GuSpot te muestra los garages cerca tuyo con sus lugares libres en vivo. Vas en el momento o reservás y
+              pagás desde el celular.
             </p>
-            <ul className="mt-6 space-y-2 text-sm text-ink-700">
-              {[
-                "Precio total del período, sin sorpresas",
-                "Ubicación aproximada (±200 m) antes de reservar; la dirección exacta, cuando la reserva esté confirmada y pagada",
-                "Cada reserva la acepta el propietario",
-              ].map((t) => (
-                <li key={t} className="flex items-start gap-2">
-                  <CheckIcon className="mt-0.5 shrink-0 text-brand-600" />
-                  {t}
-                </li>
-              ))}
-            </ul>
-            <ButtonLink href="/" size="lg" className="mt-6">
-              <MapIcon /> Buscar en el mapa
-            </ButtonLink>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <ButtonLink href="/" size="lg">
+                <SearchIcon /> Buscar en el mapa
+              </ButtonLink>
+              <ButtonLink href="/publicar/" size="lg" variant="secondary">
+                Sumar mi garage
+              </ButtonLink>
+            </div>
           </div>
         </Container>
       </section>
 
-      <Container className="space-y-14 py-12">
-        <section aria-labelledby="ciudades">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 id="ciudades" className="text-xl font-bold text-ink-900">
-              Buscá por ciudad
-            </h2>
-            <DemoBadge label="Espacios de ejemplo" />
-          </div>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {byCity.map(({ city, neighborhoods, count }) => (
-              <li key={city}>
-                <Link
-                  href={`/?${searchQuery({ zona: city })}`}
-                  className="flex h-full items-start gap-3 rounded-2xl border border-ink-200 bg-white p-4 shadow-sm hover:border-brand-300 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
-                >
-                  <PinIcon className="mt-0.5 shrink-0 text-brand-600" />
-                  <span className="flex-1">
-                    <span className="block font-semibold text-ink-900">{city}</span>
-                    <span className="block text-sm text-ink-500">
-                      {count} {count === 1 ? "espacio" : "espacios"} · {neighborhoods.join(", ")}
-                    </span>
-                  </span>
-                  <ChevronRightIcon className="mt-0.5 shrink-0 text-ink-400" />
-                </Link>
-              </li>
-            ))}
+      <Container className="space-y-12 py-10">
+        <section aria-labelledby="conductores" className="space-y-4">
+          <h2 id="conductores" className="text-2xl font-bold tracking-tight text-ink-900">
+            Si buscás dónde estacionar
+          </h2>
+          <Steps steps={DRIVER_STEPS} />
+          <ul className="space-y-1 text-sm text-ink-700">
+            <li className="flex gap-2">
+              <CheckIcon className="shrink-0 text-brand-600" /> Ves el total antes de pagar: tarifa del garage + cargo de
+              servicio.
+            </li>
+            <li className="flex gap-2">
+              <CheckIcon className="shrink-0 text-brand-600" /> Si te equivocaste, cancelá en los primeros minutos y te
+              devolvemos todo.
+            </li>
           </ul>
         </section>
 
-        <section aria-labelledby="como-funciona">
-          <h2 id="como-funciona" className="text-xl font-bold text-ink-900">
-            Cómo funciona
+        <section aria-labelledby="garages" className="space-y-4">
+          <h2 id="garages" className="text-2xl font-bold tracking-tight text-ink-900">
+            Si tenés un garage o estacionamiento
           </h2>
-          <ol className="mt-4 grid gap-4 md:grid-cols-3">
-            {STEPS.map(({ icon: Icon, title, text }, i) => (
-              <li key={title}>
-                <Card className="h-full p-5">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
-                      <Icon />
-                    </span>
-                    <span className="text-sm font-semibold text-ink-500">Paso {i + 1}</span>
-                  </div>
-                  <h3 className="mt-3 font-semibold text-ink-900">{title}</h3>
-                  <p className="mt-1 text-sm text-ink-700">{text}</p>
-                </Card>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-4 text-sm text-ink-500">
-            En esta versión de demostración las solicitudes no se envían a nadie y todavía no se
-            pueden hacer pagos.
-          </p>
+          <Steps steps={GARAGE_STEPS} />
+          <p className="text-sm text-ink-500">Las cocheras particulares se van a poder sumar más adelante.</p>
         </section>
 
-        <section
-          aria-labelledby="propietarios"
-          className="flex flex-col gap-5 rounded-3xl bg-ink-900 p-6 text-white sm:p-10 md:flex-row md:items-center md:justify-between"
-        >
-          <div className="max-w-xl">
-            <h2 id="propietarios" className="text-2xl font-bold">
-              ¿Tenés una cochera que no usás todo el día?
-            </h2>
-            <p className="mt-2 text-ink-200">
-              Publicala, definí tus horarios y tarifas, y aceptá solo las solicitudes que te
-              sirvan.
-            </p>
-          </div>
-          <ButtonLink href="/propietarios/publicar/" variant="accent" size="lg" className="shrink-0">
-            Publicá tu cochera
-          </ButtonLink>
+        <section aria-labelledby="seguridad">
+          <Card className="flex gap-4 p-5">
+            <ShieldIcon className="mt-0.5 shrink-0 text-brand-600" />
+            <div>
+              <h2 id="seguridad" className="font-semibold text-ink-900">
+                Personas verificadas
+              </h2>
+              <p className="mt-1 text-sm text-ink-700">
+                Quien reserva y quien publica verifica su identidad con su DNI y una foto de su cara. Al garage le
+                llegan el nombre y los datos del vehículo de quien va. Tus documentos no se muestran a nadie.
+              </p>
+            </div>
+          </Card>
         </section>
       </Container>
     </>

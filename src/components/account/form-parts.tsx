@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, type InputHTMLAttributes, type ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { DemoNotice } from "@/components/ui/demo-notice";
-import { ButtonLink } from "@/components/ui/button";
+
 import { fieldInput, fieldLabel } from "@/components/driver/range-fields";
 import { useAuth } from "@/lib/auth/auth-provider";
 import type { AuthResult } from "@/lib/auth/actions";
@@ -92,15 +92,8 @@ export function AccountsDisabled() {
   return (
     <div className="space-y-4">
       <DemoNotice title="Las cuentas no están disponibles en esta versión">
-        Esta es la versión de demostración: no se pueden crear cuentas ni ingresar. Podés recorrer las
-        pantallas de ejemplo para conductores y propietarios.
+        Esta copia del sitio no está conectada al servidor: no se pueden crear cuentas ni ingresar.
       </DemoNotice>
-      <div className="flex flex-wrap gap-2">
-        <ButtonLink href="/">Buscar cocheras</ButtonLink>
-        <ButtonLink href="/propietarios/" variant="secondary">
-          Ver la demo de propietarios
-        </ButtonLink>
-      </div>
     </div>
   );
 }

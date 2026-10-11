@@ -17,7 +17,7 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: { default: "GuSpot — Estacionamiento cerca, con precio claro", template: "%s · GuSpot" },
   description:
-    "Demo de GuSpot: buscá y reservá cocheras ofrecidas por propietarios en Argentina. Versión de demostración con datos de ejemplo.",
+    "GuSpot: encontrá garages cerca tuyo en CABA con lugares libres en vivo. Avisá que vas o reservá y pagá desde el celular.",
   robots: { index: false, follow: false },
 };
 

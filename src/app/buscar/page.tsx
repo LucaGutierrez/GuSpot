@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { RedirectToSearch, SearchLink } from "./redirect-to-search";
 
 export const metadata: Metadata = {
-  title: "Buscar cocheras",
-  description: "La búsqueda de cocheras está en la pantalla principal (datos de demostración).",
+  title: "Buscar garages",
+  description: "La búsqueda de garages está en la pantalla principal.",
 };
 
 /** Alias para enlaces viejos: redirige a "/" conservando la búsqueda. */

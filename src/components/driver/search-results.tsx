@@ -1,16 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { searchSpaces, type Area, type SearchParams } from "@/lib/search";
-import { cities } from "@/lib/demo-data";
 import { setLastZone } from "@/lib/last-zone";
 import { formatRange } from "@/lib/format";
-import { DemoBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
-import { DemoNotice } from "@/components/ui/demo-notice";
 import { ResultsMap } from "@/components/explore/results-map";
 import { useInitialZone } from "@/components/explore/use-initial-zone";
 import { useLockBodyScroll } from "@/components/explore/use-element-height";
@@ -91,8 +87,7 @@ function Results({
     return () => window.removeEventListener("scroll", keepTop);
   }, []);
 
-  const { mode, spaces, failed } = useSearchSource();
-  const real = mode === "reales";
+  const { spaces, failed } = useSearchSource();
   // "Buscar en esta zona": vale para la búsqueda actual de la URL.
   const [areaState, setAreaState] = useState<{ key: string; area: Area } | null>(null);
   const [movedTo, setMovedTo] = useState<{ key: string; area: Area } | null>(null);
@@ -193,15 +188,13 @@ function Results({
               {results.length} {results.length === 1 ? "espacio" : "espacios"}
               {area ? " en esta zona del mapa" : search.zona ? ` en «${search.zona}»` : ""}
             </h2>
-            {!real && <DemoBadge label="Datos de ejemplo" />}
           </div>
           {period && (
             <p className="text-sm text-ink-500">Período: {formatRange(period.start, period.end)}</p>
           )}
           <p className="text-xs text-ink-500">
-            {real
-              ? "Los lugares libres los informa cada garage en vivo. La dirección y cómo entrar se comparten cuando avisás que vas o reservás."
-              : "En el mapa aparecen solo los espacios disponibles en ese período, en una ubicación aproximada (±200 m). La dirección exacta se comparte cuando la reserva esté confirmada y pagada."}
+            Los lugares libres los informa cada garage en vivo. La dirección y cómo entrar se comparten cuando avisás
+            que vas o reservás.
           </p>
 
           {spaces === null ? (
@@ -233,25 +226,12 @@ function Results({
             </ul>
           ) : (
             <EmptyState
-              real={real}
               zona={area ? "esta zona del mapa" : search.zona}
               noZoneMatch={all.length === 0}
               onClearFilters={filtersActive ? clearFilters : undefined}
-              query={search}
             />
           )}
 
-          {real ? (
-            <DemoNotice>
-              Estos garages los publicaron sus dueños. Todavía no se puede reservar ni pagar desde
-              GuSpot.
-            </DemoNotice>
-          ) : (
-            <DemoNotice>
-              Los espacios, precios y calificaciones son de ejemplo. Reservar es solo una solicitud:
-              el propietario tiene que aceptarla.
-            </DemoNotice>
-          )}
         </section>
       </div>
 
@@ -260,7 +240,7 @@ function Results({
           results={matching}
           selectedId={highlighted}
           onSelect={onMapSelect}
-          fitKey={`${queryKey}|${search.zona}|${filters.tipo}|${filters.vehiculo}|${mode}|${spaces?.length ?? -1}`}
+          fitKey={`${queryKey}|${search.zona}|${filters.tipo}|${filters.vehiculo}|${spaces?.length ?? -1}`}
           onUserMove={(a) => setMovedTo({ key: queryKey, area: a })}
           canSearchArea={!!pendingArea}
           onSearchArea={() => pendingArea && setAreaState({ key: queryKey, area: pendingArea })}
@@ -271,20 +251,15 @@ function Results({
 }
 
 function EmptyState({
-  real,
   zona,
   noZoneMatch,
   onClearFilters,
-  query,
 }: {
-  real: boolean;
   zona: string;
   noZoneMatch: boolean;
   onClearFilters?: () => void;
-  query: SearchParams;
 }) {
-  if (real) {
-    return (
+  return (
       <Card className="space-y-3 p-6 text-center">
         <p className="font-semibold text-ink-900">
           {noZoneMatch
@@ -292,7 +267,7 @@ function EmptyState({
             : "Ningún garage coincide con los filtros elegidos."}
         </p>
         <p className="text-sm text-ink-500">
-          {noZoneMatch ? "Probá con otra zona o mirá los garages de ejemplo." : "Probá ampliar los filtros o cambiar el horario."}
+          {noZoneMatch ? "Probá con otra zona." : "Probá ampliar los filtros."}
         </p>
         {!noZoneMatch && onClearFilters && (
           <Button variant="secondary" onClick={onClearFilters}>
@@ -300,40 +275,5 @@ function EmptyState({
           </Button>
         )}
       </Card>
-    );
-  }
-  return (
-    <Card className="space-y-3 p-6 text-center">
-      <p className="font-semibold text-ink-900">
-        {noZoneMatch
-          ? `No encontramos espacios en «${zona}».`
-          : "Ningún espacio coincide con los filtros elegidos."}
-      </p>
-      <p className="text-sm text-ink-500">
-        {noZoneMatch
-          ? "Probá con otra ciudad o barrio. En la demo hay espacios en estas ciudades:"
-          : "Probá ampliar los filtros o cambiar el horario."}
-      </p>
-      {noZoneMatch ? (
-        <ul className="flex flex-wrap justify-center gap-2">
-          {cities().map(({ city }) => (
-            <li key={city}>
-              <Link
-                href={`/${rangeQuery({ ...query, zona: city })}`}
-                className="inline-flex rounded-full border border-ink-200 bg-white px-3 py-1.5 text-sm font-medium text-ink-900 hover:bg-ink-100 focus-visible:outline-2 focus-visible:outline-brand-500"
-              >
-                {city}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        onClearFilters && (
-          <Button variant="secondary" onClick={onClearFilters}>
-            Limpiar filtros
-          </Button>
-        )
-      )}
-    </Card>
   );
 }

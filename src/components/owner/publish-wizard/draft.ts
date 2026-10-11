@@ -1,5 +1,4 @@
-import type { AvailabilityRule, Feature, PhotoVariant, Space, SpaceType, VehicleSize } from "@/lib/types";
-import { cities } from "@/lib/demo-data";
+import type { AvailabilityRule, Feature, PhotoVariant, SpaceType, VehicleSize } from "@/lib/types";
 
 // Estado del asistente de publicación (solo en memoria) y sus validaciones.
 
@@ -45,8 +44,6 @@ export const STEPS = [
   "Revisión",
 ] as const;
 
-export const demoCities = (): string[] => cities().map((c) => c.city);
-
 let ruleKey = 0;
 export function newRule(partial: Partial<RuleDraft> = {}): RuleDraft {
   ruleKey += 1;
@@ -71,39 +68,6 @@ export function emptyDraft(): Draft {
     daily: "",
     minHours: "1",
     rules: [newRule()],
-  };
-}
-
-/** Borrador precargado con un espacio existente (botones "Editar"). */
-export function draftFromSpace(space: Space): Draft {
-  const known = demoCities().includes(space.city);
-  return {
-    title: space.title,
-    description: space.description,
-    type: space.type,
-    maxVehicle: space.maxVehicle,
-    city: known ? space.city : OTHER_CITY,
-    otherCity: known ? "" : space.city,
-    neighborhood: space.neighborhood,
-    approxLocation: space.approxLocation,
-    // La demo no tiene direcciones exactas: el propietario debe cargarla.
-    exactAddress: "",
-    features: [...space.features],
-    conditions: space.accessConditions.length ? [...space.accessConditions] : [""],
-    photo: space.photos[0]?.variant ?? null,
-    hourly: String(space.hourlyPrice / 100),
-    daily: space.dailyPrice ? String(space.dailyPrice / 100) : "",
-    minHours: String(space.minHours),
-    rules: space.availability.length
-      ? space.availability.map((r) =>
-          newRule({
-            days: [...r.days],
-            from: r.from,
-            to: r.to === "24:00" ? "00:00" : r.to,
-            allDay: r.from === "00:00" && r.to === "24:00",
-          }),
-        )
-      : [newRule()],
   };
 }
 

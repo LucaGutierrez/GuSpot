@@ -37,12 +37,8 @@ export function RequireSignIn({ back, children }: { back: string; children: (use
     return (
       <div className="space-y-4">
         <DemoNotice title="Las cuentas no están disponibles en esta versión">
-          Esta es la versión de demostración: no se pueden publicar garages reales. Podés ver cómo
-          funcionará en la demo de propietarios.
+          Esta copia del sitio no está conectada al servidor: no se pueden usar cuentas.
         </DemoNotice>
-        <ButtonLink href="/propietarios/" variant="secondary">
-          Ver la demo de propietarios
-        </ButtonLink>
       </div>
     );
   }
@@ -51,7 +47,7 @@ export function RequireSignIn({ back, children }: { back: string; children: (use
     const volver = `?volver=${encodeURIComponent(back)}`;
     return (
       <Card className="space-y-4 p-5">
-        <p className="text-ink-700">Para publicar y administrar tus garages, ingresá a tu cuenta.</p>
+        <p className="text-ink-700">Para seguir, ingresá a tu cuenta o creá una.</p>
         <div className="flex flex-wrap gap-2">
           <ButtonLink href={`/ingresar/${volver}`}>Ingresar</ButtonLink>
           <ButtonLink href={`/crear-cuenta/${volver}`} variant="secondary">

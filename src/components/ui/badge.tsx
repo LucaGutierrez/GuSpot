@@ -23,11 +23,6 @@ export function Badge({ tone = "neutral", children }: { tone?: Tone; children: R
   );
 }
 
-/** Etiqueta para marcar contenido de demostración. */
-export function DemoBadge({ label = "Demo" }: { label?: string }) {
-  return <Badge tone="demo">{label}</Badge>;
-}
-
 const bookingTone: Record<BookingStatus, Tone> = {
   solicitada: "warning",
   pendiente_pago: "warning",

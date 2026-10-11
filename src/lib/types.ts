@@ -1,6 +1,4 @@
-// Tipos de dominio de GuSpot. En la demo se llenan con datos de ejemplo
-// (src/lib/demo-data.ts); más adelante los mismos tipos describirán lo que
-// devuelve la base de datos.
+// Tipos de dominio de GuSpot (lo que la página muestra a partir de la base de datos).
 
 /** Montos en centavos de ARS (enteros) para evitar errores de redondeo. */
 export type Centavos = number;
