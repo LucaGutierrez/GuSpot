@@ -17,7 +17,7 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: { default: "GuSpot — Estacionamiento cerca, con precio claro", template: "%s · GuSpot" },
   description:
-    "GuSpot: encontrá garages cerca tuyo en CABA con lugares libres en vivo. Avisá que vas o reservá y pagá desde el celular.",
+    "GuSpot: encontrá garajes cerca tuyo en CABA con lugares libres en vivo. Avisá que vas o reservá y pagá desde el celular.",
   robots: { index: false, follow: false },
   applicationName: "GuSpot",
   // Abierta desde la pantalla de inicio del iPhone: sin la barra de Safari.

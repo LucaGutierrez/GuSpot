@@ -1,4 +1,4 @@
-// Disponibilidad en vivo de un garage comercial, lista para mostrar.
+// Disponibilidad en vivo de un garaje comercial, lista para mostrar.
 // Siempre se muestra texto + color (nunca solo color).
 
 import type { LocalDateTime, Space } from "./types";

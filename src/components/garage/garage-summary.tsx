@@ -15,7 +15,7 @@ import { LiveBadge, UpdatedNote } from "./live-badge";
 /** Enlace a la ficha con el aviso "Voy a este" abierto. */
 export const voyHref = (href: string) => `${href}${href.includes("?") ? "&" : "?"}voy=1`;
 
-/** Zona, disponibilidad, capacidad, precio y servicios de un garage comercial. */
+/** Zona, disponibilidad, capacidad, precio y servicios de un garaje comercial. */
 export function GarageFacts({ result, live, distance }: { result: SearchResult; live: LiveStatus; distance?: string | null }) {
   const { space } = result;
   const c = space.commercial!;
@@ -52,7 +52,7 @@ export function GarageFacts({ result, live, distance }: { result: SearchResult; 
   );
 }
 
-/** Tarjeta de garage comercial para listas (escritorio y lista del celular). */
+/** Tarjeta de garaje comercial para listas (escritorio y lista del celular). */
 export function CommercialCard({ result, href, distance }: { result: SearchResult; href: string; distance?: string | null }) {
   const now = useNow();
   const live = liveStatus(result.space, now);
@@ -85,7 +85,7 @@ export function CommercialCard({ result, href, distance }: { result: SearchResul
   );
 }
 
-/** Ficha inferior del mapa (celular) para un garage comercial. */
+/** Ficha inferior del mapa (celular) para un garaje comercial. */
 export function CommercialSelectedCard({
   result,
   href,
@@ -113,7 +113,7 @@ export function CommercialSelectedCard({
       ref={ref}
       tabIndex={-1}
       role="region"
-      aria-label={`Garage seleccionado: ${result.space.title}`}
+      aria-label={`Garaje seleccionado: ${result.space.title}`}
       onKeyDown={(e) => e.key === "Escape" && onClose()}
       className="rounded-2xl border border-ink-200 bg-white p-3 shadow-lg focus:outline-none"
     >
@@ -147,13 +147,13 @@ export function CommercialSelectedCard({
       </div>
       {position.total > 1 && (
         <div className="mt-2 flex items-center justify-between border-t border-ink-100 pt-2">
-          <button type="button" onClick={onPrev} aria-label="Garage anterior" className="grid h-9 w-9 place-items-center rounded-full text-ink-700 hover:bg-ink-100">
+          <button type="button" onClick={onPrev} aria-label="Garaje anterior" className="grid h-9 w-9 place-items-center rounded-full text-ink-700 hover:bg-ink-100">
             <ChevronLeftIcon />
           </button>
           <p className="text-xs text-ink-500" aria-live="polite">
             {position.index + 1} de {position.total}
           </p>
-          <button type="button" onClick={onNext} aria-label="Garage siguiente" className="grid h-9 w-9 place-items-center rounded-full text-ink-700 hover:bg-ink-100">
+          <button type="button" onClick={onNext} aria-label="Garaje siguiente" className="grid h-9 w-9 place-items-center rounded-full text-ink-700 hover:bg-ink-100">
             <ChevronRightIcon />
           </button>
         </div>

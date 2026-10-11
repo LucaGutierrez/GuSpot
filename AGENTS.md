@@ -23,6 +23,7 @@ original se sacaron a pedido del usuario: no volver a agregarlos.
 - La búsqueda NO tiene horario por defecto: se busca por zona/cerca y el horario se elige al reservar ("Desde ahora: 1–4 h" u otro día).
 - No inventar políticas de cancelación, verificación de propietarios ni requisitos legales: mostrarlos como "a definir".
 - Interfaz en español rioplatense (voseo: "buscá", "publicá").
+- Se escribe **"garaje" / "garajes" (con J)** en todo texto visible (pedido explícito del usuario). En el código quedan los nombres internos `garage` (tablas, rutas `/mis-garages/`, componentes): no renombrarlos, la ruta `/mis-garages/cobros/` está registrada en Mercado Pago.
 
 ## Técnica
 - Next.js 16 App Router, exportación estática (`output: "export"`, `trailingSlash: true`). Prohibido: server actions, route handlers dinámicos, cookies, headers, rewrites, `next/image` con optimización.

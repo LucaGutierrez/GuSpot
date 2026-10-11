@@ -12,13 +12,13 @@ import {
   type Errors,
 } from "@/components/owner/publish-wizard/draft";
 
-// Formulario de un garage real: el mismo borrador del asistente de la demo
+// Formulario de un garaje real: el mismo borrador del asistente de la demo
 // (para reutilizar sus pasos) más el punto exacto elegido en el mapa.
 
 export interface GarageDraft extends Draft {
   exactLocation: LatLng | null;
   arrivalInstructions: string;
-  // Garage comercial
+  // Garaje comercial
   capacity: string;
   reservableSpots: string;
   contactPhone: string;
@@ -98,9 +98,9 @@ export function validateGarageDraft(d: GarageDraft): Errors {
   if (!d.maxVehicle) errors.maxVehicle = "Elegí el vehículo más grande que entra.";
   if (!d.neighborhood.trim()) errors.neighborhood = "Escribí el barrio.";
   if (d.exactAddress.trim().length < 5) errors.exactAddress = "Escribí la dirección y elegila de la lista.";
-  if (!d.exactLocation) errors.exactLocation = "Elegí la dirección del garage de la lista.";
+  if (!d.exactLocation) errors.exactLocation = "Elegí la dirección del garaje de la lista.";
   const cap = Number(d.capacity);
-  if (!Number.isInteger(cap) || cap < 1 || cap > 5000) errors.capacity = "Indicá cuántos lugares tiene el garage (número entero).";
+  if (!Number.isInteger(cap) || cap < 1 || cap > 5000) errors.capacity = "Indicá cuántos lugares tiene el garaje (número entero).";
   const res = Number(d.reservableSpots || "0");
   if (!Number.isInteger(res) || res < 0) errors.reservableSpots = "Usá un número entero (0 si no querés reservas).";
   else if (Number.isInteger(cap) && res > cap) errors.reservableSpots = "No puede ser mayor que la capacidad.";

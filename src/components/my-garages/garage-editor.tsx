@@ -178,7 +178,7 @@ function LocationFields({
   );
 }
 
-/** Formulario de alta (`garage` null) o edición de un garage propio. */
+/** Formulario de alta (`garaje` null) o edición de un garaje propio. */
 export function GarageEditor({ garage, justCreated = false }: { garage: OwnerGarage | null; justCreated?: boolean }) {
   const router = useRouter();
   const [draft, setDraft] = useState<GarageDraft>(() => (garage ? draftFromGarage(garage) : emptyGarageDraft()));
@@ -233,10 +233,10 @@ export function GarageEditor({ garage, justCreated = false }: { garage: OwnerGar
     <div className="flex flex-col gap-6 pb-12">
       <div className="flex flex-col gap-2 pt-6">
         <Link href="/mis-garages/" className="flex w-fit items-center gap-1 text-sm font-medium text-brand-700 hover:underline">
-          <ChevronLeftIcon width={16} height={16} /> Mis garages
+          <ChevronLeftIcon width={16} height={16} /> Mis garajes
         </Link>
         <h1 className="text-2xl font-bold tracking-tight text-ink-900 sm:text-3xl">
-          {garage ? "Editar garage" : "Publicá tu garage comercial"}
+          {garage ? "Editar garaje" : "Publicá tu garaje comercial"}
         </h1>
         <p className="text-ink-500">
           {garage
@@ -245,7 +245,7 @@ export function GarageEditor({ garage, justCreated = false }: { garage: OwnerGar
         </p>
       </div>
 
-      {justCreated && saved && <SuccessBox>Guardamos tu garage como borrador. Sumá fotos y publicalo cuando esté listo.</SuccessBox>}
+      {justCreated && saved && <SuccessBox>Guardamos tu garaje como borrador. Sumá fotos y publicalo cuando esté listo.</SuccessBox>}
 
       {garage && (
         <Card className="p-5">
@@ -264,7 +264,7 @@ export function GarageEditor({ garage, justCreated = false }: { garage: OwnerGar
         <Section title="El establecimiento">
           <EstablishmentFields {...fieldProps} />
         </Section>
-        <Section title="Ubicación" subtitle="El punto del garage se ve en el mapa. La dirección escrita y las indicaciones las ve quien avisa que va o reserva.">
+        <Section title="Ubicación" subtitle="El punto del garaje se ve en el mapa. La dirección escrita y las indicaciones las ve quien avisa que va o reserva.">
           <LocationFields draft={draft} errors={errors} update={update} />
         </Section>
         <Section title="Capacidad">
@@ -333,10 +333,10 @@ function DeleteGarage({ id }: { id: string }) {
 
   return (
     <Card className="flex flex-col gap-3 border-red-200 p-5">
-      <h2 className="text-lg font-semibold text-ink-900">Eliminar garage</h2>
+      <h2 className="text-lg font-semibold text-ink-900">Eliminar garaje</h2>
       {confirming ? (
         <>
-          <p className="text-sm text-ink-700">Se borran el garage y sus fotos. No se puede deshacer.</p>
+          <p className="text-sm text-ink-700">Se borran el garaje y sus fotos. No se puede deshacer.</p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -354,7 +354,7 @@ function DeleteGarage({ id }: { id: string }) {
       ) : (
         <div>
           <Button variant="secondary" onClick={() => setConfirming(true)}>
-            Eliminar este garage
+            Eliminar este garaje
           </Button>
         </div>
       )}

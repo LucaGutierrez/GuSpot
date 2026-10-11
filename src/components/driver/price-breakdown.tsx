@@ -21,7 +21,7 @@ export function PriceBreakdown({
 }: {
   space: Pick<Space, "hourlyPrice" | "dailyPrice">;
   quote: OkQuote;
-  /** Texto de la última fila (p. ej. "Tarifa del garage" si después se suma un cargo). */
+  /** Texto de la última fila (p. ej. "Tarifa del garaje" si después se suma un cargo). */
   totalLabel?: string;
 }) {
   const daily = space.dailyPrice ?? space.hourlyPrice * 24;

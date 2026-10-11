@@ -54,9 +54,9 @@ export function ResultsSheet({
     return (
       <div className="rounded-t-2xl border-t border-ink-200 bg-white p-4 text-sm shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         {loading ? (
-          <p className="text-ink-500">Cargando garages…</p>
+          <p className="text-ink-500">Cargando garajes…</p>
         ) : (
-          <p className="text-red-800">No pudimos cargar los garages. Revisá tu conexión y probá de nuevo.</p>
+          <p className="text-red-800">No pudimos cargar los garajes. Revisá tu conexión y probá de nuevo.</p>
         )}
       </div>
     );
@@ -67,8 +67,8 @@ export function ResultsSheet({
       <div className="rounded-t-2xl border-t border-ink-200 bg-white p-4 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <p className="font-semibold text-ink-900">
           {noZoneMatch
-            ? `Todavía no hay garages publicados en «${zona}».`
-            : "Ningún garage coincide con los filtros elegidos."}
+            ? `Todavía no hay garajes publicados en «${zona}».`
+            : "Ningún garaje coincide con los filtros elegidos."}
         </p>
         <p className="mt-1 text-sm text-ink-500">
           {noZoneMatch ? "Probá con otra zona o buscá cerca tuyo." : "Probá ampliar los filtros o cambiar la zona."}
@@ -102,12 +102,12 @@ export function ResultsSheet({
         <span>
           <span className="block font-semibold text-ink-900">
             {n === 0
-              ? "No hay garages con lugar ahora"
+              ? "No hay garajes con lugar ahora"
               : `${n} ${n === 1 ? "disponible" : "disponibles"}`}
           </span>
           {!expanded && unavailable.length > 0 && (
             <span className="block text-xs text-ink-500">
-              {unavailable.length} {unavailable.length === 1 ? "garage sin lugar o cerrado" : "garages sin lugar o cerrados"}
+              {unavailable.length} {unavailable.length === 1 ? "garaje sin lugar o cerrado" : "garajes sin lugar o cerrados"}
             </span>
           )}
         </span>
@@ -134,7 +134,7 @@ export function ResultsSheet({
 
       <div id={listId} hidden={!expanded} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4">
         {n > 0 && (
-          <ul className="space-y-3" aria-label="Garages disponibles">
+          <ul className="space-y-3" aria-label="Garajes disponibles">
             {available.map((r) => (
               <li key={r.space.id}>
                 <ListItem result={r} href={hrefFor(r.space.id)} distance={distanceFor(r)} onShowOnMap={onShowOnMap} />
@@ -160,8 +160,8 @@ export function ResultsSheet({
           </section>
         )}
         <p className="mt-4 text-xs text-ink-500">
-          La disponibilidad la informa cada garage. Avisar que vas no reserva el lugar: para asegurártelo, reservá y pagá
-          desde la ficha del garage.
+          La disponibilidad la informa cada garaje. Avisar que vas no reserva el lugar: para asegurártelo, reservá y pagá
+          desde la ficha del garaje.
         </p>
       </div>
     </div>

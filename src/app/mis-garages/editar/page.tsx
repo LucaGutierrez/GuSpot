@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { EditGaragePage } from "@/components/my-garages/my-garages";
 
-export const metadata: Metadata = { title: "Editar garage" };
+export const metadata: Metadata = { title: "Editar garaje" };
 
 export default function EditarGaragePage() {
   return (

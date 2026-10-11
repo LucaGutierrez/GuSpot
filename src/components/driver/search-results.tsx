@@ -44,7 +44,7 @@ export function SearchResults() {
     <Results search={search} hasDates={!!fecha} queryKey={params.toString()}>
       <PageHeader
         title="Buscar cocheras"
-        subtitle="Buscá por zona. Ves los lugares libres en vivo y el horario lo elegís al entrar al garage."
+        subtitle="Buscá por zona. Ves los lugares libres en vivo y el horario lo elegís al entrar al garaje."
       />
       <Card className="p-4">
         <h2 className="sr-only">Modificar búsqueda</h2>
@@ -193,15 +193,15 @@ function Results({
             <p className="text-sm text-ink-500">Período: {formatRange(period.start, period.end)}</p>
           )}
           <p className="text-xs text-ink-500">
-            Los lugares libres los informa cada garage en vivo. La dirección y cómo entrar se comparten cuando avisás
+            Los lugares libres los informa cada garaje en vivo. La dirección y cómo entrar se comparten cuando avisás
             que vas o reservás.
           </p>
 
           {spaces === null ? (
-            <p className="text-sm text-ink-500">Cargando garages…</p>
+            <p className="text-sm text-ink-500">Cargando garajes…</p>
           ) : failed ? (
             <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-              No pudimos cargar los garages. Revisá tu conexión y probá de nuevo.
+              No pudimos cargar los garajes. Revisá tu conexión y probá de nuevo.
             </p>
           ) : results.length > 0 ? (
             <ul className="@container space-y-4">
@@ -263,8 +263,8 @@ function EmptyState({
       <Card className="space-y-3 p-6 text-center">
         <p className="font-semibold text-ink-900">
           {noZoneMatch
-            ? `Todavía no hay garages publicados en «${zona}».`
-            : "Ningún garage coincide con los filtros elegidos."}
+            ? `Todavía no hay garajes publicados en «${zona}».`
+            : "Ningún garaje coincide con los filtros elegidos."}
         </p>
         <p className="text-sm text-ink-500">
           {noZoneMatch ? "Probá con otra zona." : "Probá ampliar los filtros."}

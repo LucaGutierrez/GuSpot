@@ -26,21 +26,21 @@ async function requireUserId(supabase: SupabaseClient): Promise<string> {
 
 const MESSAGES: Record<string, string> = {
   not_signed_in: "Tenés que ingresar a tu cuenta para reservar.",
-  not_found: "Este garage ya no está publicado.",
-  own_garage: "No podés reservar tu propio garage.",
+  not_found: "Este garaje ya no está publicado.",
+  own_garage: "No podés reservar tu propio garaje.",
   past: "El horario de entrada ya pasó. Elegí uno futuro.",
-  min_hours: "El período es más corto que el mínimo de horas del garage.",
+  min_hours: "El período es más corto que el mínimo de horas del garaje.",
   too_long: "Podés reservar hasta 30 días seguidos.",
-  closed: "El garage no está disponible en todo ese horario.",
+  closed: "El garaje no está disponible en todo ese horario.",
   busy: "Alguien reservó ese horario recién. Elegí otro.",
   not_active: "Esta reserva ya estaba cancelada.",
   started: "La reserva ya empezó: no se puede cancelar desde la app.",
   driver_profile_incomplete: "Antes de reservar completá tu verificación (datos, DNI, selfie, licencia y vehículo).",
   vehicle_not_found: "Elegí uno de tus vehículos.",
-  vehicle_too_big: "Ese vehículo no entra en este garage.",
+  vehicle_too_big: "Ese vehículo no entra en este garaje.",
   insurance_missing: "Ese vehículo no tiene el seguro vigente cargado. Completalo en Tu cuenta → Mis vehículos.",
-  not_reservable: "Este garage no está tomando reservas en este momento.",
-  no_online_payments: "Este garage todavía no cobra reservas online.",
+  not_reservable: "Este garaje no está tomando reservas en este momento.",
+  no_online_payments: "Este garaje todavía no cobra reservas online.",
   paid_booking: "Esta reserva está pagada: cancelala desde su detalle.",
 };
 
@@ -154,7 +154,7 @@ export async function listMyBookings(): Promise<RealBooking[]> {
   return data.map((r) => toBooking(r, me));
 }
 
-/** Reservas de mis garages (como dueño). */
+/** Reservas de mis garajes (como dueño). */
 export async function listOwnerBookings(): Promise<RealBooking[]> {
   const supabase = db();
   const me = await requireUserId(supabase);
@@ -191,7 +191,7 @@ export async function getBookingAccess(id: string): Promise<BookingAccess | null
     : null;
 }
 
-/** Horarios ocupados de los garages publicados (para la búsqueda). Nunca lanza: sin datos, sin ocupación. */
+/** Horarios ocupados de los garajes publicados (para la búsqueda). Nunca lanza: sin datos, sin ocupación. */
 export async function busyByGarage(): Promise<Map<string, Interval[]>> {
   const map = new Map<string, Interval[]>();
   const supabase = getSupabase();

@@ -16,7 +16,7 @@ export function SiteFooter() {
           <Link href="/" className="hover:text-ink-900">Buscar en el mapa</Link>
           <Link href="/como-funciona/" className="hover:text-ink-900">Cómo funciona</Link>
           <Link href="/mis-reservas/" className="hover:text-ink-900">Mis reservas</Link>
-          <Link href="/publicar/" className="hover:text-ink-900">Sumá tu garage</Link>
+          <Link href="/publicar/" className="hover:text-ink-900">Sumá tu garaje</Link>
         </nav>
       </div>
     </footer>

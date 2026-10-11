@@ -1,8 +1,8 @@
 "use client";
 
-// "Voy a este": avisos de llegada a garages comerciales. No reservan lugar.
+// "Voy a este": avisos de llegada a garajes comerciales. No reservan lugar.
 // Reglas en supabase/migrations/20261011140000_commercial_garages.sql
-// (notify_arrival, update_arrival, arrival_access). El panel del garage los
+// (notify_arrival, update_arrival, arrival_access). El panel del garaje los
 // recibe en tiempo real (Supabase Realtime, respeta las reglas de acceso).
 
 import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
@@ -25,9 +25,9 @@ async function requireUserId(supabase: SupabaseClient): Promise<string> {
 
 const MESSAGES: Record<string, string> = {
   driver_profile_incomplete: "Antes de avisar, completá tus datos y tu verificación (identidad, licencia y vehículo).",
-  not_found: "Este garage ya no está publicado.",
-  own_garage: "Es tu propio garage.",
-  not_accepting: "Este garage no está recibiendo conductores en este momento.",
+  not_found: "Este garaje ya no está publicado.",
+  own_garage: "Es tu propio garaje.",
+  not_accepting: "Este garaje no está recibiendo conductores en este momento.",
   vehicle_not_found: "Elegí uno de tus vehículos.",
   insurance_missing: "Ese vehículo no tiene el seguro vigente cargado. Completalo en Tu cuenta → Mis vehículos.",
   forbidden: "No podés hacer esto.",
@@ -73,7 +73,7 @@ function toNotice(r: Row): ArrivalNotice {
   };
 }
 
-/** Avisa al garage. Devuelve el id del aviso. */
+/** Avisa al garaje. Devuelve el id del aviso. */
 export async function notifyArrival(garageId: string, etaMinutes: number, vehicleId: string): Promise<string> {
   const supabase = db();
   await requireUserId(supabase);
@@ -116,7 +116,7 @@ export async function getArrivalAccess(id: string): Promise<BookingAccess | null
     : null;
 }
 
-/** Avisos recientes de un garage propio (últimas 12 h). */
+/** Avisos recientes de un garaje propio (últimas 12 h). */
 export async function listGarageArrivals(garageId: string): Promise<ArrivalNotice[]> {
   const supabase = db();
   await requireUserId(supabase);

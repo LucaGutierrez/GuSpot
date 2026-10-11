@@ -118,7 +118,7 @@ export function PaymentsCard({ compact = false }: { compact?: boolean }) {
       {acc.connected ? (
         compact ? null : confirming ? (
           <div className="flex flex-col gap-2 rounded-xl bg-ink-50 p-3">
-            <p className="text-sm text-ink-700">Si desconectás Mercado Pago, tus garages dejan de recibir reservas.</p>
+            <p className="text-sm text-ink-700">Si desconectás Mercado Pago, tus garajes dejan de recibir reservas.</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -167,7 +167,7 @@ export function PaymentsPage() {
   return (
     <Container className="max-w-2xl pb-12">
       <BackToAccount />
-      <PageHeader title="Cobros con Mercado Pago" subtitle="Cómo te pagan las reservas de tus garages." />
+      <PageHeader title="Cobros con Mercado Pago" subtitle="Cómo te pagan las reservas de tus garajes." />
       <RequireSignIn back="/cuenta/cobros/">
         {() => (code ? <FinishConnect code={code} state={state} /> : <Overview denied={denied} />)}
       </RequireSignIn>

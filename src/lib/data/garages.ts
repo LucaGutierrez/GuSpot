@@ -83,7 +83,7 @@ const OWNER_COLUMNS = `${PUBLIC_COLUMNS}, garage_private(address, exact_lat, exa
 function db(): SupabaseClient {
   const supabase = getSupabase();
   if (!supabase)
-    throw new DataError("Los garages reales todavía no están disponibles en esta versión (modo demo).", "not_configured");
+    throw new DataError("Los garajes reales todavía no están disponibles en esta versión (modo demo).", "not_configured");
   return supabase;
 }
 
@@ -108,9 +108,9 @@ function toDataError(error: Pick<PostgrestError, "code" | "message"> | { message
       "validation",
     );
   if (message.includes("photo_limit"))
-    return new DataError(`Podés subir hasta ${PHOTO_LIMITS.maxPerGarage} fotos por garage.`, "validation");
+    return new DataError(`Podés subir hasta ${PHOTO_LIMITS.maxPerGarage} fotos por garaje.`, "validation");
   if (code === "23503")
-    return new DataError("Este garage tiene reservas: pausalo en lugar de eliminarlo.", "validation");
+    return new DataError("Este garaje tiene reservas: pausalo en lugar de eliminarlo.", "validation");
   if (code === "23514" || code === "22P02" || code === "23502")
     return new DataError("Hay datos inválidos. Revisá el formulario.", "validation");
   if (code === "42501" || /row-level security|permission denied/i.test(message))
@@ -231,7 +231,7 @@ export function validateGarageInput(input: GarageInput): string | null {
   if (input.city.trim().length < 2) return "Indicá la ciudad.";
   if (input.address.trim().length < 3) return "Indicá la dirección (solo la vas a ver vos).";
   const { lat, lng } = input.exactLocation;
-  if (!(lat >= -56 && lat <= -21 && lng >= -74 && lng <= -53)) return "Marcá la ubicación del garage en el mapa.";
+  if (!(lat >= -56 && lat <= -21 && lng >= -74 && lng <= -53)) return "Marcá la ubicación del garaje en el mapa.";
   if (!Number.isInteger(input.hourlyPrice) || input.hourlyPrice < 0) return "El precio por hora no es válido.";
   if (input.dailyPrice !== undefined && (!Number.isInteger(input.dailyPrice) || input.dailyPrice <= 0))
     return "El precio por día no es válido.";
@@ -295,7 +295,7 @@ export async function listPublishedGarages(): Promise<Space[]> {
     .from("garages")
     .select(PUBLIC_COLUMNS)
     .eq("status", "publicado")
-    // Lanzamiento: solo garages comerciales (las cocheras particulares, más adelante).
+    // Lanzamiento: solo garajes comerciales (las cocheras particulares, más adelante).
     .eq("kind", "comercial")
     .order("created_at", { ascending: false })
     .returns<GarageRow[]>();
@@ -381,7 +381,7 @@ export async function updateGarage(id: string, input: GarageInput): Promise<void
   const supabase = db();
   await requireUserId(supabase);
 
-  // Primero lo privado: si el garage está publicado, el punto público tiene que existir.
+  // Primero lo privado: si el garaje está publicado, el punto público tiene que existir.
   const { data: updatedPriv, error: privError } = await supabase
     .from("garage_private")
     .update(privateFields(input))
@@ -395,7 +395,7 @@ export async function updateGarage(id: string, input: GarageInput): Promise<void
 
   const { data, error } = await supabase.from("garages").update(publicFields(input)).eq("id", id).select("id");
   if (error) throw toDataError(error);
-  if (data.length === 0) throw new DataError("No encontramos ese garage entre los tuyos.", "not_found");
+  if (data.length === 0) throw new DataError("No encontramos ese garaje entre los tuyos.", "not_found");
 }
 
 export async function setGarageStatus(id: string, status: ListingStatus): Promise<void> {
@@ -403,13 +403,13 @@ export async function setGarageStatus(id: string, status: ListingStatus): Promis
   await requireUserId(supabase);
   const { data, error } = await supabase.from("garages").update({ status }).eq("id", id).select("id");
   if (error) throw toDataError(error);
-  if (data.length === 0) throw new DataError("No encontramos ese garage entre los tuyos.", "not_found");
+  if (data.length === 0) throw new DataError("No encontramos ese garaje entre los tuyos.", "not_found");
 }
 
 export async function deleteGarage(id: string): Promise<void> {
   const supabase = db();
   await requireUserId(supabase);
-  // Primero los archivos: las reglas de Storage exigen que el garage exista.
+  // Primero los archivos: las reglas de Storage exigen que el garaje exista.
   const { data: photos, error: listError } = await supabase.from("garage_photos").select("path").eq("garage_id", id);
   if (listError) throw toDataError(listError);
   if (photos.length > 0) {
@@ -418,7 +418,7 @@ export async function deleteGarage(id: string): Promise<void> {
   }
   const { data, error } = await supabase.from("garages").delete().eq("id", id).select("id");
   if (error) throw toDataError(error);
-  if (data.length === 0) throw new DataError("No encontramos ese garage entre los tuyos.", "not_found");
+  if (data.length === 0) throw new DataError("No encontramos ese garaje entre los tuyos.", "not_found");
 }
 
 /** Panel del operador: lugares libres, estado y pausa. Registra la hora (lo ve el conductor). */
@@ -453,7 +453,7 @@ export async function uploadGaragePhoto(garageId: string, file: File): Promise<G
     .eq("garage_id", garageId);
   if (countError) throw toDataError(countError);
   if (existing.length >= PHOTO_LIMITS.maxPerGarage)
-    throw new DataError(`Podés subir hasta ${PHOTO_LIMITS.maxPerGarage} fotos por garage.`, "validation");
+    throw new DataError(`Podés subir hasta ${PHOTO_LIMITS.maxPerGarage} fotos por garaje.`, "validation");
   const position = existing.reduce((max, p) => Math.max(max, p.position + 1), 0);
 
   const path = `${garageId}/${crypto.randomUUID()}.${EXTENSIONS[file.type]}`;
@@ -470,7 +470,7 @@ export async function uploadGaragePhoto(garageId: string, file: File): Promise<G
 }
 
 export async function removeGaragePhoto(garageId: string, path: string): Promise<void> {
-  if (!path.startsWith(`${garageId}/`)) throw new DataError("Esa foto no corresponde a este garage.", "validation");
+  if (!path.startsWith(`${garageId}/`)) throw new DataError("Esa foto no corresponde a este garaje.", "validation");
   const supabase = db();
   await requireUserId(supabase);
   const { error } = await supabase.from("garage_photos").delete().eq("garage_id", garageId).eq("path", path);

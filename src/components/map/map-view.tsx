@@ -132,7 +132,7 @@ function fitAll(ml: MapLibreModule, m: MapLibreMap, p: MapViewProps, instant: bo
     for (const pt of points) bounds.extend(toLngLat(pt));
     const camera = m.cameraForBounds(bounds, { padding: pad, maxZoom: MAX_FIT_ZOOM });
     if (p.minFitZoom !== undefined && camera?.zoom !== undefined && camera.zoom < p.minFitZoom) {
-      // Centro de masa de los puntos: queda donde hay más garages, no en el medio del rectángulo.
+      // Centro de masa de los puntos: queda donde hay más garajes, no en el medio del rectángulo.
       const lat = points.reduce((a, pt) => a + pt.lat, 0) / points.length;
       const lng = points.reduce((a, pt) => a + pt.lng, 0) / points.length;
       m.easeTo({ center: [lng, lat], zoom: p.minFitZoom, offset, duration });
@@ -143,7 +143,7 @@ function fitAll(ml: MapLibreModule, m: MapLibreMap, p: MapViewProps, instant: bo
   return true;
 }
 
-/** Garages comerciales: marca propia y punto de disponibilidad (data-tone). */
+/** Garajes comerciales: marca propia y punto de disponibilidad (data-tone). */
 function applyVariant(el: HTMLButtonElement, data: MapMarker) {
   el.classList.toggle("is-garage", data.variant === "garage");
   if (data.tone) el.dataset.tone = data.tone;

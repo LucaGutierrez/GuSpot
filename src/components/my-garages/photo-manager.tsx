@@ -8,7 +8,7 @@ import { SpacePhoto } from "@/components/ui/space-photo";
 import { CameraIcon } from "@/components/ui/icons";
 import { ErrorBox, errorMessage } from "./shared";
 
-/** Fotos de un garage ya guardado: se suben y borran al momento. */
+/** Fotos de un garaje ya guardado: se suben y borran al momento. */
 export function PhotoManager({
   garageId,
   photos,

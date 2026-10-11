@@ -6,7 +6,7 @@ import { SpacePhoto } from "@/components/ui/space-photo";
  * simple con scroll-snap (deslizable en el celular, con scroll en escritorio).
  */
 export function PhotoGallery({ photos, title }: { photos: DemoPhoto[]; title: string }) {
-  // Garages reales: fotos subidas por el propietario (con `url`).
+  // Garajes reales: fotos subidas por el propietario (con `url`).
   const real = photos.some((p) => p.url);
   const noun = real ? "fotos" : "ilustraciones";
   if (photos.length === 0) {

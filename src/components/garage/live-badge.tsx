@@ -20,7 +20,7 @@ export function LiveBadge({ status, size = "md" }: { status: LiveStatus; size?: 
 export function UpdatedNote({ status, phone }: { status: LiveStatus; phone?: string }) {
   if (status.tone === "closed" && !status.open) return null;
   if (status.minutesAgo === null) {
-    return <p className="text-xs text-ink-500">El garage todavía no actualizó su disponibilidad.</p>;
+    return <p className="text-xs text-ink-500">El garaje todavía no actualizó su disponibilidad.</p>;
   }
   return (
     <p className={`text-xs ${status.stale ? "font-medium text-amber-900" : "text-ink-500"}`}>

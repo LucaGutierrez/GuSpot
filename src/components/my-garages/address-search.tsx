@@ -31,7 +31,7 @@ export function AddressSearch({
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [status, setStatus] = useState<"idle" | "searching" | "empty">("idle");
-  // Solo se busca cuando la persona escribe (no al cargar un garage existente).
+  // Solo se busca cuando la persona escribe (no al cargar un garaje existente).
   const [query, setQuery] = useState<string | null>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);

@@ -159,7 +159,7 @@ function SignedIn({ user }: { user: AuthUser }) {
         <Card className="overflow-hidden">
           <ul className="divide-y divide-ink-100">
             <MenuItem href="/mis-reservas/" icon={<TicketIcon />} title="Mis reservas" detail="Tus reservas como conductor" />
-            <MenuItem href="/mis-garages/" icon={<ParkingIcon />} title="Mis garages" detail="Publicá y administrá tus cocheras" />
+            <MenuItem href="/mis-garages/" icon={<ParkingIcon />} title="Mis garajes" detail="Publicá y administrá tus cocheras" />
           </ul>
         </Card>
       </section>
@@ -172,7 +172,7 @@ function SignedIn({ user }: { user: AuthUser }) {
               href="/cuenta/cobros/"
               icon={<WalletIcon />}
               title="Cobros con Mercado Pago"
-              detail="Conectá tu cuenta para cobrar las reservas de tus garages"
+              detail="Conectá tu cuenta para cobrar las reservas de tus garajes"
             />
           </ul>
         </Card>

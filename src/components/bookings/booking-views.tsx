@@ -131,7 +131,7 @@ function BookingDetail({
   const canCancel = b.role === "driver" && (status === "pendiente_pago" || (b.status === "confirmada" && !started));
   const settings = usePaymentSettings();
   const marker = useMemo(
-    () => (access ? [{ id: b.id, position: access.location, label: "Tu cochera", ariaLabel: "Ubicación del garage" }] : []),
+    () => (access ? [{ id: b.id, position: access.location, label: "Tu cochera", ariaLabel: "Ubicación del garaje" }] : []),
     [access, b.id],
   );
 
@@ -153,7 +153,7 @@ function BookingDetail({
         <ErrorBox>
           Se venció el tiempo para pagar y el lugar se liberó. Si querés, volvé a{" "}
           <Link href={`/espacio/?id=${b.garageId}`} className="font-semibold underline">
-            reservar este garage
+            reservar este garaje
           </Link>
           .
         </ErrorBox>
@@ -176,7 +176,7 @@ function BookingDetail({
             <dd className="font-medium text-ink-900">{b.hours} h</dd>
           </div>
           <div>
-            <dt className="text-ink-500">{b.role === "owner" ? "Tu tarifa" : "Tarifa del garage"}</dt>
+            <dt className="text-ink-500">{b.role === "owner" ? "Tu tarifa" : "Tarifa del garaje"}</dt>
             <dd className="font-medium text-ink-900">{formatARS(b.total)}</dd>
           </div>
           <div>
@@ -460,7 +460,7 @@ function DriverBookings() {
         <>
           Todavía no reservaste.{" "}
           <Link href="/" className="font-semibold text-brand-700 hover:underline">
-            Buscá un garage
+            Buscá un garaje
           </Link>
           .
         </>
@@ -469,13 +469,13 @@ function DriverBookings() {
   );
 }
 
-/** Sección de "Mis garages": reservas que recibieron mis garages. */
+/** Sección de "Mis garajes": reservas que recibieron mis garajes. */
 export function OwnerBookingsSection() {
   const load = useBookings(listOwnerBookings);
   return (
     <section className="mt-10 flex flex-col gap-3">
-      <h2 className="text-xl font-bold tracking-tight text-ink-900">Reservas de tus garages</h2>
-      <BookingList load={load} empty="Todavía nadie reservó tus garages." />
+      <h2 className="text-xl font-bold tracking-tight text-ink-900">Reservas de tus garajes</h2>
+      <BookingList load={load} empty="Todavía nadie reservó tus garajes." />
     </section>
   );
 }

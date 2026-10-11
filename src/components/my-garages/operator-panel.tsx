@@ -21,7 +21,7 @@ export function OperatorPanelPage() {
   return (
     <Container className="max-w-2xl pb-16">
       <Link href="/mis-garages/" className="inline-flex items-center gap-1 pt-4 text-sm font-medium text-brand-700 hover:underline">
-        <ChevronLeftIcon width={16} height={16} /> Mis garages
+        <ChevronLeftIcon width={16} height={16} /> Mis garajes
       </Link>
       <RequireSignIn back={`/mis-garages/panel/?id=${id}`}>{() => <PanelLoader key={id} id={id} />}</RequireSignIn>
     </Container>
@@ -42,7 +42,7 @@ function PanelLoader({ id }: { id: string }) {
   }, [id]);
   if (error) return <ErrorBox>{error}</ErrorBox>;
   if (garage === undefined) return <p className="pt-6 text-sm text-ink-500">Cargando…</p>;
-  if (!garage) return <ErrorBox>No encontramos ese garage entre los tuyos.</ErrorBox>;
+  if (!garage) return <ErrorBox>No encontramos ese garaje entre los tuyos.</ErrorBox>;
   return <Panel garage={garage} />;
 }
 
@@ -101,7 +101,7 @@ function Panel({ garage }: { garage: OwnerGarage }) {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-ink-900">{garage.title}</h1>
           <p className="text-sm text-ink-500">
-            Panel del garage · {garage.status === "publicado" ? "Publicado" : garage.status === "pausado" ? "Pausado" : "Borrador (no se ve en el mapa)"}
+            Panel del garaje · {garage.status === "publicado" ? "Publicado" : garage.status === "pausado" ? "Pausado" : "Borrador (no se ve en el mapa)"}
           </p>
         </div>
         <ButtonLink href={`/mis-garages/editar/?id=${garage.id}`} variant="secondary">

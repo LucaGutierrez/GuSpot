@@ -209,7 +209,7 @@ function StatusCard({
         Estado: <strong className="text-ink-900">{STATUS_TEXT[profile.identityStatus]}</strong>
       </p>
       {row(missing.conductor.length === 0 ? "Ya podés reservar" : "Para reservar te falta:", missing.conductor)}
-      {row(missing.propietario.length === 0 ? "Ya podés publicar garages" : "Para publicar garages te falta:", missing.propietario)}
+      {row(missing.propietario.length === 0 ? "Ya podés publicar garajes" : "Para publicar garajes te falta:", missing.propietario)}
       {back && missing.conductor.length === 0 && (
         <ButtonLink href={back} className="w-fit">
           Volver y reservar
@@ -606,7 +606,7 @@ function LicenseSection({
   }
 
   return (
-    <Section title="Licencia de conducir" subtitle="Necesaria para reservar. Si solo publicás garages, no hace falta." done={done}>
+    <Section title="Licencia de conducir" subtitle="Necesaria para reservar. Si solo publicás garajes, no hace falta." done={done}>
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-3">
           <Field id="lc-numero" label="Número" hint="Es el mismo número que tu DNI.">
@@ -645,7 +645,7 @@ export function VehiclesPage() {
   return (
     <Container className="max-w-2xl pb-16">
       <BackToAccount />
-      <PageHeader title="Mis vehículos" subtitle="Reservás con uno de tus vehículos, con el seguro vigente. El garage ve marca, modelo, color, patente y seguro." />
+      <PageHeader title="Mis vehículos" subtitle="Reservás con uno de tus vehículos, con el seguro vigente. El garaje ve marca, modelo, color, patente y seguro." />
       <RequireSignIn back="/cuenta/vehiculos/">{() => <VehiclesLoader />}</RequireSignIn>
     </Container>
   );
@@ -829,7 +829,7 @@ function InsuranceFields({
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="text-sm font-semibold text-ink-900">Seguro del vehículo</legend>
-      <p className="text-xs text-ink-500">Lo ve el garage junto con tu auto, por si pasa algo.</p>
+      <p className="text-xs text-ink-500">Lo ve el garaje junto con tu auto, por si pasa algo.</p>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Field id={`${idPrefix}-aseguradora`} label="Compañía">
           <input

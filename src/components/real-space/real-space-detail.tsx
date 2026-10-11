@@ -22,7 +22,7 @@ import { RealBookingPanel } from "@/components/bookings/real-booking-panel";
 
 type Load = { state: "loading" } | { state: "error" } | { state: "ready"; space: Space | null };
 
-/** Detalle de un garage real publicado (`/espacio/?id=`). Usa useSearchParams: montarlo dentro de <Suspense>. */
+/** Detalle de un garaje real publicado (`/espacio/?id=`). Usa useSearchParams: montarlo dentro de <Suspense>. */
 export function RealSpaceDetail() {
   const params = useSearchParams();
   const id = params.get("id") ?? "";
@@ -69,17 +69,17 @@ function Loader({ id, voy }: { id: string; voy: boolean }) {
     };
   }, [id]);
 
-  if (load.state === "loading") return <p className="mt-6 text-sm text-ink-500">Cargando garage…</p>;
+  if (load.state === "loading") return <p className="mt-6 text-sm text-ink-500">Cargando garaje…</p>;
   if (load.state === "error")
     return (
       <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-        No pudimos cargar el garage. Revisá tu conexión y probá de nuevo.
+        No pudimos cargar el garaje. Revisá tu conexión y probá de nuevo.
       </p>
     );
   if (!load.space)
     return (
       <Card className="mt-6 space-y-3 p-6">
-        <p className="font-semibold text-ink-900">Este garage no existe o ya no está publicado.</p>
+        <p className="font-semibold text-ink-900">Este garaje no existe o ya no está publicado.</p>
         <ButtonLink href="/" variant="secondary" className="w-fit">
           Ir a la búsqueda
         </ButtonLink>
@@ -126,7 +126,7 @@ function Detail({ space }: { space: Space }) {
 
         <section aria-labelledby="datos" className="grid gap-4 sm:grid-cols-2">
           <h2 id="datos" className="sr-only">
-            Datos del garage
+            Datos del garaje
           </h2>
           <Fact icon={<ParkingIcon />} label="Tipo" value={SPACE_TYPE_LABEL[space.type]} />
           <Fact icon={<CarIcon />} label="Vehículo máximo" value={VEHICLE_LABEL[space.maxVehicle]} />
@@ -267,11 +267,11 @@ function CommercialDetail({ space, voy }: { space: Space; voy: boolean }) {
         </div>
         <UpdatedNote status={live} phone={c.contactPhone} />
       </header>
-      <aside aria-label="Ir al garage" className="flex flex-col gap-4 md:sticky md:top-20 md:col-start-2 md:row-start-2 md:self-start">
+      <aside aria-label="Ir al garaje" className="flex flex-col gap-4 md:sticky md:top-20 md:col-start-2 md:row-start-2 md:self-start">
         <ArrivalPanel space={space} autoOpen={voy} />
         {c.contactPhone && (
           <a href={`tel:${c.contactPhone}`} className="text-center text-sm font-semibold text-brand-700 hover:underline">
-            Llamar al garage
+            Llamar al garaje
           </a>
         )}
         {c.reservableSpots > 0 && c.onlinePayments && (
@@ -292,7 +292,7 @@ function CommercialDetail({ space, voy }: { space: Space; voy: boolean }) {
 
         <section aria-labelledby="datos" className="grid gap-4 sm:grid-cols-2">
           <h2 id="datos" className="sr-only">
-            Datos del garage
+            Datos del garaje
           </h2>
           <Fact
             icon={<span className="font-bold">$</span>}
@@ -334,7 +334,7 @@ function CommercialDetail({ space, voy }: { space: Space; voy: boolean }) {
             value={
               <ul>
                 {c.onlinePayments && c.reservableSpots > 0 && <li>Reservas: se pagan acá, con Mercado Pago</li>}
-                <li>{c.payAtGarage ? "Sin reserva: se paga en el garage" : "Sin reserva: pago a convenir con el garage"}</li>
+                <li>{c.payAtGarage ? "Sin reserva: se paga en el garaje" : "Sin reserva: pago a convenir con el garaje"}</li>
                 {c.paymentMethods.length > 0 && <li>{c.paymentMethods.map((m) => PAYMENT_METHOD_LABEL[m]).join(", ")}</li>}
               </ul>
             }

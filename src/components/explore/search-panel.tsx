@@ -144,7 +144,7 @@ export function SearchPanel({
             )}
           </fieldset>
           <p className="text-xs text-ink-500">
-            El horario lo elegís después, al entrar al garage: podés ir ahora o reservar para más tarde.
+            El horario lo elegís después, al entrar al garaje: podés ir ahora o reservar para más tarde.
           </p>
         </div>
 

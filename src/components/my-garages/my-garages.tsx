@@ -23,9 +23,9 @@ type Load<T> = { state: "loading" } | { state: "error"; message: string } | { st
 export function MyGaragesPage() {
   return (
     <Container className="max-w-4xl pb-12">
-      <PageHeader title="Mis garages" subtitle="Actualizá tu disponibilidad y recibí a los conductores que van en camino.">
+      <PageHeader title="Mis garajes" subtitle="Actualizá tu disponibilidad y recibí a los conductores que van en camino.">
         <ButtonLink href="/publicar/">
-          <PlusIcon width={18} height={18} /> Nuevo garage
+          <PlusIcon width={18} height={18} /> Nuevo garaje
         </ButtonLink>
       </PageHeader>
       <RequireSignIn back="/mis-garages/">
@@ -53,12 +53,12 @@ function GarageList() {
     };
   }, []);
 
-  if (load.state === "loading") return <p className="text-sm text-ink-500">Cargando tus garages…</p>;
+  if (load.state === "loading") return <p className="text-sm text-ink-500">Cargando tus garajes…</p>;
   if (load.state === "error") return <ErrorBox>{load.message}</ErrorBox>;
   if (load.data.length === 0)
     return (
       <EmptyState>
-        Todavía no cargaste ningún garage.{" "}
+        Todavía no cargaste ningún garaje.{" "}
         <Link href="/publicar/" className="font-semibold text-brand-700 hover:underline">
           Publicá el primero
         </Link>
@@ -155,7 +155,7 @@ function EditLoader({ id, justCreated }: { id: string; justCreated: boolean }) {
     };
   }, [id]);
 
-  if (load.state === "loading") return <p className="pt-6 text-sm text-ink-500">Cargando garage…</p>;
+  if (load.state === "loading") return <p className="pt-6 text-sm text-ink-500">Cargando garaje…</p>;
   if (load.state === "error")
     return (
       <div className="pt-6">
@@ -165,9 +165,9 @@ function EditLoader({ id, justCreated }: { id: string; justCreated: boolean }) {
   if (!load.data)
     return (
       <div className="flex flex-col gap-4 pt-6">
-        <ErrorBox>No encontramos ese garage entre los tuyos.</ErrorBox>
+        <ErrorBox>No encontramos ese garaje entre los tuyos.</ErrorBox>
         <ButtonLink href="/mis-garages/" variant="secondary" className="w-fit">
-          Volver a mis garages
+          Volver a mis garajes
         </ButtonLink>
       </div>
     );

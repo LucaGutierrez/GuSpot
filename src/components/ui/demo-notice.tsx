@@ -9,12 +9,12 @@ export function DemoBanner() {
       {isBackendConfigured ? (
         <>
           <strong className="font-semibold text-accent-300">Versión en desarrollo.</strong> La disponibilidad la
-          informa cada garage. Los pagos son reales: probá con montos chicos.
+          informa cada garaje. Los pagos son reales: probá con montos chicos.
         </>
       ) : (
         <>
           <strong className="font-semibold text-accent-300">Sin conexión al servidor.</strong> Esta copia del sitio
-          no muestra garages ni permite cuentas.
+          no muestra garajes ni permite cuentas.
         </>
       )}
     </div>

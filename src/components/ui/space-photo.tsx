@@ -31,7 +31,7 @@ export function SpacePhoto({
   variant: PhotoVariant;
   label?: string;
   className?: string;
-  /** Foto real (garages reales). Si está, se muestra en lugar de la ilustración. */
+  /** Foto real (garajes reales). Si está, se muestra en lugar de la ilustración. */
   url?: string;
 }) {
   if (url) {

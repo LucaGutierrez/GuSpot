@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { OperatorPanelPage } from "@/components/my-garages/operator-panel";
 
-export const metadata: Metadata = { title: "Panel del garage" };
+export const metadata: Metadata = { title: "Panel del garaje" };
 
 export default function PanelPage() {
   return (

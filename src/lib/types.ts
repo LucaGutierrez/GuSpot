@@ -25,14 +25,14 @@ export type Feature =
   | "sin_escalones"
   | "valet";
 
-/** Estado de disponibilidad que informa un garage comercial. */
+/** Estado de disponibilidad que informa un garaje comercial. */
 export type AvailabilityState = "disponible" | "pocos" | "sin_lugar" | "cerrado";
 
 export type PaymentMethod = "efectivo" | "debito" | "credito" | "mercado_pago" | "transferencia";
 
 export type AccessType = "" | "nivel" | "rampa" | "montacargas" | "mixto";
 
-/** Datos propios de un garage comercial (lanzamiento). */
+/** Datos propios de un garaje comercial (lanzamiento). */
 export interface CommercialInfo {
   /** Capacidad total, si se conoce. */
   capacity: number | null;
@@ -47,9 +47,9 @@ export interface CommercialInfo {
   reservableSpots: number;
   contactPhone: string;
   paymentMethods: PaymentMethod[];
-  /** Se paga en el garage (no en GuSpot). */
+  /** Se paga en el garaje (no en GuSpot). */
   payAtGarage: boolean;
-  /** El garage conectó Mercado Pago: puede cobrar reservas online. */
+  /** El garaje conectó Mercado Pago: puede cobrar reservas online. */
   onlinePayments: boolean;
   maxHeightCm: number | null;
   accessType: AccessType;
@@ -62,7 +62,7 @@ export interface DemoPhoto {
   /** Ilustración a mostrar si no hay `url` (o mientras carga). */
   variant: PhotoVariant;
   caption: string;
-  /** Foto real subida por el propietario (solo garages reales). */
+  /** Foto real subida por el propietario (solo garajes reales). */
   url?: string;
 }
 
@@ -87,7 +87,7 @@ export interface LatLng {
 export type ListingStatus = "publicado" | "pausado" | "borrador";
 
 /**
- * Origen del garage. Los de ejemplo ("demo") y los publicados de verdad
+ * Origen del garaje. Los de ejemplo ("demo") y los publicados de verdad
  * ("real") NUNCA se muestran mezclados ni pueden reservarse igual.
  */
 export type SpaceSource = "demo" | "real";
@@ -95,9 +95,9 @@ export type SpaceSource = "demo" | "real";
 export interface Space {
   id: string;
   source: SpaceSource;
-  /** Garage comercial o cochera particular (garages reales). */
+  /** Garaje comercial o cochera particular (garajes reales). */
   kind?: "comercial" | "particular";
-  /** Solo garages comerciales reales. */
+  /** Solo garajes comerciales reales. */
   commercial?: CommercialInfo;
   ownerId: string;
   title: string;

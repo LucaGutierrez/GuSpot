@@ -23,13 +23,13 @@ const errText = (err: unknown) => (err instanceof DataError ? err.message : "Alg
 const ETAS = [5, 10, 15, 20, 30, 45];
 
 export const NOT_A_RESERVATION =
-  "Avisar que vas no es una reserva: el lugar no queda guardado. El garage recibe tu aviso para prepararse.";
+  "Avisar que vas no es una reserva: el lugar no queda guardado. El garaje recibe tu aviso para prepararse.";
 
 // ---------------------------------------------------------------- "Voy a este" (en la ficha)
 
 type DriverState = { state: "loading" } | { state: "error" } | { state: "ready"; missing: Requirement[]; vehicles: Vehicle[] };
 
-/** Panel "Voy a este" de la ficha de un garage comercial. */
+/** Panel "Voy a este" de la ficha de un garaje comercial. */
 export function ArrivalPanel({ space, autoOpen }: { space: Space; autoOpen: boolean }) {
   const auth = useAuth();
   const router = useRouter();
@@ -76,11 +76,11 @@ export function ArrivalPanel({ space, autoOpen }: { space: Space; autoOpen: bool
       <h2 className="text-lg font-semibold text-ink-900">¿Vas para allá?</h2>
       {!live.accepting ? (
         <p className="text-sm text-ink-700">
-          {live.tone === "none" ? "Ahora no tiene lugar." : "Ahora no está recibiendo conductores."} Probá con otro garage.
+          {live.tone === "none" ? "Ahora no tiene lugar." : "Ahora no está recibiendo conductores."} Probá con otro garaje.
         </p>
       ) : !open ? (
         <>
-          <p className="text-sm text-ink-700">Avisale al garage que vas, así se prepara para recibirte.</p>
+          <p className="text-sm text-ink-700">Avisale al garaje que vas, así se prepara para recibirte.</p>
           <Button size="lg" onClick={() => setOpen(true)}>
             Voy a este
           </Button>
@@ -107,7 +107,7 @@ export function ArrivalPanel({ space, autoOpen }: { space: Space; autoOpen: bool
         </div>
       ) : fitting.length === 0 ? (
         <p className="text-sm text-ink-700">
-          Ninguno de tus vehículos con seguro vigente entra en este garage.{" "}
+          Ninguno de tus vehículos con seguro vigente entra en este garaje.{" "}
           <Link href="/cuenta/vehiculos/" className="font-semibold text-brand-700 hover:underline">
             Revisá tus vehículos
           </Link>
@@ -184,17 +184,17 @@ export function ArrivalPage() {
 const STATUS_TEXT: Record<ArrivalNotice["status"], { title: string; body: string; tone: string }> = {
   en_camino: {
     title: "Aviso enviado",
-    body: "El garage recibió tu aviso. Cuando lo vea, te va a aparecer acá que te espera.",
+    body: "El garaje recibió tu aviso. Cuando lo vea, te va a aparecer acá que te espera.",
     tone: "border-brand-200 bg-brand-50 text-ink-900",
   },
-  recibido: { title: "El garage te espera", body: "Vieron tu aviso y se preparan para recibirte.", tone: "border-emerald-200 bg-emerald-50 text-emerald-900" },
-  llego: { title: "¡Llegaste!", body: "El garage marcó que llegaste.", tone: "border-emerald-200 bg-emerald-50 text-emerald-900" },
+  recibido: { title: "El garaje te espera", body: "Vieron tu aviso y se preparan para recibirte.", tone: "border-emerald-200 bg-emerald-50 text-emerald-900" },
+  llego: { title: "¡Llegaste!", body: "El garaje marcó que llegaste.", tone: "border-emerald-200 bg-emerald-50 text-emerald-900" },
   no_hay_lugar: {
-    title: "El garage avisó que no tiene lugar",
-    body: "Buscá otro garage cerca en el mapa.",
+    title: "El garaje avisó que no tiene lugar",
+    body: "Buscá otro garaje cerca en el mapa.",
     tone: "border-red-200 bg-red-50 text-red-900",
   },
-  cancelado: { title: "Aviso cancelado", body: "Le avisamos al garage que no vas.", tone: "border-ink-200 bg-ink-50 text-ink-900" },
+  cancelado: { title: "Aviso cancelado", body: "Le avisamos al garaje que no vas.", tone: "border-ink-200 bg-ink-50 text-ink-900" },
 };
 
 function ArrivalLoader({ id }: { id: string }) {
@@ -228,7 +228,7 @@ function ArrivalLoader({ id }: { id: string }) {
   }, [id, version]);
 
   const marker = useMemo(
-    () => (access ? [{ id, position: access.location, label: garage?.title ?? "Garage", ariaLabel: "Ubicación del garage", variant: "garage" as const }] : []),
+    () => (access ? [{ id, position: access.location, label: garage?.title ?? "Garaje", ariaLabel: "Ubicación del garaje", variant: "garage" as const }] : []),
     [access, garage, id],
   );
 
@@ -265,7 +265,7 @@ function ArrivalLoader({ id }: { id: string }) {
       </div>
 
       <Card className="flex flex-col gap-1 p-5">
-        <h1 className="text-xl font-bold text-ink-900">{garage?.title ?? "Garage"}</h1>
+        <h1 className="text-xl font-bold text-ink-900">{garage?.title ?? "Garaje"}</h1>
         <p className="text-sm text-ink-500">
           {notice.car} · {notice.plate}
         </p>
@@ -301,13 +301,13 @@ function ArrivalLoader({ id }: { id: string }) {
           <NavigateButtons to={access.location} />
           {garage?.commercial?.contactPhone && (
             <a href={`tel:${garage.commercial.contactPhone}`} className={buttonClass("secondary", "lg")}>
-              Llamar al garage
+              Llamar al garaje
             </a>
           )}
         </Card>
       )}
 
-      {notice.status === "no_hay_lugar" && <ButtonLink href="/">Buscar otro garage</ButtonLink>}
+      {notice.status === "no_hay_lugar" && <ButtonLink href="/">Buscar otro garaje</ButtonLink>}
       {notice.status === "llego" && <SuccessBox>¡Buen estacionamiento!</SuccessBox>}
 
       {active && (

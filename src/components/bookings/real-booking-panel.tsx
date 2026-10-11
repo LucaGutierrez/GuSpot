@@ -55,7 +55,7 @@ export function paymentNote(s: PaymentSettings | null): string {
 }
 
 /**
- * Panel "Reservar" de un garage real: elegís el período y el vehículo, ves el
+ * Panel "Reservar" de un garaje real: elegís el período y el vehículo, ves el
  * total y pagás con Mercado Pago. Si el horario está libre se guarda el lugar
  * unos minutos y, con el pago aprobado, la reserva se confirma sola.
  * Usa useSearchParams: montarlo dentro de <Suspense>.
@@ -118,7 +118,7 @@ export function RealBookingPanel({ space }: { space: Space }) {
     return (
       <Card className="p-5">
         <h2 className="text-lg font-semibold text-ink-900">Reservas</h2>
-        <p className="mt-1 text-sm text-ink-700">Este garage todavía no recibe reservas pagas por GuSpot.</p>
+        <p className="mt-1 text-sm text-ink-700">Este garaje todavía no recibe reservas pagas por GuSpot.</p>
       </Card>
     );
   }
@@ -137,7 +137,7 @@ export function RealBookingPanel({ space }: { space: Space }) {
   return (
     <>
       <Card className="p-5">
-        <h2 className="text-lg font-semibold text-ink-900">Reservá este garage</h2>
+        <h2 className="text-lg font-semibold text-ink-900">Reservá este garaje</h2>
         <p className="mt-0.5 text-sm text-ink-500">{rateSummary(space)}</p>
 
         <div className="mt-4">
@@ -206,7 +206,7 @@ export function RealBookingPanel({ space }: { space: Space }) {
               </select>
             ) : (
               <p className="mt-1 text-sm text-ink-700">
-                Ninguno de tus vehículos con seguro vigente entra en este garage.{" "}
+                Ninguno de tus vehículos con seguro vigente entra en este garaje.{" "}
                 <a href="/cuenta/vehiculos/" className="font-semibold text-brand-700 hover:underline">
                   Revisá tus vehículos
                 </a>
@@ -222,7 +222,7 @@ export function RealBookingPanel({ space }: { space: Space }) {
           {check.interval && check.quote.ok && (
             <>
               <p className="text-sm text-ink-700">{formatRange(check.interval.start, check.interval.end)}</p>
-              <PriceBreakdown space={space} quote={check.quote} totalLabel="Tarifa del garage" />
+              <PriceBreakdown space={space} quote={check.quote} totalLabel="Tarifa del garaje" />
               {fee !== null && toPay !== null && (
                 <dl className="space-y-1.5 text-sm">
                   <div className="flex justify-between gap-3">

@@ -62,7 +62,7 @@ export function ResultsMap({
       <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="pointer-events-auto rounded-full bg-white px-2.5 py-0.5 text-xs font-medium text-ink-900 shadow-sm ring-1 ring-ink-200">
-            {n} {n === 1 ? "garage disponible" : "garages disponibles"} en el mapa
+            {n} {n === 1 ? "garaje disponible" : "garajes disponibles"} en el mapa
           </span>
         </div>
         <button

@@ -59,10 +59,10 @@ export function toRange(p: SearchParams): { start: LocalDateTime; end: LocalDate
   return isValidLocal(start) && isValidLocal(end) ? { start, end } : null;
 }
 
-/** Busca en una lista de garages. Disponibles primero, luego por precio. */
+/** Busca en una lista de garajes. Disponibles primero, luego por precio. */
 export function searchSpaces(
   p: SearchParams,
-  /** Garages publicados donde buscar. */
+  /** Garajes publicados donde buscar. */
   source: Space[],
   /** Si se indica, busca dentro de este rectángulo del mapa en lugar de por `zona`. */
   area?: Area | null,

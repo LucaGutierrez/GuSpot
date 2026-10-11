@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "GuSpot",
     short_name: "GuSpot",
-    description: "Encontrá garages cerca tuyo con lugares libres en vivo.",
+    description: "Encontrá garajes cerca tuyo con lugares libres en vivo.",
     lang: "es-AR",
     start_url: "/",
     scope: "/",

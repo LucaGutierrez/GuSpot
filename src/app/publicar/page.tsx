@@ -20,7 +20,7 @@ export default function PublicarPage() {
               <ParkingIcon width={26} height={26} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-lg font-semibold text-ink-900">Garage o estacionamiento comercial</span>
+              <span className="block text-lg font-semibold text-ink-900">Garaje o estacionamiento comercial</span>
               <span className="block text-sm text-ink-500">
                 Un establecimiento con varios lugares, horarios y tarifas. Actualizás tu disponibilidad y recibís avisos
                 de los conductores que van en camino.

@@ -14,19 +14,19 @@ import {
 
 export const metadata: Metadata = {
   title: "Cómo funciona",
-  description: "Cómo encontrar estacionamiento en GuSpot y cómo sumar tu garage.",
+  description: "Cómo encontrar estacionamiento en GuSpot y cómo sumar tu garaje.",
 };
 
 const DRIVER_STEPS = [
   {
     icon: SearchIcon,
     title: "Buscá cerca tuyo",
-    text: "En el mapa ves los garages de la zona con su precio por hora y si tienen lugar, informado en vivo por cada garage.",
+    text: "En el mapa ves los garajes de la zona con su precio por hora y si tienen lugar, informado en vivo por cada garaje.",
   },
   {
     icon: PinIcon,
     title: "¿Vas ahora? Avisá que vas",
-    text: "Con “Voy a este” el garage sabe que llegás y te ve en su panel. Ves la dirección y cómo entrar. Avisar no reserva el lugar.",
+    text: "Con “Voy a este” el garaje sabe que llegás y te ve en su panel. Ves la dirección y cómo entrar. Avisar no reserva el lugar.",
   },
   {
     icon: TicketIcon,
@@ -38,7 +38,7 @@ const DRIVER_STEPS = [
 const GARAGE_STEPS = [
   {
     icon: ParkingIcon,
-    title: "Publicá tu garage",
+    title: "Publicá tu garaje",
     text: "Cargá ubicación, tarifas, horario, capacidad y fotos. Verificamos tu identidad y tu celular antes de publicar.",
   },
   {
@@ -87,7 +87,7 @@ export default function ComoFuncionaPage() {
               Encontrá dónde estacionar, con lugar y precio a la vista
             </h1>
             <p className="mt-3 text-lg text-ink-700">
-              GuSpot te muestra los garages cerca tuyo con sus lugares libres en vivo. Vas en el momento o reservás y
+              GuSpot te muestra los garajes cerca tuyo con sus lugares libres en vivo. Vas en el momento o reservás y
               pagás desde el celular.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -95,7 +95,7 @@ export default function ComoFuncionaPage() {
                 <SearchIcon /> Buscar en el mapa
               </ButtonLink>
               <ButtonLink href="/publicar/" size="lg" variant="secondary">
-                Sumar mi garage
+                Sumar mi garaje
               </ButtonLink>
             </div>
           </div>
@@ -110,7 +110,7 @@ export default function ComoFuncionaPage() {
           <Steps steps={DRIVER_STEPS} />
           <ul className="space-y-1 text-sm text-ink-700">
             <li className="flex gap-2">
-              <CheckIcon className="shrink-0 text-brand-600" /> Ves el total antes de pagar: tarifa del garage + cargo de
+              <CheckIcon className="shrink-0 text-brand-600" /> Ves el total antes de pagar: tarifa del garaje + cargo de
               servicio.
             </li>
             <li className="flex gap-2">
@@ -122,7 +122,7 @@ export default function ComoFuncionaPage() {
 
         <section aria-labelledby="garages" className="space-y-4">
           <h2 id="garages" className="text-2xl font-bold tracking-tight text-ink-900">
-            Si tenés un garage o estacionamiento
+            Si tenés un garaje o estacionamiento
           </h2>
           <Steps steps={GARAGE_STEPS} />
           <p className="text-sm text-ink-500">Las cocheras particulares se van a poder sumar más adelante.</p>
@@ -136,7 +136,7 @@ export default function ComoFuncionaPage() {
                 Personas verificadas
               </h2>
               <p className="mt-1 text-sm text-ink-700">
-                Quien reserva y quien publica verifica su identidad con su DNI y una foto de su cara. Al garage le
+                Quien reserva y quien publica verifica su identidad con su DNI y una foto de su cara. Al garaje le
                 llegan el nombre y los datos del vehículo de quien va. Tus documentos no se muestran a nadie.
               </p>
             </div>

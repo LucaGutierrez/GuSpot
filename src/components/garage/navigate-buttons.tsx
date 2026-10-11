@@ -2,7 +2,7 @@ import type { LatLng } from "@/lib/types";
 import { buttonClass } from "@/components/ui/button";
 
 /**
- * Navegación hasta el garage con la app que la persona ya tiene (Google Maps,
+ * Navegación hasta el garaje con la app que la persona ya tiene (Google Maps,
  * Waze o Mapas de Apple). Son enlaces: la navegación ocurre fuera de GuSpot,
  * sin costo ni claves. Si la app no está instalada, se abre la versión web.
  * Mostrar solo a quien ya puede ver el punto exacto (reserva confirmada o aviso).

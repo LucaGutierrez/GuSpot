@@ -20,7 +20,7 @@ const MESSAGES: Record<string, string> = {
   not_found: "No encontramos esa reserva.",
   not_pending: "Esta reserva ya no está esperando el pago.",
   expired: "Se venció el tiempo para pagar. Hacé la reserva de nuevo.",
-  no_online_payments: "Este garage todavía no cobra reservas online.",
+  no_online_payments: "Este garaje todavía no cobra reservas online.",
   connect_failed: "No pudimos conectar tu cuenta de Mercado Pago. Probá de nuevo.",
   has_active_bookings: "Tenés reservas activas: podés desconectar Mercado Pago cuando terminen.",
   not_active: "Esta reserva ya estaba cancelada.",
@@ -104,7 +104,7 @@ export async function cancelPaidBooking(bookingId: string, acceptNoRefund = fals
   return { refunded: !!data.refunded };
 }
 
-// --- Garage -----------------------------------------------------------------
+// --- Garaje -----------------------------------------------------------------
 
 export interface PaymentAccount {
   connected: boolean;
@@ -127,7 +127,7 @@ function redirectUri() {
   return `${window.location.origin}${CONNECT_RETURN_PATH}`;
 }
 
-/** URL de Mercado Pago para autorizar a GuSpot a cobrar en nombre del garage. */
+/** URL de Mercado Pago para autorizar a GuSpot a cobrar en nombre del garaje. */
 export async function startConnect(): Promise<string> {
   const bytes = crypto.getRandomValues(new Uint8Array(24));
   const state = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("").slice(0, 40);

@@ -1,7 +1,7 @@
 "use client";
 
-// Mapa para que el propietario marque el punto EXACTO de su garage (privado).
-// Tocar el mapa mueve el pin; también se puede arrastrar. Si el garage ya fue
+// Mapa para que el propietario marque el punto EXACTO de su garaje (privado).
+// Tocar el mapa mueve el pin; también se puede arrastrar. Si el garaje ya fue
 // guardado, se muestra además el punto público aproximado que calculó la base.
 
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -177,7 +177,7 @@ export function LocationPicker({
   return (
     <div className="flex flex-col gap-2">
       <div className="gs-map relative h-72 w-full rounded-xl border border-ink-200 sm:h-96">
-        <div ref={containerRef} className="gs-map-canvas" aria-label="Mapa para marcar la ubicación del garage" />
+        <div ref={containerRef} className="gs-map-canvas" aria-label="Mapa para marcar la ubicación del garaje" />
         {status !== "ready" && (
           <div className="absolute inset-0 grid place-items-center bg-ink-100 text-sm text-ink-500">
             {status === "loading" ? "Cargando mapa…" : "No se pudo cargar el mapa. Probá recargar la página."}
@@ -188,7 +188,7 @@ export function LocationPicker({
         <p className="text-xs text-ink-500">
           {value
             ? "Tocá el mapa o arrastrá el pin para ajustar el punto exacto."
-            : "Tocá el mapa en la entrada de tu garage."}
+            : "Tocá el mapa en la entrada de tu garaje."}
           {publicLocation && " El círculo amarillo es el punto aproximado que ven los demás."}
         </p>
         <Button variant="secondary" onClick={locateMe} disabled={locating || status !== "ready"}>

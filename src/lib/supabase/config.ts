@@ -23,5 +23,5 @@ if (SUPABASE_PUBLISHABLE_KEY.startsWith("sb_secret_")) {
   );
 }
 
-/** Bucket de Storage con las fotos de los garages (lectura pública). */
+/** Bucket de Storage con las fotos de los garajes (lectura pública). */
 export const GARAGE_PHOTOS_BUCKET = "garage-photos";

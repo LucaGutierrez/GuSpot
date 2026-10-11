@@ -27,7 +27,7 @@ export function activeFilterCount(f: ResultFilters): number {
   return Number(!!f.tipo) + Number(!!f.vehiculo) + Number(f.abierto) + Number(f.conLugar) + Number(f.precioMax !== null);
 }
 
-/** Disponibilidad en vivo de un garage comercial (null para cocheras/ejemplos). */
+/** Disponibilidad en vivo de un garaje comercial (null para cocheras/ejemplos). */
 export function liveOf(r: SearchResult): LiveStatus | null {
   return r.space.commercial ? liveStatus(r.space, nowInArgentina()) : null;
 }
@@ -43,7 +43,7 @@ export function matchesFilters(r: SearchResult, f: ResultFilters): boolean {
 }
 
 /**
- * ¿Está disponible? Garages comerciales: si recibe conductores ahora.
+ * ¿Está disponible? Garajes comerciales: si recibe conductores ahora.
  * Resto: si se puede solicitar en el período buscado (con cotización válida).
  */
 export function isBookable(r: SearchResult): boolean {

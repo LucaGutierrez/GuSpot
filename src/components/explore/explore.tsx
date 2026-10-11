@@ -44,7 +44,7 @@ function rememberLocationChoice(v: "si" | "no") {
   }
 }
 
-/** Si el conductor está más lejos que esto del garage más cercano, no se lo encuadra. */
+/** Si el conductor está más lejos que esto del garaje más cercano, no se lo encuadra. */
 const FAR_KM = 50;
 
 /**
@@ -150,7 +150,7 @@ export function Explore() {
   );
   const available = useMemo(() => results.filter(isBookable), [results]);
   const unavailable = useMemo(() => results.filter((r) => !isBookable(r)), [results]);
-  // Lo que está en el mapa: garages comerciales siempre (con su estado); el resto, solo disponibles.
+  // Lo que está en el mapa: garajes comerciales siempre (con su estado); el resto, solo disponibles.
   const onMap = useMemo(() => results.filter((r) => liveOf(r) || isBookable(r)), [results]);
   const markers = useMemo(() => toMarkers(results), [results]);
   const fallbackCenter = useMemo(
@@ -278,7 +278,7 @@ export function Explore() {
   } else if (location.status === "unsupported") {
     notice = "Tu navegador no permite compartir la ubicación. Podés seguir buscando por zona.";
   } else if (!area && userCoords && zoneResults.length > 0 && !userIsNear) {
-    notice = `Los garages publicados están en ${zona}; mostramos esa zona.`;
+    notice = `Los garajes publicados están en ${zona}; mostramos esa zona.`;
   }
   const showNotice = notice !== null && notice !== dismissedNotice;
 
@@ -341,7 +341,7 @@ export function Explore() {
             className="pointer-events-auto rounded-full bg-white px-2.5 py-0.5 text-xs font-medium text-ink-900 shadow-sm ring-1 ring-ink-200"
             aria-live="polite"
           >
-            {spaces === null ? "Cargando…" : `${n} ${n === 1 ? "garage disponible" : "garages disponibles"}`}
+            {spaces === null ? "Cargando…" : `${n} ${n === 1 ? "garaje disponible" : "garajes disponibles"}`}
           </span>
         </div>
 
@@ -421,7 +421,7 @@ export function Explore() {
             ¿Usamos tu ubicación?
           </h2>
           <p id={`${id}-ubic-texto`} className="mt-1 text-sm text-ink-700">
-            Para mostrarte primero los garages cerca tuyo. No se guarda ni se envía: queda en tu
+            Para mostrarte primero los garajes cerca tuyo. No se guarda ni se envía: queda en tu
             teléfono mientras tengas esta pantalla abierta.
           </p>
           <div className="mt-3 flex justify-end gap-2">
@@ -440,7 +440,7 @@ export function Explore() {
         </div>
       )}
 
-      {/* Abajo: tarjeta del garage elegido o hoja con la lista */}
+      {/* Abajo: tarjeta del garaje elegido o hoja con la lista */}
       <div ref={bottomRef} className="absolute inset-x-0 bottom-0 z-10">
         {selected ? (
           <div className="px-3 pb-3">

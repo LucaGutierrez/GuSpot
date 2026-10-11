@@ -12,7 +12,7 @@ import { rateSummary } from "@/components/driver/price-breakdown";
 import { CloseIcon } from "./icons";
 
 /**
- * Tarjeta inferior del garage elegido en el mapa. Se puede deslizar (o usar las
+ * Tarjeta inferior del garaje elegido en el mapa. Se puede deslizar (o usar las
  * flechas) para pasar al anterior / siguiente.
  */
 export function SelectedCard({
@@ -62,7 +62,7 @@ export function SelectedCard({
       ref={ref}
       tabIndex={-1}
       role="region"
-      aria-label={`Garage seleccionado: ${space.title}`}
+      aria-label={`Garaje seleccionado: ${space.title}`}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onKeyDown={onKeyDown}
@@ -134,7 +134,7 @@ export function SelectedCard({
           <button
             type="button"
             onClick={onPrev}
-            aria-label="Garage anterior"
+            aria-label="Garaje anterior"
             className="grid h-9 w-9 place-items-center rounded-full text-ink-700 hover:bg-ink-100 focus-visible:outline-2 focus-visible:outline-brand-500"
           >
             <ChevronLeftIcon />
@@ -145,7 +145,7 @@ export function SelectedCard({
           <button
             type="button"
             onClick={onNext}
-            aria-label="Garage siguiente"
+            aria-label="Garaje siguiente"
             className="grid h-9 w-9 place-items-center rounded-full text-ink-700 hover:bg-ink-100 focus-visible:outline-2 focus-visible:outline-brand-500"
           >
             <ChevronRightIcon />

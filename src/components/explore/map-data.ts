@@ -13,7 +13,7 @@ export function bookableResults(results: SearchResult[]): SearchResult[] {
 /** Marcadores del mapa: solo disponibles con precio; el label es el total del período. */
 export function toMarkers(results: SearchResult[]): MapMarker[] {
   return results.flatMap((r) => {
-    // Garages comerciales: siempre en el mapa, con nombre, precio por hora y disponibilidad.
+    // Garajes comerciales: siempre en el mapa, con nombre, precio por hora y disponibilidad.
     const live = liveOf(r);
     if (live) {
       const price = `${formatARS(r.space.hourlyPrice)}/h`;

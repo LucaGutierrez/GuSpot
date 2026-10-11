@@ -20,7 +20,7 @@ const checkCard =
 export function EstablishmentFields({ draft, errors, update }: Props) {
   return (
     <div className="flex flex-col gap-5">
-      <Field id="title" label="Nombre del establecimiento" hint="Como lo conocen tus clientes. Ej.: “Garage Plaza San Martín”." error={errors.title}>
+      <Field id="title" label="Nombre del establecimiento" hint="Como lo conocen tus clientes. Ej.: “Garaje Plaza San Martín”." error={errors.title}>
         <input
           id="title"
           className={inputClass}
@@ -50,7 +50,7 @@ export function EstablishmentFields({ draft, errors, update }: Props) {
 export function CapacityFields({ draft, errors, update }: Props) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
-      <Field id="capacity" label="Capacidad total" hint="Cantidad de lugares del garage." error={errors.capacity}>
+      <Field id="capacity" label="Capacidad total" hint="Cantidad de lugares del garaje." error={errors.capacity}>
         <input
           id="capacity"
           inputMode="numeric"
@@ -77,7 +77,7 @@ export function CapacityFields({ draft, errors, update }: Props) {
           aria-describedby={describedBy("reservableSpots", true, errors.reservableSpots)}
         />
       </Field>
-      <Field id="contactPhone" label="Teléfono del garage" optional hint="Lo ven los conductores para llamar antes de ir." error={errors.contactPhone}>
+      <Field id="contactPhone" label="Teléfono del garaje" optional hint="Lo ven los conductores para llamar antes de ir." error={errors.contactPhone}>
         <input
           id="contactPhone"
           type="tel"
@@ -159,7 +159,7 @@ export function VehicleAccessFields({ draft, errors, update }: Props) {
   );
 }
 
-/** Medios de pago aceptados y si se paga en el garage. */
+/** Medios de pago aceptados y si se paga en el garaje. */
 export function PaymentFields({ draft, update }: Props) {
   function toggle(m: PaymentMethod) {
     update({
@@ -193,7 +193,7 @@ export function PaymentFields({ draft, update }: Props) {
           onChange={(e) => update({ payAtGarage: e.target.checked })}
           className="h-4 w-4 accent-brand-600"
         />
-        El conductor paga en el garage
+        El conductor paga en el garaje
       </label>
     </div>
   );

@@ -1,6 +1,6 @@
 // CONTRATO de acceso a datos reales (Supabase). Lo mantiene el coordinador.
 // Implementación: src/lib/data/garages.ts. Lo usan las pantallas de búsqueda
-// y las de "Mis garages". Si hace falta cambiarlo, se acuerda antes.
+// y las de "Mis garajes". Si hace falta cambiarlo, se acuerda antes.
 //
 // La misma estructura (tablas + reglas RLS en supabase/migrations) es la que
 // usará la futura app móvil con el SDK oficial de Supabase.
@@ -44,13 +44,13 @@ export interface GarageInput {
   minHours: number;
   availability: AvailabilityRule[];
   accessConditions: string[];
-  /** Garage comercial (lanzamiento) o cochera particular (etapa 2). */
+  /** Garaje comercial (lanzamiento) o cochera particular (etapa 2). */
   kind: "comercial" | "particular";
-  /** Capacidad total (garages comerciales). */
+  /** Capacidad total (garajes comerciales). */
   capacity: number | null;
   /** Lugares que se pueden reservar a la vez desde GuSpot (0 = sin reservas). */
   reservableSpots: number;
-  /** Teléfono del garage, para que el conductor pueda llamar. */
+  /** Teléfono del garaje, para que el conductor pueda llamar. */
   contactPhone: string;
   paymentMethods: PaymentMethod[];
   payAtGarage: boolean;
@@ -66,7 +66,7 @@ export interface GaragePhoto {
   position: number;
 }
 
-/** Garage del propio propietario: incluye los datos privados. */
+/** Garaje del propio propietario: incluye los datos privados. */
 export interface OwnerGarage extends GarageInput {
   id: string;
   status: ListingStatus;
@@ -102,7 +102,7 @@ export class DataError extends Error {
  * ante un problema. Requieren sesión salvo las de lectura pública.
  */
 export interface GaragesApi {
-  /** Garages PUBLICADOS por cualquier propietario, como `Space` con `source: "real"` y `coords` = punto público. Sin datos privados. */
+  /** Garajes PUBLICADOS por cualquier propietario, como `Space` con `source: "real"` y `coords` = punto público. Sin datos privados. */
   listPublishedGarages(): Promise<Space[]>;
   /** Uno publicado (o null si no existe o no está publicado). */
   getPublishedGarage(id: string): Promise<Space | null>;
@@ -116,7 +116,7 @@ export interface GaragesApi {
   setGarageStatus(id: string, status: ListingStatus): Promise<void>;
   deleteGarage(id: string): Promise<void>;
 
-  /** Máx. 6 fotos por garage, JPG/PNG/WebP, hasta 5 MB cada una. */
+  /** Máx. 6 fotos por garaje, JPG/PNG/WebP, hasta 5 MB cada una. */
   uploadGaragePhoto(garageId: string, file: File): Promise<GaragePhoto>;
   removeGaragePhoto(garageId: string, path: string): Promise<void>;
 }
@@ -151,7 +151,7 @@ export interface RealBooking {
   /** Foto de perfil del conductor (URL pública o ""). */
   driverAvatarUrl: string;
   hours: number;
-  /** Tarifa del garage. */
+  /** Tarifa del garaje. */
   total: Centavos;
   /** Cargo de servicio de GuSpot (lo paga el conductor). */
   serviceFee: Centavos;
@@ -159,7 +159,7 @@ export interface RealBooking {
   holdUntil: string | null;
   paidAt: string | null;
   createdAt: string; // ISO
-  /** Quién la mira: conductor o dueño del garage. */
+  /** Quién la mira: conductor o dueño del garaje. */
   role: "driver" | "owner";
 }
 
@@ -221,7 +221,7 @@ export type Requirement =
 
 export type ArrivalStatus = "en_camino" | "recibido" | "llego" | "cancelado" | "no_hay_lugar";
 
-/** Aviso de un conductor que va a un garage. NO reserva lugar. */
+/** Aviso de un conductor que va a un garaje. NO reserva lugar. */
 export interface ArrivalNotice {
   id: string;
   garageId: string;
