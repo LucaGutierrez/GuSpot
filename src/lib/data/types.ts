@@ -6,13 +6,16 @@
 // usará la futura app móvil con el SDK oficial de Supabase.
 
 import type {
+  AccessType,
   AvailabilityRule,
+  CommercialInfo,
   BookingStatus,
   Centavos,
   Feature,
   LatLng,
   ListingStatus,
   LocalDateTime,
+  PaymentMethod,
   PaymentStatus,
   Space,
   SpaceType,
@@ -41,6 +44,18 @@ export interface GarageInput {
   minHours: number;
   availability: AvailabilityRule[];
   accessConditions: string[];
+  /** Garage comercial (lanzamiento) o cochera particular (etapa 2). */
+  kind: "comercial" | "particular";
+  /** Capacidad total (garages comerciales). */
+  capacity: number | null;
+  /** Lugares que se pueden reservar a la vez desde GuSpot (0 = sin reservas). */
+  reservableSpots: number;
+  /** Teléfono del garage, para que el conductor pueda llamar. */
+  contactPhone: string;
+  paymentMethods: PaymentMethod[];
+  payAtGarage: boolean;
+  maxHeightCm: number | null;
+  accessType: AccessType;
 }
 
 export interface GaragePhoto {
@@ -55,6 +70,8 @@ export interface GaragePhoto {
 export interface OwnerGarage extends GarageInput {
   id: string;
   status: ListingStatus;
+  /** Disponibilidad en vivo (la maneja el panel del operador). */
+  live: CommercialInfo;
   /** Punto público calculado por la base (null hasta que haya ubicación). */
   publicLocation: LatLng | null;
   photos: GaragePhoto[];
@@ -182,3 +199,20 @@ export type Requirement =
   | "licencia"
   | "licencia_vencida"
   | "vehiculo";
+
+// --- Avisos de llegada: "Voy a este" (src/lib/data/arrivals.ts) -------------
+
+export type ArrivalStatus = "en_camino" | "recibido" | "llego" | "cancelado" | "no_hay_lugar";
+
+/** Aviso de un conductor que va a un garage. NO reserva lugar. */
+export interface ArrivalNotice {
+  id: string;
+  garageId: string;
+  driverName: string;
+  car: string;
+  plate: string;
+  etaMinutes: number;
+  status: ArrivalStatus;
+  createdAt: string; // ISO
+  updatedAt: string; // ISO
+}

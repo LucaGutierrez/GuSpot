@@ -143,6 +143,13 @@ function fitAll(ml: MapLibreModule, m: MapLibreMap, p: MapViewProps, instant: bo
   return true;
 }
 
+/** Garages comerciales: marca propia y punto de disponibilidad (data-tone). */
+function applyVariant(el: HTMLButtonElement, data: MapMarker) {
+  el.classList.toggle("is-garage", data.variant === "garage");
+  if (data.tone) el.dataset.tone = data.tone;
+  else delete el.dataset.tone;
+}
+
 function attachMarkerHandlers(
   el: HTMLButtonElement,
   id: string,
@@ -333,6 +340,7 @@ export function MapView(props: MapViewProps) {
         const { el, pill } = createMarkerElement();
         pill.textContent = data.label;
         el.setAttribute("aria-label", data.ariaLabel);
+        applyVariant(el, data);
         attachMarkerHandlers(el, data.id, propsRef);
         const marker = new ml.Marker({ element: el, anchor: "bottom" })
           .setLngLat(toLngLat(data.position))
@@ -343,6 +351,7 @@ export function MapView(props: MapViewProps) {
       const prev = existing.data;
       if (prev.label !== data.label) existing.pill.textContent = data.label;
       if (prev.ariaLabel !== data.ariaLabel) existing.el.setAttribute("aria-label", data.ariaLabel);
+      if (prev.variant !== data.variant || prev.tone !== data.tone) applyVariant(existing.el, data);
       if (prev.position.lat !== data.position.lat || prev.position.lng !== data.position.lng) {
         existing.marker.setLngLat(toLngLat(data.position));
       }

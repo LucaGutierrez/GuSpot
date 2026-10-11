@@ -7,6 +7,7 @@ import { SPACE_TYPE_LABEL, formatARS } from "@/lib/format";
 import { cities } from "@/lib/demo-data";
 import { Button } from "@/components/ui/button";
 import { SpacePhoto } from "@/components/ui/space-photo";
+import { CommercialCard } from "@/components/garage/garage-summary";
 import { AvailabilityBadge, bookability } from "@/components/driver/availability-status";
 import { ListIcon, MapIcon } from "./icons";
 
@@ -192,10 +193,10 @@ export function ResultsSheet({
         {unavailable.length > 0 && (
           <section aria-labelledby={`${id}-nodisp`} className="mt-5">
             <h3 id={`${id}-nodisp`} className="text-sm font-semibold text-ink-900">
-              No disponibles en ese horario
+              {real ? "Sin lugar o cerrados ahora" : "No disponibles en ese horario"}
             </h3>
             <p className="mt-0.5 text-xs text-ink-500">
-              No aparecen en el mapa. Probá con otro horario.
+              {real ? "Se ven en el mapa con su estado." : "No aparecen en el mapa. Probá con otro horario."}
             </p>
             <ul className="mt-3 space-y-3">
               {unavailable.map((r) => (
@@ -208,7 +209,7 @@ export function ResultsSheet({
         )}
         <p className="mt-4 text-xs text-ink-500">
           {real
-            ? "Garages publicados por sus dueños. Todavía no se puede reservar ni pagar."
+            ? "La disponibilidad la informa cada garage. Avisar que vas no reserva el lugar. Todavía no se puede pagar desde GuSpot."
             : "Datos de demostración: espacios, precios y ubicaciones son de ejemplo. Solicitar no reserva ni cobra nada."}
         </p>
       </div>
@@ -227,6 +228,7 @@ function ListItem({
   distance: string | null;
   onShowOnMap?: (id: string) => void;
 }) {
+  if (result.space.commercial) return <CommercialCard result={result} href={href} distance={distance} />;
   const { space, quote } = result;
   const status = bookability(result.availability, quote);
   const photo = space.photos[0];

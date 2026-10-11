@@ -1,8 +1,10 @@
 import type {
+  AccessType,
   BookingStatus,
   Centavos,
   Feature,
   LocalDateTime,
+  PaymentMethod,
   PaymentStatus,
   SpaceType,
   VehicleSize,
@@ -76,6 +78,22 @@ export const FEATURE_LABEL: Record<Feature, string> = {
   apta_camioneta: "Apta camioneta",
   carga_electrica: "Carga eléctrica",
   sin_escalones: "Acceso sin escalones",
+  valet: "Valet",
+};
+
+export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
+  efectivo: "Efectivo",
+  debito: "Débito",
+  credito: "Crédito",
+  mercado_pago: "Mercado Pago",
+  transferencia: "Transferencia",
+};
+
+export const ACCESS_TYPE_LABEL: Record<Exclude<AccessType, "">, string> = {
+  nivel: "A nivel de calle",
+  rampa: "Rampa",
+  montacargas: "Montacargas",
+  mixto: "Rampa y montacargas",
 };
 
 export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {

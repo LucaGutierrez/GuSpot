@@ -11,6 +11,10 @@ export interface MapMarker {
   label: string;
   /** Nombre accesible del marcador (lector de pantalla). */
   ariaLabel: string;
+  /** Garage comercial (marca distinta de las cocheras particulares). */
+  variant?: "garage" | "cochera";
+  /** Disponibilidad: se dibuja como punto de color (el texto va en la ficha). */
+  tone?: "ok" | "few" | "none" | "closed";
 }
 
 /** Rectángulo visible del mapa (grados). */

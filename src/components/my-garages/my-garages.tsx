@@ -23,8 +23,8 @@ type Load<T> = { state: "loading" } | { state: "error"; message: string } | { st
 export function MyGaragesPage() {
   return (
     <Container className="max-w-4xl pb-12">
-      <PageHeader title="Mis garages" subtitle="Publicá tus cocheras y administralas.">
-        <ButtonLink href="/mis-garages/nuevo/">
+      <PageHeader title="Mis garages" subtitle="Actualizá tu disponibilidad y recibí a los conductores que van en camino.">
+        <ButtonLink href="/publicar/">
           <PlusIcon width={18} height={18} /> Nuevo garage
         </ButtonLink>
       </PageHeader>
@@ -59,7 +59,7 @@ function GarageList() {
     return (
       <EmptyState>
         Todavía no cargaste ningún garage.{" "}
-        <Link href="/mis-garages/nuevo/" className="font-semibold text-brand-700 hover:underline">
+        <Link href="/publicar/" className="font-semibold text-brand-700 hover:underline">
           Publicá el primero
         </Link>
         .
@@ -91,10 +91,19 @@ function GarageList() {
                 </p>
               </div>
               <div className="mt-auto flex flex-col gap-3">
+                <p className="text-sm text-ink-700">
+                  {g.live.availableSpots !== null
+                    ? `${g.live.availableSpots} de ${g.capacity ?? "?"} lugares libres`
+                    : "Sin cantidad informada"}
+                  {!g.live.acceptingDrivers && " · Recepción pausada"}
+                </p>
                 <StatusControl garageId={g.id} status={g.status} onChange={(s) => setStatus(g.id, s)} compact />
-                <ButtonLink href={`/mis-garages/editar/?id=${g.id}`} variant="secondary">
-                  Editar
-                </ButtonLink>
+                <div className="grid grid-cols-2 gap-2">
+                  <ButtonLink href={`/mis-garages/panel/?id=${g.id}`}>Abrir panel</ButtonLink>
+                  <ButtonLink href={`/mis-garages/editar/?id=${g.id}`} variant="secondary">
+                    Editar datos
+                  </ButtonLink>
+                </div>
               </div>
             </div>
           </Card>

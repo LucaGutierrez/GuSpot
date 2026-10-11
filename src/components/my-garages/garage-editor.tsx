@@ -13,7 +13,8 @@ import { Field, describedBy, inputClass } from "@/components/owner/form-fields";
 import type { Draft, Errors } from "@/components/owner/publish-wizard/draft";
 import { CABA_ID, fullAddress, googleMapsUrl, reverseLookup, type AddressMatch } from "@/lib/geocoding";
 import { AddressSearch } from "./address-search";
-import { AvailabilityStep, BasicsStep, FeaturesStep, PriceStep } from "@/components/owner/publish-wizard/steps";
+import { AvailabilityStep, FeaturesStep, PriceStep } from "@/components/owner/publish-wizard/steps";
+import { CapacityFields, EstablishmentFields, PaymentFields, VehicleAccessFields } from "./commercial-fields";
 import { LocationPicker } from "./location-picker";
 import { PhotoManager } from "./photo-manager";
 import { ErrorBox, StatusControl, SuccessBox, errorMessage } from "./shared";
@@ -129,15 +130,15 @@ function LocationFields({
 
       <Field
         id="arrivalInstructions"
-        label="Indicaciones de llegada (privadas)"
-        hint="Cómo entrar y dónde estacionar. Solo las ves vos; más adelante las verá el conductor cuando su reserva esté confirmada."
+        label="Indicaciones al llegar"
+        hint="Qué hacer al llegar: dónde presentarse, a quién avisar. Las ve quien avisa que va o tiene una reserva."
         optional
       >
         <textarea
           id="arrivalInstructions"
           rows={3}
           maxLength={1000}
-          placeholder="Ej.: Tocá el timbre 3B. Entrá por el portón negro, bajá la rampa al 2º subsuelo, cochera 14 a la izquierda."
+          placeholder="Ej.: Entrá por la rampa de Florida y presentate en la cabina. Decí que venís por GuSpot."
           className={inputClass}
           value={draft.arrivalInstructions}
           onChange={(e) => update({ arrivalInstructions: e.target.value })}
@@ -159,8 +160,9 @@ function LocationFields({
       </div>
       <Field
         id="approxLocation"
-        label="Referencia aproximada (pública)"
-        hint="Es lo que ven todos. Ejemplo: “A ~3 cuadras de Plaza Serrano”."
+        label="Referencia para llegar (pública)"
+        optional
+        hint="Ej.: “Entrada por Florida, entre Paraguay y Charcas”."
         error={errors.approxLocation}
       >
         <input
@@ -196,6 +198,7 @@ export function GarageEditor({ garage, justCreated = false }: { garage: OwnerGar
   }
   // Los pasos del asistente esperan un `update` de Draft (GarageDraft lo extiende).
   const stepProps = { draft, errors, update: update as (patch: Partial<Draft>) => void };
+  const fieldProps = { draft, errors, update };
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -233,7 +236,7 @@ export function GarageEditor({ garage, justCreated = false }: { garage: OwnerGar
           <ChevronLeftIcon width={16} height={16} /> Mis garages
         </Link>
         <h1 className="text-2xl font-bold tracking-tight text-ink-900 sm:text-3xl">
-          {garage ? "Editar garage" : "Publicá tu garage"}
+          {garage ? "Editar garage" : "Publicá tu garage comercial"}
         </h1>
         <p className="text-ink-500">
           {garage
@@ -258,19 +261,28 @@ export function GarageEditor({ garage, justCreated = false }: { garage: OwnerGar
       )}
 
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-6">
-        <Section title="Datos básicos">
-          <BasicsStep {...stepProps} />
+        <Section title="El establecimiento">
+          <EstablishmentFields {...fieldProps} />
         </Section>
-        <Section title="Ubicación" subtitle="La dirección y el punto exacto son privados: solo los ves vos.">
+        <Section title="Ubicación" subtitle="El punto del garage se ve en el mapa. La dirección escrita y las indicaciones las ve quien avisa que va o reserva.">
           <LocationFields draft={draft} errors={errors} update={update} />
         </Section>
-        <Section title="Características y condiciones">
+        <Section title="Capacidad">
+          <CapacityFields {...fieldProps} />
+        </Section>
+        <Section title="Vehículos y acceso">
+          <VehicleAccessFields {...fieldProps} />
+        </Section>
+        <Section title="Servicios y condiciones">
           <FeaturesStep {...stepProps} />
         </Section>
-        <Section title="Precio">
+        <Section title="Tarifas">
           <PriceStep {...stepProps} />
         </Section>
-        <Section title="Disponibilidad">
+        <Section title="Medios de pago">
+          <PaymentFields {...fieldProps} />
+        </Section>
+        <Section title="Horario de atención">
           <AvailabilityStep {...stepProps} />
         </Section>
 

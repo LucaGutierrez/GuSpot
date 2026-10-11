@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { SearchResult } from "@/lib/search";
 import { FEATURE_LABEL, SPACE_TYPE_LABEL, formatARS } from "@/lib/format";
 import { SpacePhoto } from "@/components/ui/space-photo";
+import { CommercialCard } from "@/components/garage/garage-summary";
 import { PinIcon } from "@/components/ui/icons";
 import { AvailabilityBadge, bookability } from "./availability-status";
 import { rateSummary } from "./price-breakdown";
@@ -12,6 +13,7 @@ import { Rating } from "./rating";
  * Se acomoda al ancho del contenedor (`@container` en la lista), no al de la pantalla.
  */
 export function SpaceCard({ result, href }: { result: SearchResult; href: string }) {
+  if (result.space.commercial) return <CommercialCard result={result} href={href} />;
   const { space, quote } = result;
   const status = bookability(result.availability, quote);
   const photo = space.photos[0];

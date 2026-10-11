@@ -243,3 +243,39 @@
     transition: none;
   }
 }
+
+/* ---------- Garages comerciales: marca oscura con nombre y precio + punto de disponibilidad ---------- */
+.gs-map-marker.is-garage .gs-map-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--gs-ink-900);
+  border-color: var(--gs-ink-900);
+  color: #fff;
+  font-weight: 600;
+}
+.gs-map-marker.is-garage .gs-map-pill::before { border-top-color: var(--gs-ink-900); }
+.gs-map-marker.is-garage .gs-map-pill::after { border-top-color: var(--gs-ink-900); }
+.gs-map-marker.is-garage[data-tone] .gs-map-pill {
+  padding-left: 8px;
+}
+.gs-map-marker[data-tone] .gs-map-pill {
+  --gs-dot: #8d95a5;
+}
+.gs-map-marker[data-tone="ok"] .gs-map-pill { --gs-dot: #10b981; }
+.gs-map-marker[data-tone="few"] .gs-map-pill { --gs-dot: #fbbf24; }
+.gs-map-marker[data-tone="none"] .gs-map-pill { --gs-dot: #ef4444; }
+.gs-map-marker[data-tone="closed"] .gs-map-pill { --gs-dot: #8d95a5; opacity: 0.85; }
+.gs-map-marker[data-tone] .gs-map-pill {
+  background-image: radial-gradient(circle at 12px 50%, var(--gs-dot) 4px, transparent 5px);
+  padding-left: 22px;
+}
+.gs-map-marker.is-garage.is-selected .gs-map-pill {
+  background-color: var(--gs-brand-600);
+  border-color: var(--gs-brand-700);
+}
+.gs-map-marker.is-garage.is-selected .gs-map-pill::before { border-top-color: var(--gs-brand-700); }
+.gs-map-marker.is-garage.is-selected .gs-map-pill::after { border-top-color: var(--gs-brand-600); }

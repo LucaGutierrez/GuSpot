@@ -12,7 +12,7 @@ const isAccount = (p: string) =>
 const NAV = [
   { href: "/", label: "Buscar", icon: SearchIcon, match: (p: string) => p === "/" || p.startsWith("/buscar") || p.startsWith("/espacio") },
   { href: "/mis-reservas/", label: "Mis reservas", icon: TicketIcon, match: (p: string) => p.startsWith("/mis-reservas") },
-  { href: "/mis-garages/", label: "Mis garages", icon: ParkingIcon, match: (p: string) => p.startsWith("/mis-garages") || p.startsWith("/propietarios") },
+  { href: "/mis-garages/", label: "Mis garages", icon: ParkingIcon, match: (p: string) => p.startsWith("/mis-garages") || p.startsWith("/propietarios") || p.startsWith("/publicar") },
   { href: "/como-funciona/", label: "Cómo funciona", icon: InfoIcon, match: (p: string) => p.startsWith("/como-funciona") || p.startsWith("/acerca-de-la-demo"), desktopOnly: true },
   { href: "/cuenta/", label: "Cuenta", icon: UserIcon, match: isAccount, mobileOnly: true },
 ];
@@ -79,10 +79,10 @@ export function SiteHeader() {
               <AccountButton />
             </div>
             <Link
-              href="/mis-garages/nuevo/"
+              href="/publicar/"
               className="hidden rounded-lg border border-ink-200 px-3 py-2 text-sm font-semibold text-ink-900 hover:bg-ink-100 sm:inline-flex md:ml-2"
             >
-              Publicá tu cochera
+              Publicar un espacio
             </Link>
           </div>
         </div>

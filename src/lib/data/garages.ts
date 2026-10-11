@@ -6,7 +6,7 @@ import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { busyByGarage } from "./bookings";
 import { getSupabase } from "../supabase/client";
 import { GARAGE_PHOTOS_BUCKET } from "../supabase/config";
-import type { AvailabilityRule, LatLng, ListingStatus, Space } from "../types";
+import type { AvailabilityRule, CommercialInfo, LatLng, ListingStatus, Space } from "../types";
 import {
   DataError,
   PHOTO_LIMITS,
@@ -42,6 +42,18 @@ interface GarageRow {
   access_conditions: string[];
   public_lat: number | null;
   public_lng: number | null;
+  kind: "comercial" | "particular";
+  capacity: number | null;
+  available_spots: number | null;
+  availability_state: CommercialInfo["state"];
+  availability_updated_at: string | null;
+  accepting_drivers: boolean;
+  reservable_spots: number;
+  contact_phone: string;
+  payment_methods: CommercialInfo["paymentMethods"];
+  pay_at_garage: boolean;
+  max_height_cm: number | null;
+  access_type: CommercialInfo["accessType"];
   created_at: string;
   updated_at: string;
   garage_photos?: PhotoRow[];
@@ -59,6 +71,8 @@ type OwnerGarageRow = GarageRow & { garage_private: PrivateRow | null };
 const PUBLIC_COLUMNS =
   "id, owner_id, status, title, description, city, neighborhood, approx_location, type, max_vehicle, " +
   "features, hourly_price, daily_price, min_hours, availability, access_conditions, public_lat, public_lng, " +
+  "kind, capacity, available_spots, availability_state, availability_updated_at, accepting_drivers, " +
+  "reservable_spots, contact_phone, payment_methods, pay_at_garage, max_height_cm, access_type, " +
   "created_at, updated_at, garage_photos(path, position)";
 
 const OWNER_COLUMNS = `${PUBLIC_COLUMNS}, garage_private(address, exact_lat, exact_lng, arrival_instructions)`;
@@ -118,12 +132,30 @@ function publicLocation(row: GarageRow): LatLng | null {
   return row.public_lat == null || row.public_lng == null ? null : { lat: row.public_lat, lng: row.public_lng };
 }
 
+function commercialOf(row: GarageRow): CommercialInfo {
+  return {
+    capacity: row.capacity,
+    availableSpots: row.available_spots,
+    state: row.availability_state,
+    updatedAt: row.availability_updated_at,
+    acceptingDrivers: row.accepting_drivers,
+    reservableSpots: row.reservable_spots,
+    contactPhone: row.contact_phone,
+    paymentMethods: row.payment_methods,
+    payAtGarage: row.pay_at_garage,
+    maxHeightCm: row.max_height_cm,
+    accessType: row.access_type,
+  };
+}
+
 function toSpace(supabase: SupabaseClient, row: GarageRow): Space | null {
   const coords = publicLocation(row);
   if (!coords) return null;
   return {
     id: row.id,
     source: "real",
+    kind: row.kind,
+    commercial: row.kind === "comercial" ? commercialOf(row) : undefined,
     ownerId: row.owner_id,
     title: row.title,
     description: row.description,
@@ -172,6 +204,15 @@ function toOwnerGarage(supabase: SupabaseClient, row: OwnerGarageRow): OwnerGara
     minHours: row.min_hours,
     availability: row.availability,
     accessConditions: row.access_conditions,
+    kind: row.kind,
+    capacity: row.capacity,
+    reservableSpots: row.reservable_spots,
+    contactPhone: row.contact_phone,
+    paymentMethods: row.payment_methods,
+    payAtGarage: row.pay_at_garage,
+    maxHeightCm: row.max_height_cm,
+    accessType: row.access_type,
+    live: commercialOf(row),
     publicLocation: publicLocation(row),
     photos: photosOf(supabase, row),
     createdAt: row.created_at,
@@ -220,6 +261,13 @@ function publicFields(input: GarageInput) {
     min_hours: input.minHours,
     availability: input.availability,
     access_conditions: input.accessConditions.map((c) => c.trim()).filter(Boolean),
+    capacity: input.capacity,
+    reservable_spots: input.reservableSpots,
+    contact_phone: input.contactPhone,
+    payment_methods: input.paymentMethods,
+    pay_at_garage: input.payAtGarage,
+    max_height_cm: input.maxHeightCm,
+    access_type: input.accessType,
   };
 }
 
@@ -245,6 +293,8 @@ export async function listPublishedGarages(): Promise<Space[]> {
     .from("garages")
     .select(PUBLIC_COLUMNS)
     .eq("status", "publicado")
+    // Lanzamiento: solo garages comerciales (las cocheras particulares, más adelante).
+    .eq("kind", "comercial")
     .order("created_at", { ascending: false })
     .returns<GarageRow[]>();
   if (error) throw toDataError(error);
@@ -308,7 +358,7 @@ export async function createGarage(input: GarageInput): Promise<{ id: string }> 
   await requireUserId(supabase);
   const { data, error } = await supabase
     .from("garages")
-    .insert({ ...publicFields(input), status: "borrador" })
+    .insert({ ...publicFields(input), kind: input.kind, status: "borrador" })
     .select("id")
     .single<{ id: string }>();
   if (error) throw toDataError(error);
@@ -367,6 +417,22 @@ export async function deleteGarage(id: string): Promise<void> {
   const { data, error } = await supabase.from("garages").delete().eq("id", id).select("id");
   if (error) throw toDataError(error);
   if (data.length === 0) throw new DataError("No encontramos ese garage entre los tuyos.", "not_found");
+}
+
+/** Panel del operador: lugares libres, estado y pausa. Registra la hora (lo ve el conductor). */
+export async function updateLiveAvailability(
+  id: string,
+  patch: Partial<Pick<CommercialInfo, "availableSpots" | "state" | "acceptingDrivers">>,
+): Promise<CommercialInfo> {
+  const supabase = db();
+  await requireUserId(supabase);
+  const row: Record<string, unknown> = {};
+  if (patch.availableSpots !== undefined) row.available_spots = patch.availableSpots;
+  if (patch.state !== undefined) row.availability_state = patch.state;
+  if (patch.acceptingDrivers !== undefined) row.accepting_drivers = patch.acceptingDrivers;
+  const { data, error } = await supabase.from("garages").update(row).eq("id", id).select(PUBLIC_COLUMNS).single<GarageRow>();
+  if (error) throw toDataError(error);
+  return commercialOf(data);
 }
 
 const EXTENSIONS: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };

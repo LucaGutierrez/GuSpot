@@ -15,7 +15,7 @@ import { ResultsMap } from "@/components/explore/results-map";
 import { useInitialZone } from "@/components/explore/use-initial-zone";
 import { useLockBodyScroll } from "@/components/explore/use-element-height";
 import { spaceHref, useSearchSource } from "@/components/explore/space-source";
-import { FilterSelects, NO_FILTERS, isBookable, matchesFilters, type ResultFilters } from "./filters";
+import { FilterSelects, NO_FILTERS, isBookable, liveOf, matchesFilters, type ResultFilters } from "./filters";
 import { defaultDay, rangeQuery, rangeToInterval, readRange, withDefaults } from "./range";
 import { fieldInput, fieldLabel } from "./range-fields";
 import { SearchForm } from "./search-form";
@@ -132,7 +132,7 @@ function Results({
   };
   const detailQuery = rangeQuery(search);
   const period = hasDates ? rangeToInterval(search) : null;
-  const onMap = new Set(matching.filter(isBookable).map((r) => r.space.id));
+  const onMap = new Set(matching.filter((r) => liveOf(r) || isBookable(r)).map((r) => r.space.id));
   const highlighted = hoveredId && onMap.has(hoveredId) ? hoveredId : selectedId;
 
   return (

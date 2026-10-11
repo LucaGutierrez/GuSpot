@@ -10,7 +10,7 @@ import { setLastZone } from "@/lib/last-zone";
 import { formatRange } from "@/lib/format";
 import { Button, buttonClass } from "@/components/ui/button";
 import { InfoIcon, SearchIcon } from "@/components/ui/icons";
-import { NO_FILTERS, isBookable, matchesFilters, type ResultFilters } from "@/components/driver/filters";
+import { NO_FILTERS, activeFilterCount, isBookable, liveOf, matchesFilters, type ResultFilters } from "@/components/driver/filters";
 import { defaultDay, rangeQuery, rangeToInterval, readRange, withDefaults } from "@/components/driver/range";
 import { useNow } from "@/components/driver/use-now";
 import { CloseIcon, FilterIcon, LocateIcon, RecenterIcon } from "./icons";
@@ -18,6 +18,7 @@ import { toMarkers, zoneCenter } from "./map-data";
 import { ResultsSheet } from "./results-sheet";
 import { SearchPanel, type ExploreQuery } from "./search-panel";
 import { SelectedCard } from "./selected-card";
+import { CommercialSelectedCard } from "@/components/garage/garage-summary";
 import { SourceBadge, spaceHref, useSearchSource } from "./space-source";
 import { useDriverLocation } from "./use-driver-location";
 import { useInitialZone } from "./use-initial-zone";
@@ -151,7 +152,9 @@ export function Explore() {
   );
   const available = useMemo(() => results.filter(isBookable), [results]);
   const unavailable = useMemo(() => results.filter((r) => !isBookable(r)), [results]);
-  const markers = useMemo(() => toMarkers(available), [available]);
+  // Lo que está en el mapa: garages comerciales siempre (con su estado); el resto, solo disponibles.
+  const onMap = useMemo(() => results.filter((r) => liveOf(r) || isBookable(r)), [results]);
+  const markers = useMemo(() => toMarkers(results), [results]);
   const fallbackCenter = useMemo(
     () =>
       area
@@ -166,8 +169,8 @@ export function Explore() {
   const userIsNear = nearestKm <= FAR_KM;
   const fitKey = `${params.toString()}|${zona}|${filters.tipo}|${filters.vehiculo}|${fitNonce}|${mode}|${spaces?.length ?? -1}`;
 
-  const selectedIndex = available.findIndex((r) => r.space.id === selectedId);
-  const selected = selectedIndex >= 0 ? available[selectedIndex] : null;
+  const selectedIndex = onMap.findIndex((r) => r.space.id === selectedId);
+  const selected = selectedIndex >= 0 ? onMap[selectedIndex] : null;
 
   const hrefFor = (spaceId: string) => {
     const r = zoneResults.find((x) => x.space.id === spaceId);
@@ -239,9 +242,9 @@ export function Explore() {
   };
 
   const step = (delta: number) => {
-    if (available.length === 0) return;
-    const i = selectedIndex < 0 ? 0 : (selectedIndex + delta + available.length) % available.length;
-    setSelectedId(available[i].space.id);
+    if (onMap.length === 0) return;
+    const i = selectedIndex < 0 ? 0 : (selectedIndex + delta + onMap.length) % onMap.length;
+    setSelectedId(onMap[i].space.id);
   };
 
   const onLocate = () => {
@@ -281,7 +284,7 @@ export function Explore() {
   }
   const showNotice = notice !== null && notice !== dismissedNotice;
 
-  const filterCount = Number(!!filters.tipo) + Number(!!filters.vehiculo);
+  const filterCount = activeFilterCount(filters);
   const periodText = period ? formatRange(period.start, period.end) : "Elegí fecha y horario";
   const n = available.length;
   const locating = location.status === "locating";
@@ -444,16 +447,29 @@ export function Explore() {
       <div ref={bottomRef} className="absolute inset-x-0 bottom-0 z-10">
         {selected ? (
           <div className="px-3 pb-3">
+            {selected.space.commercial ? (
+            <CommercialSelectedCard
+              ref={cardRef}
+              result={selected}
+              href={hrefFor(selected.space.id)}
+              distance={distanceFor(selected)}
+              position={{ index: selectedIndex, total: onMap.length }}
+              onPrev={() => step(-1)}
+              onNext={() => step(1)}
+              onClose={() => setSelectedId(null)}
+            />
+            ) : (
             <SelectedCard
               ref={cardRef}
               result={selected}
               href={hrefFor(selected.space.id)}
               distance={distanceFor(selected)}
-              position={{ index: selectedIndex, total: available.length }}
+              position={{ index: selectedIndex, total: onMap.length }}
               onPrev={() => step(-1)}
               onNext={() => step(1)}
               onClose={() => setSelectedId(null)}
             />
+            )}
           </div>
         ) : (
           <ResultsSheet

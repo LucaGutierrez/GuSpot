@@ -8,8 +8,8 @@ export function DemoBanner() {
     <div data-app-chrome className="bg-ink-900 px-4 py-2 text-center text-xs text-white sm:text-sm">
       {isBackendConfigured ? (
         <>
-          <strong className="font-semibold text-accent-300">Versión en desarrollo.</strong> Cuentas y garages
-          son reales; los marcados &quot;Ejemplo&quot; no. Todavía no hay reservas ni pagos.
+          <strong className="font-semibold text-accent-300">Versión en desarrollo.</strong> La disponibilidad la
+          informa cada garage. Todavía no se puede pagar desde GuSpot.
         </>
       ) : (
         <>

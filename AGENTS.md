@@ -69,3 +69,14 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - `profiles.identity_status` y `phone_verified` los cambia solo el sistema (sin permiso de escritura del usuario). Pendiente: comparación automática cara-DNI con prueba de vida (Didit), SMS, código de llegada, calificaciones. Aspectos legales (Ley 25.326): a confirmar con un abogado, no inventar.
 - En cada reserva el dueño ve nombre, marca, modelo, color y patente (copia en `bookings`).
 - **Identidad con Didit** (2026-10-11): `supabase/functions/didit` (Edge Function, Deno) crea la sesión (DNI + prueba de vida + comparación de cara) y consulta el resultado; actualiza `profiles.identity_status` con la clave de servicio. Secretos en Supabase: `DIDIT_API_KEY`, `DIDIT_WORKFLOW_ID` (nunca en el cliente). Al aprobar, el número del DNI escaneado tiene que coincidir con el cargado. Para reservar y publicar se exige `identity_status = 'verificada'` (migración 20261011120000). Cambiar nombre, DNI o fecha de nacimiento anula la verificación.
+
+## Lanzamiento con garages comerciales (2026-10-11)
+- Se lanza con **garages comerciales** (`garages.kind = 'comercial'`); las **cocheras particulares** son etapa 2: en `/publicar/` figuran como "Próximamente" y la base no deja publicarlas. La búsqueda muestra solo comerciales.
+- Dos recorridos: **Buscar** (mapa, `/`) y **Publicar un espacio** (`/publicar/` → formulario comercial `/mis-garages/nuevo/`). El formulario comercial no pide auto ni datos de cochera particular.
+- **Disponibilidad en vivo**: `capacity`, `available_spots` (null = no informa número), `availability_state` (disponible/pocos/sin_lugar/cerrado), `accepting_drivers`, `availability_updated_at` (lo pone la base). Se muestra siempre con texto + color (`src/lib/live.ts`, `components/garage/live-badge.tsx`); dato viejo a los 30 min (`STALE_MINUTES`).
+- **Panel del operador**: `/mis-garages/panel/?id=` (+/– lugares, estados, pausar, avisos en tiempo real).
+- **"Voy a este"**: aviso de llegada (`arrival_notices`, `notify_arrival`, `update_arrival`, `arrival_access`), NO reserva lugar y se dice siempre. Pantalla `/aviso/?id=`. El garage lo recibe por Supabase Realtime con el panel abierto (email/SMS/push: pendiente).
+- **Reservas** en garages comerciales: hasta `reservable_spots` superpuestas (lo controla `create_booking` con el garage bloqueado).
+- Marcadores de garage: "Nombre · $X/h" con punto de disponibilidad (`MapMarker.variant = "garage"`, `tone`).
+- Requisitos: conductor = datos + identidad + licencia + vehículo (también para "Voy a este"); quien publica = datos + identidad + **celular verificado** (`profiles.phone_verified`; SMS pendiente de proveedor).
+- Precio por demanda y reseñas: NO implementados (sin datos de demanda ni forma de verificar visitas todavía).

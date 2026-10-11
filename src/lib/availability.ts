@@ -16,6 +16,12 @@ function inRules(space: Pick<Space, "availability">, weekday: number, minute: nu
   );
 }
 
+/** ¿El espacio atiende en ese momento según su horario semanal? */
+export function isOpenAt(space: Pick<Space, "availability">, at: LocalDateTime): boolean {
+  const d = new Date(toMs(at));
+  return inRules(space, d.getUTCDay(), d.getUTCHours() * 60 + d.getUTCMinutes());
+}
+
 export type AvailabilityResult =
   | { available: true }
   | { available: false; reason: "fuera_de_horario" | "ocupado" };

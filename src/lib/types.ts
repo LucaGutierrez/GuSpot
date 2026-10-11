@@ -24,7 +24,36 @@ export type Feature =
   | "techada"
   | "apta_camioneta"
   | "carga_electrica"
-  | "sin_escalones";
+  | "sin_escalones"
+  | "valet";
+
+/** Estado de disponibilidad que informa un garage comercial. */
+export type AvailabilityState = "disponible" | "pocos" | "sin_lugar" | "cerrado";
+
+export type PaymentMethod = "efectivo" | "debito" | "credito" | "mercado_pago" | "transferencia";
+
+export type AccessType = "" | "nivel" | "rampa" | "montacargas" | "mixto";
+
+/** Datos propios de un garage comercial (lanzamiento). */
+export interface CommercialInfo {
+  /** Capacidad total, si se conoce. */
+  capacity: number | null;
+  /** Lugares libres informados por el operador (null = no informa número). */
+  availableSpots: number | null;
+  state: AvailabilityState;
+  /** Última actualización de la disponibilidad (ISO). */
+  updatedAt: string | null;
+  /** El operador puede pausar la recepción de conductores. */
+  acceptingDrivers: boolean;
+  /** Lugares que se pueden reservar a la vez desde GuSpot (0 = sin reservas). */
+  reservableSpots: number;
+  contactPhone: string;
+  paymentMethods: PaymentMethod[];
+  /** Se paga en el garage (no en GuSpot). */
+  payAtGarage: boolean;
+  maxHeightCm: number | null;
+  accessType: AccessType;
+}
 
 /** Ilustración usada como "foto de muestra" (no son fotos reales). */
 export type PhotoVariant = "garage" | "cochera" | "patio" | "subsuelo" | "porton";
@@ -66,6 +95,10 @@ export type SpaceSource = "demo" | "real";
 export interface Space {
   id: string;
   source: SpaceSource;
+  /** Garage comercial o cochera particular (garages reales). */
+  kind?: "comercial" | "particular";
+  /** Solo garages comerciales reales. */
+  commercial?: CommercialInfo;
   ownerId: string;
   title: string;
   description: string;
