@@ -4,12 +4,13 @@
 // para mostrar; nunca exponen detalles internos.
 
 import { getSupabase } from "../supabase/client";
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "../supabase/config";
 
 export type AuthResult = { ok: true; message?: string } | { ok: false; message: string };
 
 const NOT_CONFIGURED: AuthResult = {
   ok: false,
-  message: "Las cuentas todavía no están configuradas en esta versión (modo demo).",
+  message: "Las cuentas no están disponibles en esta copia del sitio.",
 };
 
 export const PASSWORD_MIN_LENGTH = 8;
@@ -79,6 +80,39 @@ export async function signIn(email: string, password: string): Promise<AuthResul
   if (!supabase) return NOT_CONFIGURED;
   const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
   return error ? { ok: false, message: friendly(error) } : { ok: true };
+}
+
+export type OAuthProvider = "google" | "apple";
+
+const PROVIDER_NAME: Record<OAuthProvider, string> = { google: "Google", apple: "Apple" };
+
+/** Métodos de ingreso activados en Supabase (los botones solo aparecen si están activos). */
+export async function enabledProviders(): Promise<OAuthProvider[]> {
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) return [];
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_PUBLISHABLE_KEY } });
+    if (!res.ok) return [];
+    const external = ((await res.json()) as { external?: Record<string, boolean> }).external ?? {};
+    return (["google", "apple"] as const).filter((p) => external[p]);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Ingreso (o registro) con Google o Apple. Abre la página del proveedor; al
+ * volver, /ingresar/ termina el ingreso y sigue a `next` (o a completar datos).
+ */
+export async function signInWithProvider(provider: OAuthProvider, next: string): Promise<AuthResult> {
+  const supabase = getSupabase();
+  if (!supabase) return NOT_CONFIGURED;
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo: redirect(`/ingresar/?volver=${encodeURIComponent(next)}`) },
+  });
+  return error
+    ? { ok: false, message: `No pudimos abrir el ingreso con ${PROVIDER_NAME[provider]}. Probá de nuevo.` }
+    : { ok: true };
 }
 
 export async function signOut(): Promise<void> {

@@ -16,6 +16,7 @@ import {
   safeNext,
   useRedirectWhenSignedIn,
 } from "./form-parts";
+import { SocialButtons } from "./social-buttons";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_RE = /^[\p{L}][\p{L}' -]*$/u;
@@ -128,6 +129,8 @@ export function SignUpForm() {
       ) : auth.status === "loading" || auth.status === "signed-in" ? (
         <Loading />
       ) : (
+        <div className="space-y-4">
+          <SocialButtons next={next} separator="o creá tu cuenta con tu email" />
         <form onSubmit={onSubmit} noValidate className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -206,6 +209,7 @@ export function SignUpForm() {
             ¿Ya tenés cuenta? <TextLink href="/ingresar/">Ingresá</TextLink>
           </p>
         </form>
+        </div>
       )}
     </AuthCard>
   );

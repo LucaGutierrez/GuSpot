@@ -170,3 +170,20 @@ describe("abuso", () => {
     assert.equal((await asAdmin(db, `select status from bookings where id = $1`, [first]))[0].status, "cancelada");
   });
 });
+
+describe("ingreso con Google / Apple", () => {
+  const cases = [
+    ["google", { full_name: "Juana Gómez Paz", email: "j@x.test" }, "Juana", "Gómez Paz"],
+    ["google con partes", { given_name: "Pedro", family_name: "Ruiz", full_name: "Pedro Ruiz" }, "Pedro", "Ruiz"],
+    ["apple sin nombre", { email: "privado@privaterelay.appleid.com" }, "", ""],
+    ["nombre que es un email", { full_name: "alguien@ejemplo.com" }, "", ""],
+  ];
+  for (const [label, meta, first, last] of cases) {
+    test(`perfil inicial: ${label}`, async () => {
+      const id = crypto.randomUUID();
+      await asAdmin(db, `insert into auth.users (id, email, raw_user_meta_data) values ($1, 'x@x.test', $2)`, [id, JSON.stringify(meta)]);
+      const [p] = await asAdmin(db, `select first_name, last_name, identity_status from profiles where id = $1`, [id]);
+      assert.deepEqual([p.first_name, p.last_name, p.identity_status], [first, last, "sin_verificar"]);
+    });
+  }
+});

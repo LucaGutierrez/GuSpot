@@ -75,6 +75,8 @@ export function VerificationPage() {
   const back = params.get("volver") ? safeNext(params.get("volver"), "/") : null;
   // Didit vuelve a /verificacion/?didit=1&verificationSessionId=…&status=…
   const returning = params.get("didit") === "1";
+  // Cuenta recién creada con Google o Apple: faltan los datos personales.
+  const welcome = params.get("completar") === "1";
   return (
     <Container className="max-w-2xl pb-16">
       <BackToAccount />
@@ -82,6 +84,12 @@ export function VerificationPage() {
         title="Datos personales y verificación"
         subtitle="Para reservar o publicar necesitamos saber quién sos. Tus documentos son privados."
       />
+      {welcome && (
+        <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-ink-900">
+          <p className="font-semibold">¡Bienvenido a GuSpot!</p>
+          <p className="mt-1">Completá tus datos tal como figuran en tu DNI para empezar a reservar o publicar.</p>
+        </div>
+      )}
       <RequireSignIn back="/verificacion/">{() => <Verification back={back} returning={returning} />}</RequireSignIn>
     </Container>
   );

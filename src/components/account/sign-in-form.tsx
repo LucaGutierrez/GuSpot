@@ -15,6 +15,7 @@ import {
   safeNext,
   useRedirectWhenSignedIn,
 } from "./form-parts";
+import { SocialButtons } from "./social-buttons";
 
 export function SignInForm() {
   const params = useSearchParams();
@@ -51,6 +52,8 @@ export function SignInForm() {
       ) : auth.status === "loading" || auth.status === "signed-in" ? (
         <Loading />
       ) : (
+        <div className="space-y-4">
+          <SocialButtons next={next} separator="o con tu email" />
         <form onSubmit={onSubmit} noValidate className="space-y-4">
           {confirmed && (
             <FormMessage result={{ ok: true, message: "Tu email quedó confirmado. Ingresá con tu email y contraseña." }} />
@@ -86,6 +89,7 @@ export function SignInForm() {
             ¿No tenés cuenta? <TextLink href={withNext("/crear-cuenta/")}>Creá una</TextLink>
           </p>
         </form>
+        </div>
       )}
     </AuthCard>
   );

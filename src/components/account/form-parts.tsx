@@ -8,6 +8,7 @@ import { DemoNotice } from "@/components/ui/demo-notice";
 
 import { fieldInput, fieldLabel } from "@/components/driver/range-fields";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { getMyProfile } from "@/lib/data/profile";
 import type { AuthResult } from "@/lib/auth/actions";
 
 /** Destino después de ingresar: solo rutas internas (evita redirecciones abiertas). */
@@ -17,11 +18,26 @@ export function safeNext(value: string | null, fallback = "/cuenta/"): string {
 }
 
 /** Si ya hay sesión, lleva a `to` (para ingresar / crear cuenta). */
+/**
+ * Si ya hay sesión, lleva a `to`. Si a la cuenta le faltan los datos personales
+ * (p. ej. recién creada con Google o Apple), primero a completarlos.
+ */
 export function useRedirectWhenSignedIn(to: string) {
   const auth = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (auth.status === "signed-in") router.replace(to);
+    if (auth.status !== "signed-in") return;
+    let cancelled = false;
+    getMyProfile()
+      .then((p) => {
+        if (cancelled) return;
+        const incomplete = !p.firstName || !p.lastName || !p.dni || !p.birthDate || !p.phone;
+        router.replace(incomplete ? `/verificacion/?completar=1&volver=${encodeURIComponent(to)}` : to);
+      })
+      .catch(() => !cancelled && router.replace(to));
+    return () => {
+      cancelled = true;
+    };
   }, [auth.status, router, to]);
   return auth;
 }
