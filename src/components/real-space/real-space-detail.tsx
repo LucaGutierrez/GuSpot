@@ -14,6 +14,7 @@ import { DemoNotice } from "@/components/ui/demo-notice";
 import { CarIcon, CheckIcon, ChevronLeftIcon, ClockIcon, ParkingIcon, PinIcon } from "@/components/ui/icons";
 import { MapView } from "@/components/map/map-view";
 import { PhotoGallery } from "@/components/driver/photo-gallery";
+import { RealBookingPanel } from "@/components/bookings/real-booking-panel";
 
 type Load = { state: "loading" } | { state: "error" } | { state: "ready"; space: Space | null };
 
@@ -196,15 +197,7 @@ function Detail({ space }: { space: Space }) {
       </div>
 
       <aside aria-label="Reserva" className="md:sticky md:top-20 md:self-start">
-        <Card className="space-y-3 p-5">
-          <p className="text-2xl font-bold text-ink-900">
-            {formatARS(space.hourlyPrice)} <span className="text-base font-normal text-ink-500">/ hora</span>
-          </p>
-          <DemoNotice title="Las reservas todavía no están disponibles">
-            Estamos preparando las reservas y los pagos. Por ahora no se puede reservar este garage
-            desde GuSpot. Verificación de propietarios: a definir.
-          </DemoNotice>
-        </Card>
+        <RealBookingPanel space={space} />
       </aside>
     </div>
   );

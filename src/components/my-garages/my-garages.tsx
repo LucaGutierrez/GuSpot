@@ -13,6 +13,7 @@ import { PlusIcon } from "@/components/ui/icons";
 import { EmptyState } from "@/components/owner/section";
 import { PhotoPlaceholder } from "@/components/owner/space-cards";
 import { GarageEditor } from "./garage-editor";
+import { OwnerBookingsSection } from "@/components/bookings/booking-views";
 import { ErrorBox, RequireSignIn, StatusControl, errorMessage } from "./shared";
 
 type Load<T> = { state: "loading" } | { state: "error"; message: string } | { state: "ready"; data: T };
@@ -27,7 +28,14 @@ export function MyGaragesPage() {
           <PlusIcon width={18} height={18} /> Nuevo garage
         </ButtonLink>
       </PageHeader>
-      <RequireSignIn back="/mis-garages/">{() => <GarageList />}</RequireSignIn>
+      <RequireSignIn back="/mis-garages/">
+        {() => (
+          <>
+            <GarageList />
+            <OwnerBookingsSection />
+          </>
+        )}
+      </RequireSignIn>
     </Container>
   );
 }

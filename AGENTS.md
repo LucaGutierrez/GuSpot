@@ -55,3 +55,10 @@ reservas reales, pagos, mapas, mensajes ni carga de fotos.
 - Datos privados (dirección escrita, indicaciones de llegada) solo los ve el propietario; el conductor, con reserva confirmada (etapa de reservas). El punto del mapa es público y exacto.
 - Rutas reales: `/ingresar/`, `/crear-cuenta/`, `/recuperar/`, `/recuperar/nueva/`, `/cuenta/`, `/mis-garages/`, `/mis-garages/nuevo/`, `/mis-garages/editar/?id=`, `/espacio/?id=` (detalle de garage real; ruta con query porque el sitio es estático). Las pantallas de demo (`/propietarios/**`, `/espacios/[id]/`, `/mis-reservas/`) se conservan como demostración.
 - Fuera de alcance en esta etapa: reservas reales, pagos, Mercado Pago, comisiones, códigos de llegada, app nativa.
+
+## Etapa 2 (en prueba): reservas reales
+- Decisión del usuario (2026-10-10): **reserva instantánea** (si el horario está libre se confirma sola, sin aprobación del dueño). En el producto real se **paga al reservar** (tarjetas y Mercado Pago, estilo DiDi/Uber); la cancelación con reembolso tendrá unos minutos de gracia (a definir).
+- Fase actual SIN pagos: `payment_status` = `no_disponible`; cancelar es libre hasta la hora de entrada. Nunca mostrar una reserva como pagada.
+- Base: `supabase/migrations/20261010140000_bookings.sql`. Todo por funciones: `create_booking` (valida horario, superposición —constraint de exclusión— y calcula el precio igual que `src/lib/pricing.ts`), `cancel_booking`, `busy_periods` (ocupación pública, sin datos personales), `booking_access` (dirección + indicaciones + punto exacto solo para el conductor de una reserva confirmada).
+- Cliente: `src/lib/data/bookings.ts`; pantallas en `src/components/bookings/**`, rutas `/reserva/?id=` y `/mis-reservas/` (con Supabase muestra las reales). El dueño ve "Reservas de tus garages" en `/mis-garages/`.
+- Avisos por email: pendientes (requieren un proveedor de email, p. ej. Resend).

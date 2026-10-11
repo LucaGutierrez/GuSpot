@@ -4,13 +4,17 @@ import { DemoBadge } from "@/components/ui/badge";
 import { Container, PageHeader } from "@/components/ui/card";
 import { DemoNotice } from "@/components/ui/demo-notice";
 import { MyBookings } from "@/components/driver/my-bookings";
+import { MyRealBookingsPage } from "@/components/bookings/booking-views";
+import { isBackendConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = {
   title: "Mis reservas",
-  description: "Reservas de ejemplo del conductor de la demo.",
+  description: "Tus reservas de cocheras.",
 };
 
 export default function MisReservasPage() {
+  // Con cuentas reales: las reservas de verdad. En modo demo: las de ejemplo.
+  if (isBackendConfigured) return <MyRealBookingsPage />;
   return (
     <Container className="max-w-3xl pb-12">
       <PageHeader

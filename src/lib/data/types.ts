@@ -7,10 +7,13 @@
 
 import type {
   AvailabilityRule,
+  BookingStatus,
   Centavos,
   Feature,
   LatLng,
   ListingStatus,
+  LocalDateTime,
+  PaymentStatus,
   Space,
   SpaceType,
   VehicleSize,
@@ -106,3 +109,34 @@ export const PHOTO_LIMITS = {
   maxBytes: 5 * 1024 * 1024,
   mimeTypes: ["image/jpeg", "image/png", "image/webp"],
 } as const;
+
+// --- Reservas reales (src/lib/data/bookings.ts) -----------------------------
+
+/** Reserva real. Confirmación automática; el pago se integra más adelante. */
+export interface RealBooking {
+  id: string;
+  garageId: string;
+  /** Copia al reservar (para el historial). */
+  garageTitle: string;
+  garageNeighborhood: string;
+  driverName: string;
+  start: LocalDateTime;
+  end: LocalDateTime;
+  status: Extract<BookingStatus, "confirmada" | "cancelada">;
+  /** Hasta integrar Mercado Pago es siempre "no_disponible". */
+  paymentStatus: PaymentStatus;
+  vehicle: VehicleSize;
+  plate: string;
+  hours: number;
+  total: Centavos;
+  createdAt: string; // ISO
+  /** Quién la mira: conductor o dueño del garage. */
+  role: "driver" | "owner";
+}
+
+/** Lo que ve el CONDUCTOR de una reserva confirmada. */
+export interface BookingAccess {
+  address: string;
+  arrivalInstructions: string;
+  location: LatLng;
+}

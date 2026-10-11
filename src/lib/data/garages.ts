@@ -3,6 +3,7 @@
 // valida para dar mensajes claros antes de ir a la base.
 
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
+import { busyByGarage } from "./bookings";
 import { getSupabase } from "../supabase/client";
 import { GARAGE_PHOTOS_BUCKET } from "../supabase/config";
 import type { AvailabilityRule, LatLng, ListingStatus, Space } from "../types";
@@ -88,6 +89,8 @@ function toDataError(error: Pick<PostgrestError, "code" | "message"> | { message
     );
   if (message.includes("photo_limit"))
     return new DataError(`Podés subir hasta ${PHOTO_LIMITS.maxPerGarage} fotos por garage.`, "validation");
+  if (code === "23503")
+    return new DataError("Este garage tiene reservas: pausalo en lugar de eliminarlo.", "validation");
   if (code === "23514" || code === "22P02" || code === "23502")
     return new DataError("Hay datos inválidos. Revisá el formulario.", "validation");
   if (code === "42501" || /row-level security|permission denied/i.test(message))
@@ -240,7 +243,11 @@ export async function listPublishedGarages(): Promise<Space[]> {
     .order("created_at", { ascending: false })
     .returns<GarageRow[]>();
   if (error) throw toDataError(error);
-  return data.map((row) => toSpace(supabase, row)).filter((s): s is Space => s !== null);
+  const busy = await busyByGarage();
+  return data
+    .map((row) => toSpace(supabase, row))
+    .filter((s): s is Space => s !== null)
+    .map((s) => ({ ...s, busy: busy.get(s.id) ?? [] }));
 }
 
 export async function getPublishedGarage(id: string): Promise<Space | null> {
@@ -255,7 +262,10 @@ export async function getPublishedGarage(id: string): Promise<Space | null> {
     if (error.code === "22P02") return null; // id con formato inválido
     throw toDataError(error);
   }
-  return data ? toSpace(supabase, data) : null;
+  const space = data ? toSpace(supabase, data) : null;
+  if (!space) return null;
+  const busy = await busyByGarage();
+  return { ...space, busy: busy.get(space.id) ?? [] };
 }
 
 export async function listMyGarages(): Promise<OwnerGarage[]> {
