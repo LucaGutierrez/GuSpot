@@ -248,27 +248,44 @@ function CommercialDetail({ space, voy }: { space: Space; voy: boolean }) {
   const spaceKind = space.type === "cubierta" ? "Cubierto" : space.type === "semicubierta" ? "Semicubierto" : "Descubierto";
 
   return (
-    <div className="mt-4 grid gap-8 md:grid-cols-[1fr_22rem] lg:grid-cols-[1fr_24rem]">
-      <div className="min-w-0 space-y-6">
-        <header className="space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight text-ink-900 sm:text-3xl">{space.title}</h1>
-          <p className="flex items-start gap-1.5 text-ink-700">
-            <PinIcon className="mt-0.5 shrink-0 text-brand-600" />
-            <span>
-              {space.neighborhood}
-              {space.approxLocation && ` · ${space.approxLocation}`}
-            </span>
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <LiveBadge status={live} />
-            <span className={`text-sm font-semibold ${live.open ? "text-emerald-700" : "text-ink-700"}`}>
-              {live.open ? "Abierto ahora" : "Cerrado ahora"}
-            </span>
-            {c.capacity && <span className="text-sm text-ink-500">· Capacidad {c.capacity} lugares</span>}
-          </div>
-          <UpdatedNote status={live} phone={c.contactPhone} />
-        </header>
-
+    <div className="mt-4 grid gap-6 md:grid-cols-[1fr_22rem] md:gap-x-8 lg:grid-cols-[1fr_24rem]">
+      <header className="space-y-2 md:col-span-2">
+        <h1 className="text-2xl font-bold tracking-tight text-ink-900 sm:text-3xl">{space.title}</h1>
+        <p className="flex items-start gap-1.5 text-ink-700">
+          <PinIcon className="mt-0.5 shrink-0 text-brand-600" />
+          <span>
+            {space.neighborhood}
+            {space.approxLocation && ` · ${space.approxLocation}`}
+          </span>
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <LiveBadge status={live} />
+          <span className={`text-sm font-semibold ${live.open ? "text-emerald-700" : "text-ink-700"}`}>
+            {live.open ? "Abierto ahora" : "Cerrado ahora"}
+          </span>
+          {c.capacity && <span className="text-sm text-ink-500">· Capacidad {c.capacity} lugares</span>}
+        </div>
+        <UpdatedNote status={live} phone={c.contactPhone} />
+      </header>
+      <aside aria-label="Ir al garage" className="flex flex-col gap-4 md:sticky md:top-20 md:col-start-2 md:row-start-2 md:self-start">
+        <ArrivalPanel space={space} autoOpen={voy} />
+        {c.contactPhone && (
+          <a href={`tel:${c.contactPhone}`} className="text-center text-sm font-semibold text-brand-700 hover:underline">
+            Llamar al garage
+          </a>
+        )}
+        {c.reservableSpots > 0 && c.onlinePayments && (
+          <details className="rounded-2xl">
+            <summary className="cursor-pointer rounded-2xl border border-ink-200 bg-white p-4 text-sm font-semibold text-ink-900">
+              Reservar y pagar un lugar (ahora o para más tarde)
+            </summary>
+            <div className="mt-3">
+              <RealBookingPanel space={space} />
+            </div>
+          </details>
+        )}
+      </aside>
+      <div className="min-w-0 space-y-6 md:col-start-1 md:row-start-2">
         {space.photos.length > 0 && <PhotoGallery photos={space.photos} title={space.title} />}
 
         {space.description && <p className="whitespace-pre-line text-ink-700">{space.description}</p>}
@@ -316,7 +333,8 @@ function CommercialDetail({ space, voy }: { space: Space; voy: boolean }) {
             label="Pago"
             value={
               <ul>
-                <li>{c.payAtGarage ? "Se paga en el garage" : "Pago a convenir con el garage"}</li>
+                {c.onlinePayments && c.reservableSpots > 0 && <li>Reservas: se pagan acá, con Mercado Pago</li>}
+                <li>{c.payAtGarage ? "Sin reserva: se paga en el garage" : "Sin reserva: pago a convenir con el garage"}</li>
                 {c.paymentMethods.length > 0 && <li>{c.paymentMethods.map((m) => PAYMENT_METHOD_LABEL[m]).join(", ")}</li>}
               </ul>
             }
@@ -372,24 +390,6 @@ function CommercialDetail({ space, voy }: { space: Space; voy: boolean }) {
         </section>
       </div>
 
-      <aside aria-label="Ir al garage" className="flex flex-col gap-4 md:sticky md:top-20 md:self-start">
-        <ArrivalPanel space={space} autoOpen={voy} />
-        {c.contactPhone && (
-          <a href={`tel:${c.contactPhone}`} className="text-center text-sm font-semibold text-brand-700 hover:underline">
-            Llamar al garage
-          </a>
-        )}
-        {c.reservableSpots > 0 && c.onlinePayments && (
-          <details className="rounded-2xl">
-            <summary className="cursor-pointer rounded-2xl border border-ink-200 bg-white p-4 text-sm font-semibold text-ink-900">
-              ¿Preferís reservar con anticipación?
-            </summary>
-            <div className="mt-3">
-              <RealBookingPanel space={space} />
-            </div>
-          </details>
-        )}
-      </aside>
     </div>
   );
 }

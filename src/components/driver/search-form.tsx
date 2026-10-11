@@ -7,8 +7,7 @@ import { cities } from "@/lib/demo-data";
 import { setLastZone } from "@/lib/last-zone";
 import { Button } from "@/components/ui/button";
 import { PinIcon, SearchIcon } from "@/components/ui/icons";
-import { RangeFields, fieldInput, fieldLabel } from "./range-fields";
-import { useRange } from "./use-range";
+import { fieldInput, fieldLabel } from "./range-fields";
 
 /** Sugerencias de zona: ciudades y "Barrio, Ciudad". */
 export const ZONE_SUGGESTIONS = cities().flatMap(({ city, neighborhoods }) => [
@@ -17,8 +16,8 @@ export const ZONE_SUGGESTIONS = cities().flatMap(({ city, neighborhoods }) => [
 ]);
 
 /**
- * Formulario de búsqueda. Envía GET al mapa ("/") con zona, fecha, desde,
- * fechaHasta y hasta, y recuerda la zona como última buscada.
+ * Formulario de búsqueda. Envía GET al mapa ("/") con la zona y la recuerda
+ * como última buscada. El horario no se pide acá: se elige al reservar.
  * `variant="compact"` es la barra editable de resultados (reemplaza la URL).
  */
 export function SearchForm({
@@ -30,7 +29,6 @@ export function SearchForm({
 }) {
   const id = useId();
   const [zona, setZona] = useState(initial.zona ?? "");
-  const { value, setValue } = useRange(initial);
   const listId = `${id}-zonas`;
   const compact = variant === "compact";
 
@@ -68,13 +66,6 @@ export function SearchForm({
           </datalist>
         </div>
       </div>
-      <RangeFields
-        value={value}
-        onChange={setValue}
-        idPrefix={id}
-        withNames
-        layout={compact ? "row" : "grid"}
-      />
       <Button type="submit" size={compact ? "md" : "lg"} className="w-full">
         <SearchIcon />
         {compact ? "Actualizar búsqueda" : "Buscar cocheras"}

@@ -259,9 +259,6 @@
 }
 .gs-map-marker.is-garage .gs-map-pill::before { border-top-color: var(--gs-ink-900); }
 .gs-map-marker.is-garage .gs-map-pill::after { border-top-color: var(--gs-ink-900); }
-.gs-map-marker.is-garage[data-tone] .gs-map-pill {
-  padding-left: 8px;
-}
 .gs-map-marker[data-tone] .gs-map-pill {
   --gs-dot: #8d95a5;
 }

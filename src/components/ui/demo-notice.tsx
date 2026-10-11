@@ -9,7 +9,7 @@ export function DemoBanner() {
       {isBackendConfigured ? (
         <>
           <strong className="font-semibold text-accent-300">Versión en desarrollo.</strong> La disponibilidad la
-          informa cada garage. Todavía no se puede pagar desde GuSpot.
+          informa cada garage. Los pagos son reales: probá con montos chicos.
         </>
       ) : (
         <>

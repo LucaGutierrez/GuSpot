@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { PinIcon, SearchIcon } from "@/components/ui/icons";
 import { FilterSelects, NO_FILTERS, type ResultFilters } from "@/components/driver/filters";
 import type { RangeValue } from "@/components/driver/range";
-import { RangeFields, fieldInput, fieldLabel } from "@/components/driver/range-fields";
+import { fieldInput, fieldLabel } from "@/components/driver/range-fields";
 import { ZONE_SUGGESTIONS } from "@/components/driver/search-form";
 import { CloseIcon } from "./icons";
 
@@ -32,7 +32,7 @@ export function SearchPanel({
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [zona, setZona] = useState(initial.zona);
-  const [range, setRange] = useState(initial.range);
+  const range = initial.range;
   const [filters, setFilters] = useState(initial.filters);
 
   // Foco en el título (no en el input, para no abrir el teclado de golpe).
@@ -84,7 +84,7 @@ export function SearchPanel({
           tabIndex={-1}
           className="text-lg font-semibold text-ink-900 focus:outline-none"
         >
-          ¿Dónde y cuándo?
+          ¿Dónde querés estacionar?
         </h2>
         <button
           type="button"
@@ -128,8 +128,6 @@ export function SearchPanel({
             </div>
           </div>
 
-          <RangeFields value={range} onChange={setRange} idPrefix={id} />
-
           <fieldset className="space-y-3">
             <legend className="text-sm font-semibold text-ink-900">Filtros</legend>
             <div className="grid grid-cols-2 gap-3">
@@ -146,7 +144,7 @@ export function SearchPanel({
             )}
           </fieldset>
           <p className="text-xs text-ink-500">
-            En el mapa ves solo los espacios disponibles en ese horario.
+            El horario lo elegís después, al entrar al garage: podés ir ahora o reservar para más tarde.
           </p>
         </div>
 

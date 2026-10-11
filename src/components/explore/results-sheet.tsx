@@ -209,7 +209,7 @@ export function ResultsSheet({
         )}
         <p className="mt-4 text-xs text-ink-500">
           {real
-            ? "La disponibilidad la informa cada garage. Avisar que vas no reserva el lugar. Todavía no se puede pagar desde GuSpot."
+            ? "La disponibilidad la informa cada garage. Avisar que vas no reserva el lugar: para asegurártelo, reservá y pagá desde la ficha del garage."
             : "Datos de demostración: espacios, precios y ubicaciones son de ejemplo. Solicitar no reserva ni cobra nada."}
         </p>
       </div>

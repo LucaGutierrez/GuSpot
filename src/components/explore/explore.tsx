@@ -11,8 +11,7 @@ import { formatRange } from "@/lib/format";
 import { Button, buttonClass } from "@/components/ui/button";
 import { InfoIcon, SearchIcon } from "@/components/ui/icons";
 import { NO_FILTERS, activeFilterCount, isBookable, liveOf, matchesFilters, type ResultFilters } from "@/components/driver/filters";
-import { defaultDay, rangeQuery, rangeToInterval, readRange, withDefaults } from "@/components/driver/range";
-import { useNow } from "@/components/driver/use-now";
+import { rangeOrEmpty, rangeToInterval, readRange } from "@/components/driver/range";
 import { CloseIcon, FilterIcon, LocateIcon, RecenterIcon } from "./icons";
 import { toMarkers, zoneCenter } from "./map-data";
 import { ResultsSheet } from "./results-sheet";
@@ -57,7 +56,6 @@ export function Explore() {
   const id = useId();
   const params = useSearchParams();
   const router = useRouter();
-  const now = useNow();
 
   // --- Búsqueda (URL) -------------------------------------------------------
   // Sin zona en la URL: la última buscada en este navegador o CABA.
@@ -67,7 +65,8 @@ export function Explore() {
   useEffect(() => {
     if (urlZone) setLastZone(urlZone);
   }, [urlZone]);
-  const { fecha, desde, fechaHasta, hasta } = withDefaults(readRange(params), defaultDay(now));
+  // Sin horario por defecto: se busca por zona/cerca y el horario se elige al reservar.
+  const { fecha, desde, fechaHasta, hasta } = rangeOrEmpty(readRange(params));
   const range = useMemo(
     () => ({ fecha, desde, fechaHasta, hasta }),
     [fecha, desde, fechaHasta, hasta],
@@ -174,7 +173,7 @@ export function Explore() {
 
   const hrefFor = (spaceId: string) => {
     const r = zoneResults.find((x) => x.space.id === spaceId);
-    return r ? spaceHref(r.space, rangeQuery(search)) : "/";
+    return r ? spaceHref(r.space, "") : "/";
   };
   const distanceFor = (r: SearchResult) =>
     userCoords
@@ -285,7 +284,7 @@ export function Explore() {
   const showNotice = notice !== null && notice !== dismissedNotice;
 
   const filterCount = activeFilterCount(filters);
-  const periodText = period ? formatRange(period.start, period.end) : "Elegí fecha y horario";
+  const periodText = period ? formatRange(period.start, period.end) : "Lugares libres en vivo";
   const n = available.length;
   const locating = location.status === "locating";
 

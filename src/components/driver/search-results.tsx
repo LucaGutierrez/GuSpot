@@ -16,11 +16,10 @@ import { useInitialZone } from "@/components/explore/use-initial-zone";
 import { useLockBodyScroll } from "@/components/explore/use-element-height";
 import { spaceHref, useSearchSource } from "@/components/explore/space-source";
 import { FilterSelects, NO_FILTERS, isBookable, liveOf, matchesFilters, type ResultFilters } from "./filters";
-import { defaultDay, rangeQuery, rangeToInterval, readRange, withDefaults } from "./range";
+import { rangeOrEmpty, rangeQuery, rangeToInterval, readRange } from "./range";
 import { fieldInput, fieldLabel } from "./range-fields";
 import { SearchForm } from "./search-form";
 import { SpaceCard } from "./space-card";
-import { useNow } from "./use-now";
 
 type Order = "recomendado" | "precio_asc" | "precio_desc";
 
@@ -30,7 +29,6 @@ type Order = "recomendado" | "precio_asc" | "precio_desc";
  */
 export function SearchResults() {
   const params = useSearchParams();
-  const now = useNow();
   // Sin `zona` en la URL: la última buscada o CABA. `zona=` vacía: todas.
   const fallbackZone = useInitialZone();
   const urlZone = params.get("zona");
@@ -39,7 +37,8 @@ export function SearchResults() {
   useEffect(() => {
     if (urlZone?.trim()) setLastZone(urlZone);
   }, [urlZone]);
-  const { fecha, desde, fechaHasta, hasta } = withDefaults(readRange(params), defaultDay(now));
+  // Sin horario por defecto: se busca por zona y el horario se elige al reservar.
+  const { fecha, desde, fechaHasta, hasta } = rangeOrEmpty(readRange(params));
   const search = useMemo<SearchParams>(
     () => ({ zona, fecha, desde, fechaHasta, hasta }),
     [zona, fecha, desde, fechaHasta, hasta],
@@ -49,7 +48,7 @@ export function SearchResults() {
     <Results search={search} hasDates={!!fecha} queryKey={params.toString()}>
       <PageHeader
         title="Buscar cocheras"
-        subtitle="Elegí zona y horario. Ves el precio total antes de solicitar."
+        subtitle="Buscá por zona. Ves los lugares libres en vivo y el horario lo elegís al entrar al garage."
       />
       <Card className="p-4">
         <h2 className="sr-only">Modificar búsqueda</h2>
@@ -201,7 +200,7 @@ function Results({
           )}
           <p className="text-xs text-ink-500">
             {real
-              ? "En el mapa aparecen solo los garages disponibles en ese período. La dirección y cómo entrar se comparten cuando la reserva esté confirmada."
+              ? "Los lugares libres los informa cada garage en vivo. La dirección y cómo entrar se comparten cuando avisás que vas o reservás."
               : "En el mapa aparecen solo los espacios disponibles en ese período, en una ubicación aproximada (±200 m). La dirección exacta se comparte cuando la reserva esté confirmada y pagada."}
           </p>
 

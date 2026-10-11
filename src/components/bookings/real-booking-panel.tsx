@@ -15,9 +15,9 @@ import { InfoIcon } from "@/components/ui/icons";
 import { AvailabilityBadge } from "@/components/driver/availability-status";
 import { checkBooking } from "@/components/driver/booking-check";
 import { PriceBreakdown, rateSummary } from "@/components/driver/price-breakdown";
-import { readRange } from "@/components/driver/range";
+import { rangeFromNow, rangeOrEmpty, readRange, type RangeValue } from "@/components/driver/range";
 import { RangeFields, fieldInput, fieldLabel } from "@/components/driver/range-fields";
-import { useRange } from "@/components/driver/use-range";
+import { useNow } from "@/components/driver/use-now";
 import { fitsVehicle } from "@/components/driver/vehicles";
 
 type DriverState =
@@ -65,7 +65,15 @@ export function RealBookingPanel({ space }: { space: Space }) {
   const params = useSearchParams();
   const router = useRouter();
   const auth = useAuth();
-  const { value, setValue, now } = useRange(readRange(params));
+  // Sin horario por defecto: lo elige el conductor (con atajos "desde ahora").
+  const now = useNow();
+  const [value, setValue] = useState<RangeValue>(() => rangeOrEmpty(readRange(params)));
+  const [quick, setQuick] = useState<number | null>(null);
+  const pickNow = (hours: number) => {
+    if (!now) return;
+    setQuick(hours);
+    setValue(rangeFromNow(now, hours));
+  };
   const check = checkBooking(space, value, now);
   const driver = useDriver(auth.status === "signed-in");
   const fitting = driver.state === "ready" ? driver.vehicles.filter((v) => fitsVehicle(space.maxVehicle, v.size)) : [];
@@ -133,7 +141,35 @@ export function RealBookingPanel({ space }: { space: Space }) {
         <p className="mt-0.5 text-sm text-ink-500">{rateSummary(space)}</p>
 
         <div className="mt-4">
-          <RangeFields value={value} onChange={setValue} idPrefix={id} />
+          <p className="text-sm font-semibold text-ink-900">¿Cuándo?</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2" role="group" aria-label="Desde ahora">
+            <span className="text-sm text-ink-700">Desde ahora:</span>
+            {[1, 2, 3, 4].map((h) => (
+              <button
+                key={h}
+                type="button"
+                onClick={() => pickNow(h)}
+                aria-pressed={quick === h}
+                aria-label={`Desde ahora, ${h} ${h === 1 ? "hora" : "horas"}`}
+                className={`h-9 min-w-12 rounded-full border px-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-brand-500 ${
+                  quick === h ? "border-brand-600 bg-brand-600 text-white" : "border-ink-300 bg-white text-ink-900 hover:bg-ink-50"
+                }`}
+              >
+                {h} h
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-ink-500">O elegí otro día y horario:</p>
+          <div className="mt-1">
+            <RangeFields
+              value={value}
+              onChange={(v) => {
+                setQuick(null);
+                setValue(v);
+              }}
+              idPrefix={id}
+            />
+          </div>
         </div>
 
         {auth.status === "signed-in" && driver.state === "ready" && driver.missing.length > 0 && (
