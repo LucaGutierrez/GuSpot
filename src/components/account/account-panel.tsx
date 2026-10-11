@@ -1,25 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, Container, PageHeader } from "@/components/ui/card";
-import { ParkingIcon, ShieldIcon } from "@/components/ui/icons";
+import { CarIcon, ChevronLeftIcon, ChevronRightIcon, KeyIcon, ParkingIcon, ShieldIcon, TicketIcon } from "@/components/ui/icons";
 import { useAuth, type AuthUser } from "@/lib/auth/auth-provider";
-import {
-  PASSWORD_MIN_LENGTH,
-  signOut,
-  updateDisplayName,
-  updatePassword,
-  type AuthResult,
-} from "@/lib/auth/actions";
+import { PASSWORD_MIN_LENGTH, signOut, updatePassword, type AuthResult } from "@/lib/auth/actions";
+import type { Profile, Requirement } from "@/lib/data/types";
+import { getMyProfile, myMissingRequirements } from "@/lib/data/profile";
+import { RequireSignIn } from "@/components/my-garages/shared";
 import { AccountsDisabled, Field, FormMessage, Loading, ShowPassword } from "./form-parts";
+
+// ---------------------------------------------------------------- /cuenta/
 
 export function AccountPanel() {
   const auth = useAuth();
 
   return (
-    <Container className="max-w-3xl pb-12">
+    <Container className="max-w-2xl pb-12">
       <PageHeader title="Tu cuenta" />
       {auth.status === "disabled" ? (
         <Card className="p-5">
@@ -29,7 +29,7 @@ export function AccountPanel() {
         <Loading />
       ) : auth.status === "signed-out" ? (
         <Card className="space-y-4 p-5">
-          <p className="text-ink-700">Ingresá o creá una cuenta para publicar tu cochera.</p>
+          <p className="text-ink-700">Ingresá o creá una cuenta para reservar o publicar tu cochera.</p>
           <div className="flex flex-wrap gap-2">
             <ButtonLink href="/ingresar/">Ingresar</ButtonLink>
             <ButtonLink href="/crear-cuenta/" variant="secondary">
@@ -44,9 +44,63 @@ export function AccountPanel() {
   );
 }
 
+const STATUS: Record<Profile["identityStatus"], { text: string; tone: string }> = {
+  verificada: { text: "Identidad verificada", tone: "bg-emerald-50 text-emerald-800" },
+  en_revision: { text: "Verificación en revisión", tone: "bg-accent-100 text-ink-900" },
+  rechazada: { text: "Verificación rechazada", tone: "bg-red-50 text-red-800" },
+  sin_verificar: { text: "Identidad sin verificar", tone: "bg-ink-100 text-ink-700" },
+};
+
+function MenuItem({
+  href,
+  icon,
+  title,
+  detail,
+  badge,
+}: {
+  href: string;
+  icon: ReactNode;
+  title: string;
+  detail?: string;
+  badge?: ReactNode;
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className="flex items-center gap-3 px-4 py-3.5 hover:bg-ink-50 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500"
+      >
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">{icon}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium text-ink-900">{title}</span>
+          {detail && <span className="block truncate text-sm text-ink-500">{detail}</span>}
+        </span>
+        {badge}
+        <ChevronRightIcon width={18} height={18} className="shrink-0 text-ink-400" />
+      </Link>
+    </li>
+  );
+}
+
 function SignedIn({ user }: { user: AuthUser }) {
   const router = useRouter();
   const [leaving, setLeaving] = useState(false);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [missing, setMissing] = useState<Requirement[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([getMyProfile(), myMissingRequirements("conductor")])
+      .then(([p, m]) => {
+        if (cancelled) return;
+        setProfile(p);
+        setMissing(m);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onSignOut() {
     setLeaving(true);
@@ -54,94 +108,110 @@ function SignedIn({ user }: { user: AuthUser }) {
     router.replace("/");
   }
 
+  const fullName = profile && (profile.firstName || profile.lastName)
+    ? `${profile.firstName} ${profile.lastName}`.trim()
+    : user.displayName;
+  const status = profile ? STATUS[profile.identityStatus] : null;
+  const vehiclesMissing = missing?.includes("vehiculo");
+
   return (
-    <div className="space-y-4">
-      <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
-            <ParkingIcon />
-          </span>
-          <div>
-            <p className="font-semibold text-ink-900">Mis garages</p>
-            <p className="text-sm text-ink-500">Publicá y administrá tus cocheras.</p>
-          </div>
+    <div className="flex flex-col gap-5">
+      <Card className="flex items-center gap-4 p-5">
+        <span
+          aria-hidden="true"
+          className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand-100 text-xl font-bold text-brand-700"
+        >
+          {fullName.charAt(0).toUpperCase()}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-lg font-semibold text-ink-900">{fullName}</p>
+          <p className="truncate text-sm text-ink-500">{user.email}</p>
+          {status && (
+            <span className={`mt-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.tone}`}>
+              {status.text}
+            </span>
+          )}
         </div>
-        <ButtonLink href="/mis-garages/">Ir a mis garages</ButtonLink>
       </Card>
 
-      <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700">
-            <ShieldIcon />
-          </span>
-          <div>
-            <p className="font-semibold text-ink-900">Verificación de identidad</p>
-            <p className="text-sm text-ink-500">DNI, selfie, licencia y vehículos. Necesaria para reservar y publicar.</p>
-          </div>
-        </div>
-        <ButtonLink href="/verificacion/" variant="secondary">
-          Verificarme
-        </ButtonLink>
-      </Card>
+      <section aria-label="Perfil">
+        <h2 className="mb-2 px-1 text-xs font-semibold tracking-wide text-ink-500 uppercase">Perfil</h2>
+        <Card className="overflow-hidden">
+          <ul className="divide-y divide-ink-100">
+            <MenuItem
+              href="/verificacion/"
+              icon={<ShieldIcon />}
+              title="Datos personales y verificación"
+              detail="Nombre, DNI, celular, verificación de identidad y licencia"
+            />
+            <MenuItem
+              href="/cuenta/vehiculos/"
+              icon={<CarIcon />}
+              title="Mis vehículos"
+              detail="Los autos con los que reservás"
+              badge={
+                vehiclesMissing ? (
+                  <span className="rounded-full bg-ink-100 px-2 py-0.5 text-xs font-semibold text-ink-700">Falta</span>
+                ) : undefined
+              }
+            />
+          </ul>
+        </Card>
+      </section>
 
-      <NameForm user={user} />
-      <PasswordForm />
+      <section aria-label="Actividad">
+        <h2 className="mb-2 px-1 text-xs font-semibold tracking-wide text-ink-500 uppercase">Actividad</h2>
+        <Card className="overflow-hidden">
+          <ul className="divide-y divide-ink-100">
+            <MenuItem href="/mis-reservas/" icon={<TicketIcon />} title="Mis reservas" detail="Tus reservas como conductor" />
+            <MenuItem href="/mis-garages/" icon={<ParkingIcon />} title="Mis garages" detail="Publicá y administrá tus cocheras" />
+          </ul>
+        </Card>
+      </section>
 
-      <Card className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-ink-500">
-          Sesión iniciada como <strong className="text-ink-900">{user.email}</strong>
-        </p>
-        <Button variant="secondary" onClick={onSignOut} disabled={leaving}>
-          {leaving ? "Cerrando sesión…" : "Cerrar sesión"}
-        </Button>
-      </Card>
+      <section aria-label="Seguridad">
+        <h2 className="mb-2 px-1 text-xs font-semibold tracking-wide text-ink-500 uppercase">Seguridad</h2>
+        <Card className="overflow-hidden">
+          <ul className="divide-y divide-ink-100">
+            <MenuItem href="/cuenta/contrasena/" icon={<KeyIcon />} title="Contraseña" detail="Cambiá tu contraseña" />
+          </ul>
+        </Card>
+      </section>
+
+      <Button variant="secondary" size="lg" onClick={onSignOut} disabled={leaving} className="w-full">
+        {leaving ? "Cerrando sesión…" : "Cerrar sesión"}
+      </Button>
     </div>
   );
 }
 
-function NameForm({ user }: { user: AuthUser }) {
-  const [name, setName] = useState(user.displayName);
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<AuthResult | null>(null);
+// ---------------------------------------------------------------- subpáginas
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) {
-      setResult({ ok: false, message: "El nombre no puede quedar vacío." });
-      return;
-    }
-    setBusy(true);
-    setResult(await updateDisplayName(name));
-    setBusy(false);
-  }
-
+function BackToAccount() {
   return (
-    <Card className="p-5">
-      <form onSubmit={onSubmit} noValidate className="space-y-4">
-        <h2 className="text-lg font-semibold text-ink-900">Tus datos</h2>
-        <Field
-          id="cuenta-nombre"
-          label="Nombre"
-          autoComplete="name"
-          value={name}
-          maxLength={60}
-          onChange={(e) => {
-            setName(e.target.value);
-            setResult(null);
-          }}
-          hint="Es el nombre que van a ver los demás usuarios."
-        />
-        <FormMessage result={result} />
-        <Button type="submit" disabled={busy || name.trim() === user.displayName}>
-          {busy ? "Guardando…" : "Guardar"}
-        </Button>
-      </form>
-    </Card>
+    <Link
+      href="/cuenta/"
+      className="inline-flex items-center gap-1 pt-4 text-sm font-medium text-brand-700 hover:underline"
+    >
+      <ChevronLeftIcon width={16} height={16} /> Tu cuenta
+    </Link>
+  );
+}
+
+/** /cuenta/contrasena/ */
+export function PasswordPage() {
+  return (
+    <Container className="max-w-2xl pb-12">
+      <BackToAccount />
+      <PageHeader title="Contraseña" subtitle="Elegí una contraseña nueva para entrar a GuSpot." />
+      <RequireSignIn back="/cuenta/contrasena/">{() => <PasswordForm />}</RequireSignIn>
+    </Container>
   );
 }
 
 function PasswordForm() {
   const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<AuthResult | null>(null);
@@ -152,17 +222,23 @@ function PasswordForm() {
       setResult({ ok: false, message: `La contraseña tiene que tener al menos ${PASSWORD_MIN_LENGTH} caracteres.` });
       return;
     }
+    if (password !== password2) {
+      setResult({ ok: false, message: "Las contraseñas no coinciden." });
+      return;
+    }
     setBusy(true);
     const r = await updatePassword(password);
     setBusy(false);
     setResult(r);
-    if (r.ok) setPassword("");
+    if (r.ok) {
+      setPassword("");
+      setPassword2("");
+    }
   }
 
   return (
     <Card className="p-5">
       <form onSubmit={onSubmit} noValidate className="space-y-4">
-        <h2 className="text-lg font-semibold text-ink-900">Cambiar contraseña</h2>
         <Field
           id="cuenta-clave"
           label="Contraseña nueva"
@@ -175,6 +251,17 @@ function PasswordForm() {
           }}
           hint={`Al menos ${PASSWORD_MIN_LENGTH} caracteres.`}
         />
+        <Field
+          id="cuenta-clave2"
+          label="Repetí la contraseña nueva"
+          type={show ? "text" : "password"}
+          autoComplete="new-password"
+          value={password2}
+          onChange={(e) => {
+            setPassword2(e.target.value);
+            setResult(null);
+          }}
+        />
         <ShowPassword checked={show} onChange={setShow} />
         <FormMessage result={result} />
         <Button type="submit" disabled={busy || !password}>
@@ -184,3 +271,5 @@ function PasswordForm() {
     </Card>
   );
 }
+
+export { BackToAccount };

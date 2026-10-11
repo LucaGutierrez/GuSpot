@@ -140,7 +140,7 @@ export function RealBookingPanel({ space }: { space: Space }) {
             ) : (
               <p className="mt-1 text-sm text-ink-700">
                 Ninguno de tus vehículos entra en este garage.{" "}
-                <a href="/verificacion/#vehiculos" className="font-semibold text-brand-700 hover:underline">
+                <a href="/cuenta/vehiculos/" className="font-semibold text-brand-700 hover:underline">
                   Agregá otro
                 </a>
                 .

@@ -30,6 +30,7 @@ import { Field, inputClass } from "@/components/owner/form-fields";
 import { VEHICLE_ORDER } from "@/components/driver/vehicles";
 import { ErrorBox, RequireSignIn, SuccessBox } from "@/components/my-garages/shared";
 import { safeNext } from "./form-parts";
+import { BackToAccount } from "./account-panel";
 
 const errText = (err: unknown) => (err instanceof DataError ? err.message : "Algo salió mal. Probá de nuevo.");
 
@@ -70,9 +71,10 @@ export function VerificationPage() {
   // Didit vuelve a /verificacion/?didit=1&verificationSessionId=…&status=…
   const returning = params.get("didit") === "1";
   return (
-    <Container className="max-w-3xl pb-16">
+    <Container className="max-w-2xl pb-16">
+      <BackToAccount />
       <PageHeader
-        title="Verificación de identidad"
+        title="Datos personales y verificación"
         subtitle="Para reservar o publicar necesitamos saber quién sos. Tus documentos son privados."
       />
       <RequireSignIn back="/verificacion/">{() => <Verification back={back} returning={returning} />}</RequireSignIn>
@@ -83,7 +85,6 @@ export function VerificationPage() {
 function Verification({ back, returning }: { back: string | null; returning: boolean }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [docs, setDocs] = useState<Set<IdentityDoc>>(new Set());
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [missing, setMissing] = useState<{ conductor: Requirement[]; propietario: Requirement[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
@@ -98,12 +99,11 @@ function Verification({ back, returning }: { back: string | null; returning: boo
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([getMyProfile(), myUploadedDocs(), listMyVehicles(), myMissingRequirements("conductor"), myMissingRequirements("propietario")])
-      .then(([p, d, v, conductor, propietario]) => {
+    Promise.all([getMyProfile(), myUploadedDocs(), myMissingRequirements("conductor"), myMissingRequirements("propietario")])
+      .then(([p, d, conductor, propietario]) => {
         if (cancelled) return;
         setProfile(p);
         setDocs(d);
-        setVehicles(v);
         setMissing({ conductor, propietario });
         if (d.size > 0) setConsent(true);
       })
@@ -154,13 +154,6 @@ function Verification({ back, returning }: { back: string | null; returning: boo
         onDocUploaded={onDocUploaded}
       />
 
-      <VehiclesSection
-        vehicles={vehicles}
-        onChange={(v) => {
-          setVehicles(v);
-          refreshMissing().catch(() => {});
-        }}
-      />
     </div>
   );
 }
@@ -183,7 +176,15 @@ function StatusCard({
       {list.length > 0 && (
         <ul className="list-disc pl-9 text-sm text-ink-700">
           {list.map((m) => (
-            <li key={m}>{REQUIREMENT_LABEL[m]}</li>
+            <li key={m}>
+              {m === "vehiculo" ? (
+                <Link href="/cuenta/vehiculos/" className="font-semibold text-brand-700 hover:underline">
+                  {REQUIREMENT_LABEL[m]}
+                </Link>
+              ) : (
+                REQUIREMENT_LABEL[m]
+              )}
+            </li>
           ))}
         </ul>
       )}
@@ -529,6 +530,34 @@ function LicenseSection({
   );
 }
 
+/** /cuenta/vehiculos/ */
+export function VehiclesPage() {
+  return (
+    <Container className="max-w-2xl pb-16">
+      <BackToAccount />
+      <PageHeader title="Mis vehículos" subtitle="Reservás con uno de tus vehículos. El dueño del garage ve marca, modelo, color y patente." />
+      <RequireSignIn back="/cuenta/vehiculos/">{() => <VehiclesLoader />}</RequireSignIn>
+    </Container>
+  );
+}
+
+function VehiclesLoader() {
+  const [vehicles, setVehicles] = useState<Vehicle[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    listMyVehicles()
+      .then((v) => !cancelled && setVehicles(v))
+      .catch((err) => !cancelled && setError(errText(err)));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  if (error) return <ErrorBox>{error}</ErrorBox>;
+  if (!vehicles) return <p className="text-sm text-ink-500">Cargando…</p>;
+  return <VehiclesSection vehicles={vehicles} onChange={setVehicles} />;
+}
+
 function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange: (v: Vehicle[]) => void }) {
   const empty = { brand: "", model: "", color: "", plate: "", size: "auto_mediano" as VehicleSize };
   const [form, setForm] = useState(empty);
@@ -573,7 +602,7 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
   }
 
   return (
-    <Section id="vehiculos" title="Tus vehículos" subtitle="El dueño del garage ve marca, modelo, color y patente del auto con el que reservás." done={vehicles.length > 0}>
+    <Section id="vehiculos" title="Tus vehículos" done={vehicles.length > 0}>
       {vehicles.length > 0 && (
         <ul className="flex flex-col gap-2">
           {vehicles.map((v) => (
@@ -627,9 +656,6 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
           {busy ? "Agregando…" : "Agregar vehículo"}
         </Button>
       </form>
-      <p className="text-xs text-ink-500">
-        ¿Volver al <Link href="/" className="font-semibold text-brand-700 hover:underline">mapa</Link>?
-      </p>
     </Section>
   );
 }

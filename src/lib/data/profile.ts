@@ -101,6 +101,9 @@ export async function saveMyProfile(p: Omit<Profile, "identityStatus" | "phoneVe
     ? await supabase.from("profiles").update(row).eq("id", me)
     : await supabase.from("profiles").insert({ id: me, ...row });
   if (error) throw toDataError(error);
+  // El nombre visible en todo el sitio es el del perfil.
+  const displayName = `${row.first_name} ${row.last_name}`.trim();
+  if (displayName) await supabase.auth.updateUser({ data: { display_name: displayName } });
 }
 
 /** Celular argentino a formato internacional: "11 2345-6789" / "011 15 2345 6789" → "+541123456789". */
