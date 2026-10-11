@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Worker de MapLibre copiado por scripts/copy-map-worker.mjs
     "public/vendor/**",
+    // Funciones del servidor (Deno), se revisan con `deno check`.
+    "supabase/functions/**",
   ]),
 ]);
 

@@ -89,7 +89,7 @@ function toDataError(error: Pick<PostgrestError, "code" | "message"> | { message
     );
   if (message.includes("owner_identity_required"))
     return new DataError(
-      "Para publicar, primero verificá tu identidad (datos personales, fotos del DNI y selfie) en Tu cuenta → Verificación.",
+      "Para publicar, primero verificá tu identidad (datos personales + DNI y reconocimiento facial) en Tu cuenta → Verificación.",
       "validation",
     );
   if (message.includes("photo_limit"))

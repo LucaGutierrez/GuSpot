@@ -174,4 +174,11 @@ export interface Vehicle {
 }
 
 /** Lo que falta para reservar ("conductor") o publicar ("propietario"). */
-export type Requirement = "datos_personales" | "dni_fotos" | "selfie" | "licencia" | "licencia_vencida" | "vehiculo";
+export type Requirement =
+  | "datos_personales"
+  | "identidad"
+  | "dni_fotos"
+  | "selfie"
+  | "licencia"
+  | "licencia_vencida"
+  | "vehiculo";

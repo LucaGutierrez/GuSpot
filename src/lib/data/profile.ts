@@ -187,6 +187,40 @@ export async function deleteVehicle(id: string): Promise<void> {
   if (error) throw toDataError(error);
 }
 
+// --- Verificación con Didit (función del servidor supabase/functions/didit) ---
+
+async function callDidit(body: Record<string, unknown>): Promise<Record<string, string>> {
+  const supabase = db();
+  await requireUserId(supabase);
+  const { data, error } = await supabase.functions.invoke("didit", { body });
+  if (error) {
+    let code = "";
+    try {
+      code = ((await (error as { context?: Response }).context?.json()) as { error?: string })?.error ?? "";
+    } catch {
+      // sin cuerpo
+    }
+    if (code === "datos_personales") throw new DataError("Primero guardá tus datos personales.", "validation");
+    if (code === "not_configured")
+      throw new DataError("La verificación todavía no está configurada. Probá más tarde.", "not_configured");
+    throw new DataError("No pudimos conectar con el servicio de verificación. Probá de nuevo.", "network");
+  }
+  return data as Record<string, string>;
+}
+
+/** Crea la sesión de verificación y devuelve la URL de Didit (abrirla en esta pestaña). */
+export async function startIdentityCheck(callback: string): Promise<string> {
+  const data = await callDidit({ action: "start", callback });
+  if (!data.url) throw new DataError("No pudimos iniciar la verificación. Probá de nuevo.");
+  return data.url;
+}
+
+/** Consulta el resultado en Didit y devuelve el estado actualizado. */
+export async function syncIdentityCheck(): Promise<{ status: Profile["identityStatus"]; reason: string }> {
+  const data = await callDidit({ action: "sync" });
+  return { status: (data.status as Profile["identityStatus"]) ?? "sin_verificar", reason: data.reason ?? "" };
+}
+
 // --- Requisitos -------------------------------------------------------------
 
 export async function myMissingRequirements(role: "conductor" | "propietario"): Promise<Requirement[]> {
@@ -199,6 +233,7 @@ export async function myMissingRequirements(role: "conductor" | "propietario"): 
 
 export const REQUIREMENT_LABEL: Record<Requirement, string> = {
   datos_personales: "Datos personales (nombre, DNI, fecha de nacimiento —18 años o más— y celular)",
+  identidad: "Verificar tu identidad (DNI + reconocimiento facial)",
   dni_fotos: "Fotos del DNI (frente y dorso)",
   selfie: "Selfie para verificar que sos vos",
   licencia: "Licencia de conducir (datos y fotos de frente y dorso)",

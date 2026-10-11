@@ -18,6 +18,8 @@ import {
   myUploadedDocs,
   normalizePlate,
   saveMyProfile,
+  startIdentityCheck,
+  syncIdentityCheck,
   uploadIdentityDoc,
 } from "@/lib/data/profile";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -64,18 +66,20 @@ function Section({ id, title, subtitle, done, children }: { id?: string; title: 
 export function VerificationPage() {
   const params = useSearchParams();
   const back = params.get("volver") ? safeNext(params.get("volver"), "/") : null;
+  // Didit vuelve a /verificacion/?didit=1&verificationSessionId=…&status=…
+  const returning = params.get("didit") === "1";
   return (
     <Container className="max-w-3xl pb-16">
       <PageHeader
         title="Verificación de identidad"
         subtitle="Como en DiDi o Uber: para reservar o publicar necesitamos saber quién sos. Tus documentos son privados."
       />
-      <RequireSignIn back="/verificacion/">{() => <Verification back={back} />}</RequireSignIn>
+      <RequireSignIn back="/verificacion/">{() => <Verification back={back} returning={returning} />}</RequireSignIn>
     </Container>
   );
 }
 
-function Verification({ back }: { back: string | null }) {
+function Verification({ back, returning }: { back: string | null; returning: boolean }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [docs, setDocs] = useState<Set<IdentityDoc>>(new Set());
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -115,7 +119,6 @@ function Verification({ back }: { back: string | null }) {
     setDocs((d) => new Set(d).add(doc));
     refreshMissing().catch(() => {});
   };
-  const has = (d: IdentityDoc) => docs.has(d);
 
   return (
     <div className="flex flex-col gap-5">
@@ -129,33 +132,19 @@ function Verification({ back }: { back: string | null }) {
         }}
       />
 
-      <Section
-        title="Tu DNI"
-        subtitle="Sacale una foto al frente y otra al dorso, completas y sin reflejos."
-        done={has("dni-frente") && has("dni-dorso")}
-      >
-        <Consent checked={consent} onChange={setConsent} />
-        <div className="grid gap-3 sm:grid-cols-2">
-          <PhotoSlot doc="dni-frente" label="Frente del DNI" uploaded={has("dni-frente")} disabled={!consent} capture="environment" onUploaded={onDocUploaded} />
-          <PhotoSlot doc="dni-dorso" label="Dorso del DNI" uploaded={has("dni-dorso")} disabled={!consent} capture="environment" onUploaded={onDocUploaded} />
-        </div>
-      </Section>
-
-      <Section
-        title="Tu cara"
-        subtitle="Una selfie de frente, con buena luz, sin anteojos ni gorra. Se compara con la foto de tu DNI."
-        done={has("selfie")}
-      >
-        <PhotoSlot doc="selfie" label="Selfie" uploaded={has("selfie")} disabled={!consent} capture="user" onUploaded={onDocUploaded} />
-        <p className="text-xs text-ink-500">
-          Próximamente la verificación será automática, con prueba de vida (te vamos a pedir mover la cara frente a la
-          cámara), como en las apps de movilidad.
-        </p>
-      </Section>
+      <IdentitySection
+        profile={profile}
+        returning={returning}
+        onStatus={(identityStatus) => {
+          setProfile((p) => (p ? { ...p, identityStatus } : p));
+          refreshMissing().catch(() => {});
+        }}
+      />
 
       <LicenseSection
         profile={profile}
         consent={consent}
+        onConsent={setConsent}
         docs={docs}
         onSaved={(p) => {
           setProfile(p);
@@ -215,6 +204,92 @@ function StatusCard({
   );
 }
 
+function IdentitySection({
+  profile,
+  returning,
+  onStatus,
+}: {
+  profile: Profile;
+  returning: boolean;
+  onStatus: (s: Profile["identityStatus"]) => void;
+}) {
+  const [busy, setBusy] = useState<"start" | "sync" | null>(returning ? "sync" : null);
+  const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const status = profile.identityStatus;
+  const hasPersonal = !!(profile.firstName && profile.lastName && profile.dni && profile.birthDate);
+
+  useEffect(() => {
+    // Al volver de Didit (o si quedó en revisión), consultar el resultado.
+    if (!returning && status !== "en_revision") return;
+    let cancelled = false;
+    syncIdentityCheck()
+      .then((r) => {
+        if (cancelled) return;
+        onStatus(r.status);
+        if (r.reason === "dni_distinto")
+          setNote("El DNI escaneado no coincide con el número que cargaste en tus datos. Revisalo y volvé a verificar.");
+      })
+      .catch((err) => !cancelled && setError(errText(err)))
+      .finally(() => !cancelled && setBusy(null));
+    return () => {
+      cancelled = true;
+    };
+    // Solo al entrar a la pantalla.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function onStart() {
+    setBusy("start");
+    setError(null);
+    try {
+      const url = await startIdentityCheck(`${window.location.origin}/verificacion/?didit=1`);
+      window.location.assign(url);
+    } catch (err) {
+      setError(errText(err));
+      setBusy(null);
+    }
+  }
+
+  const text: Record<Profile["identityStatus"], string> = {
+    sin_verificar: "Todavía no verificaste tu identidad.",
+    en_revision: "Tu verificación está en revisión. Te avisamos cuando termine (puede tardar unas horas).",
+    verificada: "Tu identidad está verificada.",
+    rechazada: "No pudimos verificar tu identidad. Revisá tus datos y volvé a intentarlo.",
+  };
+
+  return (
+    <Section
+      title="Verificá tu identidad"
+      subtitle="Como en DiDi o Uber: sacás fotos de tu DNI y hacés un reconocimiento facial con la cámara para confirmar que sos vos. Lo hace Didit, un servicio especializado."
+      done={status === "verificada"}
+    >
+      <p className={`text-sm ${status === "verificada" ? "text-emerald-800" : status === "rechazada" ? "text-red-800" : "text-ink-700"}`}>
+        {busy === "sync" ? "Consultando el resultado…" : text[status]}
+      </p>
+      {note && <ErrorBox>{note}</ErrorBox>}
+      {status !== "verificada" && status !== "en_revision" && (
+        <>
+          <ul className="list-disc pl-5 text-sm text-ink-700">
+            <li>Tené a mano tu DNI físico (frente y dorso).</li>
+            <li>Buscá buena luz y sacate anteojos y gorra.</li>
+            <li>Te va a pedir mover la cara frente a la cámara (prueba de vida).</li>
+          </ul>
+          {!hasPersonal && <p className="text-sm text-ink-500">Primero guardá tus datos personales.</p>}
+          <Button size="lg" className="w-full sm:w-fit" onClick={onStart} disabled={!hasPersonal || busy !== null}>
+            {busy === "start" ? "Abriendo…" : status === "rechazada" ? "Volver a verificar" : "Verificar mi identidad"}
+          </Button>
+          <p className="text-xs text-ink-500">
+            Al continuar aceptás que Didit procese las fotos de tu DNI y de tu cara solo para verificar tu identidad. No se
+            muestran a otros usuarios. La política de privacidad de GuSpot está a definir.
+          </p>
+        </>
+      )}
+      {error && <ErrorBox>{error}</ErrorBox>}
+    </Section>
+  );
+}
+
 function Consent({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="flex items-start gap-2 rounded-xl bg-ink-50 p-3 text-sm text-ink-700">
@@ -225,7 +300,7 @@ function Consent({ checked, onChange }: { checked: boolean; onChange: (v: boolea
         className="mt-0.5 h-4 w-4 shrink-0 rounded border-ink-300 accent-brand-600"
       />
       <span>
-        Acepto que GuSpot guarde mis datos y las fotos de mis documentos y de mi cara solo para verificar mi identidad. No
+        Acepto que GuSpot guarde las fotos de mi licencia solo para verificar que puedo manejar. No
         se muestran a otros usuarios. La política de privacidad está a definir.
       </span>
     </label>
@@ -374,12 +449,14 @@ function PersonalForm({ profile, onSaved }: { profile: Profile; onSaved: (p: Pro
 function LicenseSection({
   profile,
   consent,
+  onConsent,
   docs,
   onSaved,
   onDocUploaded,
 }: {
   profile: Profile;
   consent: boolean;
+  onConsent: (v: boolean) => void;
   docs: Set<IdentityDoc>;
   onSaved: (p: Profile) => void;
   onDocUploaded: (doc: IdentityDoc) => void;
@@ -442,6 +519,7 @@ function LicenseSection({
           {busy ? "Guardando…" : "Guardar licencia"}
         </Button>
       </form>
+      <Consent checked={consent} onChange={onConsent} />
       <div className="grid gap-3 sm:grid-cols-2">
         <PhotoSlot doc="licencia-frente" label="Frente de la licencia" uploaded={docs.has("licencia-frente")} disabled={!consent} capture="environment" onUploaded={onDocUploaded} />
         <PhotoSlot doc="licencia-dorso" label="Dorso de la licencia" uploaded={docs.has("licencia-dorso")} disabled={!consent} capture="environment" onUploaded={onDocUploaded} />
