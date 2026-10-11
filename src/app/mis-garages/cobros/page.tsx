@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { PaymentsPage } from "@/components/my-garages/payments-account";
+import { PaymentsReturnRedirect } from "@/components/account/payments-account";
 
-export const metadata: Metadata = { title: "Cobros" };
+// Vuelta de Mercado Pago al conectar la cuenta (URL registrada en la app de Mercado Pago).
+export const metadata: Metadata = { title: "Cobros con Mercado Pago" };
 
-export default function CobrosPage() {
+export default function CobrosReturnPage() {
   return (
     <Suspense fallback={<p className="px-4 pt-6 text-sm text-ink-500">Cargando…</p>}>
-      <PaymentsPage />
+      <PaymentsReturnRedirect />
     </Suspense>
   );
 }

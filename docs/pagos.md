@@ -31,7 +31,7 @@ Con `MP_TEST_MODE=true` no se manda el email del comprador. Lo que hace que la p
 Mercado Pago no permite mezclar cuentas reales y de prueba. Para probar se usan **cuentas de prueba** (panel de la app → *Cuentas de prueba*): una "vendedor" para el garage y una "comprador" para el conductor.
 
 0. Cerrar TODAS las ventanas de incógnito entre el paso del vendedor y el del comprador (comparten la sesión de Mercado Pago).
-1. Con la cuenta de GuSpot del garage: *Mis garages → Cobro de reservas → Conectar Mercado Pago*, e ingresar con el usuario de prueba **vendedor**.
+1. Con la cuenta de GuSpot del garage: *Tu cuenta → Cobros con Mercado Pago → Conectar Mercado Pago*, e ingresar con el usuario de prueba **vendedor**.
 2. Con otra cuenta de GuSpot (conductor verificado): reservar ese garage → *Reservar y pagar* → pagar en Mercado Pago con el usuario de prueba **comprador** y una tarjeta de prueba (titular `APRO` = aprobado, `OTHE` = rechazado).
 3. Al volver, la reserva tiene que quedar **Confirmada · Pago aprobado** y mostrar la dirección.
 4. Cancelar dentro de los 10 minutos → devolución total.

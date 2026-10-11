@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, Container, PageHeader } from "@/components/ui/card";
-import { CarIcon, ChevronLeftIcon, ChevronRightIcon, KeyIcon, ParkingIcon, ShieldIcon, TicketIcon } from "@/components/ui/icons";
+import { CarIcon, ChevronLeftIcon, ChevronRightIcon, KeyIcon, ParkingIcon, ShieldIcon, TicketIcon, WalletIcon } from "@/components/ui/icons";
 import { useAuth, type AuthUser } from "@/lib/auth/auth-provider";
 import { PASSWORD_MIN_LENGTH, signOut, updatePassword, type AuthResult } from "@/lib/auth/actions";
 import type { Profile, Requirement } from "@/lib/data/types";
@@ -165,6 +165,20 @@ function SignedIn({ user }: { user: AuthUser }) {
           <ul className="divide-y divide-ink-100">
             <MenuItem href="/mis-reservas/" icon={<TicketIcon />} title="Mis reservas" detail="Tus reservas como conductor" />
             <MenuItem href="/mis-garages/" icon={<ParkingIcon />} title="Mis garages" detail="Publicá y administrá tus cocheras" />
+          </ul>
+        </Card>
+      </section>
+
+      <section aria-label="Pagos">
+        <h2 className="mb-2 px-1 text-xs font-semibold tracking-wide text-ink-500 uppercase">Pagos</h2>
+        <Card className="overflow-hidden">
+          <ul className="divide-y divide-ink-100">
+            <MenuItem
+              href="/cuenta/cobros/"
+              icon={<WalletIcon />}
+              title="Cobros con Mercado Pago"
+              detail="Conectá tu cuenta para cobrar las reservas de tus garages"
+            />
           </ul>
         </Card>
       </section>

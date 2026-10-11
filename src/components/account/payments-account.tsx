@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
   disconnectPayments,
@@ -11,9 +11,10 @@ import {
   startConnect,
   type PaymentAccount,
 } from "@/lib/data/payments";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, Container, PageHeader } from "@/components/ui/card";
-import { ErrorBox, RequireSignIn, SuccessBox, errorMessage } from "./shared";
+import { BackToAccount } from "@/components/account/account-panel";
+import { ErrorBox, RequireSignIn, SuccessBox, errorMessage } from "@/components/my-garages/shared";
 
 type Load<T> = { state: "loading" } | { state: "error"; message: string } | { state: "ready"; data: T };
 
@@ -147,7 +148,7 @@ export function PaymentsCard({ compact = false }: { compact?: boolean }) {
         </div>
       )}
       {compact && (
-        <Link href="/mis-garages/cobros/" className="text-sm font-semibold text-brand-700 hover:underline">
+        <Link href="/cuenta/cobros/" className="text-sm font-semibold text-brand-700 hover:underline">
           Ver cómo funcionan los cobros
         </Link>
       )}
@@ -155,9 +156,9 @@ export function PaymentsCard({ compact = false }: { compact?: boolean }) {
   );
 }
 
-// ---------------------------------------------------------------- /mis-garages/cobros/
+// ---------------------------------------------------------------- /cuenta/cobros/
 
-/** Página de cobros; también recibe la vuelta de Mercado Pago (?code=&state=). Montar dentro de <Suspense>. */
+/** Página de cobros (Tu cuenta); también recibe la vuelta de Mercado Pago (?code=&state=). Montar dentro de <Suspense>. */
 export function PaymentsPage() {
   const params = useSearchParams();
   const code = params.get("code");
@@ -165,8 +166,9 @@ export function PaymentsPage() {
   const denied = params.has("error");
   return (
     <Container className="max-w-2xl pb-12">
-      <PageHeader title="Cobros" subtitle="Cómo te pagan las reservas de tus garages." />
-      <RequireSignIn back="/mis-garages/cobros/">
+      <BackToAccount />
+      <PageHeader title="Cobros con Mercado Pago" subtitle="Cómo te pagan las reservas de tus garages." />
+      <RequireSignIn back="/cuenta/cobros/">
         {() => (code ? <FinishConnect code={code} state={state} /> : <Overview denied={denied} />)}
       </RequireSignIn>
     </Container>
@@ -178,9 +180,6 @@ function Overview({ denied }: { denied: boolean }) {
     <div className="flex flex-col gap-4">
       {denied && <ErrorBox>No se conectó la cuenta de Mercado Pago. Podés intentarlo de nuevo cuando quieras.</ErrorBox>}
       <PaymentsCard />
-      <ButtonLink href="/mis-garages/" variant="secondary" className="w-fit">
-        Volver a mis garages
-      </ButtonLink>
     </div>
   );
 }
@@ -196,7 +195,7 @@ function FinishConnect({ code, state }: { code: string; state: string }) {
     finishConnect(code, state)
       .then(() => setResult({ ok: true }))
       .catch((err) => setResult({ ok: false, message: errorMessage(err) }))
-      .finally(() => window.history.replaceState(null, "", "/mis-garages/cobros/"));
+      .finally(() => window.history.replaceState(null, "", "/cuenta/cobros/"));
   }, [code, state]);
 
   if (!result) return <p className="text-sm text-ink-500">Conectando tu cuenta de Mercado Pago…</p>;
@@ -208,9 +207,22 @@ function FinishConnect({ code, state }: { code: string; state: string }) {
         <ErrorBox>{result.message}</ErrorBox>
       )}
       <PaymentsCard />
-      <ButtonLink href="/mis-garages/" variant="secondary" className="w-fit">
-        Volver a mis garages
-      </ButtonLink>
     </div>
   );
+}
+
+// ---------------------------------------------------------------- /mis-garages/cobros/
+
+/**
+ * Dirección de vuelta registrada en la app de Mercado Pago (OAuth). Solo pasa
+ * el código a /cuenta/cobros/, donde está la pantalla de cobros.
+ */
+export function PaymentsReturnRedirect() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const query = params.toString();
+  useEffect(() => {
+    router.replace(`/cuenta/cobros/${query ? `?${query}` : ""}`);
+  }, [router, query]);
+  return <p className="px-4 pt-6 text-sm text-ink-500">Volviendo a GuSpot…</p>;
 }

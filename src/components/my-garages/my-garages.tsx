@@ -14,7 +14,6 @@ import { EmptyState } from "@/components/owner/section";
 import { PhotoPlaceholder } from "@/components/owner/space-cards";
 import { GarageEditor } from "./garage-editor";
 import { OwnerBookingsSection } from "@/components/bookings/booking-views";
-import { PaymentsCard } from "./payments-account";
 import { ErrorBox, RequireSignIn, StatusControl, errorMessage } from "./shared";
 
 type Load<T> = { state: "loading" } | { state: "error"; message: string } | { state: "ready"; data: T };
@@ -33,9 +32,6 @@ export function MyGaragesPage() {
         {() => (
           <>
             <GarageList />
-            <div className="mt-6">
-              <PaymentsCard compact />
-            </div>
             <OwnerBookingsSection />
           </>
         )}

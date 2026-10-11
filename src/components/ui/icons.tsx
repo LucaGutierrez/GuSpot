@@ -73,6 +73,9 @@ export const CameraIcon = (p: IconProps) => (
 export const ParkingIcon = (p: IconProps) => (
   <Icon {...p}><rect x="3" y="3" width="18" height="18" rx="4" /><path d="M9 17V7h4a3 3 0 0 1 0 6H9" /></Icon>
 );
+export const WalletIcon = (p: IconProps) => (
+  <Icon {...p}><path d="M4 7h15a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7Z" /><path d="M4 7V6a2 2 0 0 1 2-2h11v3" /><path d="M16 13.5h.01" /></Icon>
+);
 export const UserIcon = (p: IconProps) => (
   <Icon {...p}><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></Icon>
 );
