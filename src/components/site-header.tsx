@@ -39,10 +39,27 @@ function AccountButton() {
   );
 }
 
+/** Símbolo de GuSpot: la G dibujada como un garaje (ver public/brand/ y docs/marca.md). */
+export function LogoMark({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 512 512" aria-hidden="true" className={className}>
+      <rect width="512" height="512" rx="112" className="fill-brand-600" />
+      <path
+        d="M398 214 256 104 114 214v186h284v-96H284"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="46"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function Logo() {
   return (
     <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-ink-900">
-      <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-lg text-white">P</span>
+      <LogoMark className="h-8 w-8" />
       <span className="text-xl">
         Gu<span className="text-brand-600">Spot</span>
       </span>
