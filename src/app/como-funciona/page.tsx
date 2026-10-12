@@ -81,7 +81,7 @@ export default function ComoFuncionaPage() {
         <Container className="py-10 md:py-16">
           <div className="max-w-2xl">
             <p className="inline-flex items-center gap-2 text-sm font-semibold text-brand-700">
-              <ParkingIcon /> Estacionamiento en CABA
+              <ParkingIcon /> Estacionamiento en toda la Argentina
             </p>
             <h1 className="mt-3 text-3xl font-bold tracking-tight text-ink-900 md:text-4xl">
               Encontrá dónde estacionar, con lugar y precio a la vista

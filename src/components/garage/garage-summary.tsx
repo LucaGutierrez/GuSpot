@@ -11,6 +11,7 @@ import { SpacePhoto } from "@/components/ui/space-photo";
 import { useNow } from "@/components/driver/use-now";
 import { CloseIcon } from "@/components/explore/icons";
 import { LiveBadge, UpdatedNote } from "./live-badge";
+import { GoButton } from "./navigate-buttons";
 
 /** Enlace a la ficha con el aviso "Voy a este" abierto. */
 const voyHref = (href: string) => `${href}${href.includes("?") ? "&" : "?"}voy=1`;
@@ -71,8 +72,9 @@ export function CommercialCard({ result, href, distance }: { result: SearchResul
         </h3>
         <GarageFacts result={result} live={live} distance={distance} />
         <div className="flex flex-wrap gap-2">
+          <GoButton to={result.space.coords} size="md" className="px-6" />
           {live.accepting && (
-            <Link href={voyHref(href)} className={buttonClass("primary", "md")}>
+            <Link href={voyHref(href)} className={buttonClass("secondary", "md")}>
               Voy a este
             </Link>
           )}
@@ -131,13 +133,15 @@ export function CommercialSelectedCard({
       <div className="mt-1">
         <GarageFacts result={result} live={live} distance={distance} />
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2">
+      {/* Para quien maneja: "Ir" es un toque y abre su app de mapas. */}
+      <GoButton to={result.space.coords} className="mt-3 w-full" />
+      <div className="mt-2 grid grid-cols-2 gap-2">
         {live.accepting ? (
-          <Link href={voyHref(href)} className={buttonClass("primary", "md")}>
+          <Link href={voyHref(href)} className={buttonClass("secondary", "md")}>
             Voy a este
           </Link>
         ) : (
-          <span className={buttonClass("primary", "md", "cursor-not-allowed opacity-50")} aria-disabled="true">
+          <span className={buttonClass("secondary", "md", "cursor-not-allowed opacity-50")} aria-disabled="true">
             Voy a este
           </span>
         )}

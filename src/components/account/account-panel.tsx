@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, Container, PageHeader } from "@/components/ui/card";
-import { CameraIcon, CarIcon, ChevronLeftIcon, ChevronRightIcon, KeyIcon, ParkingIcon, ShieldIcon, TicketIcon, WalletIcon } from "@/components/ui/icons";
+import { CameraIcon, CarIcon, ChevronLeftIcon, ChevronRightIcon, KeyIcon, ParkingIcon, PinIcon, ShieldIcon, TicketIcon, WalletIcon } from "@/components/ui/icons";
+import { NavAppPicker } from "@/components/garage/navigate-buttons";
 import { useAuth, type AuthUser } from "@/lib/auth/auth-provider";
 import { PASSWORD_MIN_LENGTH, signOut, updatePassword, type AuthResult } from "@/lib/auth/actions";
 import type { Profile, Requirement } from "@/lib/data/types";
@@ -150,6 +151,12 @@ function SignedIn({ user }: { user: AuthUser }) {
                 ) : undefined
               }
             />
+            <MenuItem
+              href="/cuenta/navegacion/"
+              icon={<PinIcon />}
+              title="App para ir"
+              detail="Google Maps, Waze u otra: la que abre el botón Ir"
+            />
           </ul>
         </Card>
       </section>
@@ -282,6 +289,20 @@ function BackToAccount() {
     >
       <ChevronLeftIcon width={16} height={16} /> Tu cuenta
     </Link>
+  );
+}
+
+/** /cuenta/navegacion/ (la elección queda en este navegador, no hace falta sesión). */
+export function NavigationAppPage() {
+  return (
+    <Container className="max-w-2xl pb-12">
+      <BackToAccount />
+      <PageHeader
+        title="App para ir"
+        subtitle="La que se abre al tocar Ir en un garaje, con el camino ya iniciado. Si no está instalada, se abre en el navegador."
+      />
+      <NavAppPicker />
+    </Container>
   );
 }
 

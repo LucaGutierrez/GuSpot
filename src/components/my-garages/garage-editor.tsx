@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { ListingStatus } from "@/lib/types";
 import type { GaragePhoto, OwnerGarage } from "@/lib/data/types";
 import { createGarage, deleteGarage, updateGarage } from "@/lib/data/garages";
@@ -11,7 +11,15 @@ import { Card } from "@/components/ui/card";
 import { ChevronLeftIcon } from "@/components/ui/icons";
 import { Field, describedBy, inputClass } from "@/components/ui/form-fields";
 import type { Draft, Errors } from "@/components/my-garages/form-draft";
-import { CABA_ID, fullAddress, googleMapsUrl, reverseLookup, type AddressMatch } from "@/lib/geocoding";
+import {
+  CABA_ID,
+  PROVINCES,
+  fullAddress,
+  googleMapsUrl,
+  provinceAt,
+  reverseLookup,
+  type AddressMatch,
+} from "@/lib/geocoding";
 import { AddressSearch } from "./address-search";
 import { AvailabilityStep, FeaturesStep, PriceStep } from "@/components/my-garages/form-steps";
 import { CapacityFields, EstablishmentFields, PaymentFields, VehicleAccessFields } from "./commercial-fields";
@@ -47,30 +55,47 @@ function LocationFields({
   errors: Errors;
   update: (patch: Partial<GarageDraft>) => void;
 }) {
-  // Por ahora GuSpot funciona solo en CABA (decisión del 2026-10-10). Para sumar
-  // provincias, volver a mostrar un selector con PROVINCES de src/lib/geocoding.ts.
-  const provinceId = CABA_ID;
+  // La provincia solo acota las sugerencias de dirección (no se guarda). Al
+  // editar un garaje de fuera de CABA se averigua por su punto.
+  const [provinceId, setProvinceId] = useState(CABA_ID);
   const [showMap, setShowMap] = useState(!!draft.exactLocation);
+  const initialLocation = useRef(draft.city !== "CABA" ? draft.exactLocation : null);
+  useEffect(() => {
+    const p = initialLocation.current;
+    if (p) provinceAt(p).then((id) => id && setProvinceId(id));
+  }, []);
 
   async function onPick(m: AddressMatch) {
     update({
       exactAddress: fullAddress(m),
       exactLocation: m.location,
-      city: "CABA",
+      city: m.city || draft.city,
       neighborhood: m.neighborhood || draft.neighborhood,
     });
     setShowMap(true);
-    if (!m.neighborhood) {
+    if (!m.neighborhood || !m.city) {
       const place = await reverseLookup(m.location);
-      if (place?.neighborhood) update({ neighborhood: place.neighborhood });
+      if (place?.neighborhood && !m.neighborhood) update({ neighborhood: place.neighborhood });
+      if (place?.city && !m.city) update({ city: place.city });
     }
   }
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-sm text-ink-700">
-        Por ahora GuSpot está disponible solo en la <strong>Ciudad de Buenos Aires</strong>.
-      </p>
+      <Field id="province" label="Provincia">
+        <select
+          id="province"
+          className={inputClass}
+          value={provinceId}
+          onChange={(e) => setProvinceId(e.target.value)}
+        >
+          {PROVINCES.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </Field>
       <Field
         id="exactAddress"
         label="Dirección exacta (privada)"
@@ -147,7 +172,17 @@ function LocationFields({
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field id="neighborhood" label="Barrio" error={errors.neighborhood}>
+        <Field id="city" label="Ciudad o localidad" error={errors.city}>
+          <input
+            id="city"
+            className={inputClass}
+            value={draft.city}
+            onChange={(e) => update({ city: e.target.value })}
+            aria-invalid={!!errors.city}
+            aria-describedby={describedBy("city", false, errors.city)}
+          />
+        </Field>
+        <Field id="neighborhood" label="Barrio o zona" error={errors.neighborhood}>
           <input
             id="neighborhood"
             className={inputClass}

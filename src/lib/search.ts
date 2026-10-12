@@ -27,9 +27,13 @@ function normalize(text: string): string {
     .trim();
 }
 
-/** Formas habituales de nombrar la Ciudad de Buenos Aires. */
+/**
+ * Formas habituales de nombrar la Ciudad de Buenos Aires. "Buenos Aires" solo
+ * cuando es todo el texto: "La Plata, Buenos Aires" es la provincia.
+ */
 const ZONE_ALIASES: [RegExp, string][] = [
-  [/\b(ciudad (autonoma )?de buenos aires|capital federal|buenos aires)\b/g, "caba"],
+  [/\b(ciudad (autonoma )?de buenos aires|capital federal)\b/g, "caba"],
+  [/^buenos aires$/, "caba"],
 ];
 
 function matchesZone(space: Space, zona: string): boolean {

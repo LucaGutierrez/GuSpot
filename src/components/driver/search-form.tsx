@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { PinIcon, SearchIcon } from "@/components/ui/icons";
 import { fieldInput, fieldLabel } from "./range-fields";
 
-/** Sugerencias de zona: por ahora GuSpot funciona en CABA. */
+/** Sugerencias de zona: barrios porteños y las ciudades más grandes del país. */
 export const ZONE_SUGGESTIONS = [
   "CABA",
+  "Córdoba", "Rosario", "Mendoza", "La Plata", "Mar del Plata", "San Miguel de Tucumán", "Salta",
+  "Santa Fe", "Neuquén", "Bahía Blanca", "San Juan", "Bariloche",
   ...[
     "Microcentro", "San Nicolás", "Retiro", "Monserrat", "San Telmo", "Puerto Madero", "Recoleta", "Palermo",
     "Belgrano", "Núñez", "Colegiales", "Villa Crespo", "Almagro", "Balvanera", "Caballito", "Flores",

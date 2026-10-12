@@ -8,7 +8,7 @@ export function DemoBanner() {
     <div data-app-chrome className="bg-ink-900 px-4 py-2 text-center text-xs text-white sm:text-sm">
       {isBackendConfigured ? (
         <>
-          <strong className="font-semibold text-accent-300">GuSpot Beta</strong> · Ya funciona en CABA y estamos
+          <strong className="font-semibold text-accent-300">GuSpot Beta</strong> · Ya funciona en toda la Argentina y estamos
           sumando garajes. Los pagos con Mercado Pago son reales.
         </>
       ) : (

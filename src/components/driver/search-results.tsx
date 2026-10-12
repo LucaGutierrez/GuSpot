@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, PageHeader } from "@/components/ui/card";
 import { ResultsMap } from "@/components/explore/results-map";
 import { useInitialZone } from "@/components/explore/use-initial-zone";
+import { usePlace } from "@/components/explore/use-place";
 import { useLockBodyScroll } from "@/components/explore/use-element-height";
 import { spaceHref, useSearchSource } from "@/components/explore/space-source";
 import { FilterSelects, NO_FILTERS, isBookable, liveOf, matchesFilters, type ResultFilters } from "./filters";
@@ -93,7 +94,14 @@ function Results({
   const [movedTo, setMovedTo] = useState<{ key: string; area: Area } | null>(null);
   const area = areaState?.key === queryKey ? areaState.area : null;
   const pendingArea = movedTo?.key === queryKey && movedTo.area !== area ? movedTo.area : null;
-  const all = useMemo(() => searchSpaces(search, spaces ?? [], area), [search, spaces, area]);
+  const textResults = useMemo(() => searchSpaces(search, spaces ?? [], area), [search, spaces, area]);
+  // Si ningún garaje nombra la zona ("Rosario", "Nueva Córdoba"), se la ubica en
+  // el mapa y se busca dentro de ella.
+  const place = usePlace(search.zona, !area && spaces !== null && textResults.length === 0);
+  const all = useMemo(
+    () => (place ? searchSpaces(search, spaces ?? [], place.area) : textResults),
+    [place, search, spaces, textResults],
+  );
   const matching = useMemo(() => all.filter((r) => matchesFilters(r, filters)), [all, filters]);
   const filtered = soloDisponibles ? matching.filter(isBookable) : matching;
   const results =
@@ -240,10 +248,11 @@ function Results({
           results={matching}
           selectedId={highlighted}
           onSelect={onMapSelect}
-          fitKey={`${queryKey}|${search.zona}|${filters.tipo}|${filters.vehiculo}|${spaces?.length ?? -1}`}
+          fitKey={`${queryKey}|${search.zona}|${place ? "lugar" : ""}|${filters.tipo}|${filters.vehiculo}|${spaces?.length ?? -1}`}
           onUserMove={(a) => setMovedTo({ key: queryKey, area: a })}
           canSearchArea={!!pendingArea}
           onSearchArea={() => pendingArea && setAreaState({ key: queryKey, area: pendingArea })}
+          center={place?.center}
         />
       </div>
     </div>

@@ -30,8 +30,8 @@ export interface GarageDraft extends Draft {
 }
 
 export function emptyGarageDraft(): GarageDraft {
-  // Por ahora solo CABA.
-  return { ...emptyDraft(), city: "CABA",
+  // La ciudad se completa al elegir la dirección.
+  return { ...emptyDraft(), city: "",
     exactLocation: null,
     arrivalInstructions: "",
     capacity: "",
@@ -96,7 +96,9 @@ export function validateGarageDraft(d: GarageDraft): Errors {
   if (d.description.length > 2000) errors.description = "La descripción puede tener hasta 2000 caracteres.";
   if (!d.type) errors.type = "Elegí el tipo de espacio.";
   if (!d.maxVehicle) errors.maxVehicle = "Elegí el vehículo más grande que entra.";
-  if (!d.neighborhood.trim()) errors.neighborhood = "Escribí el barrio.";
+  const city = cityOf(d).trim();
+  if (city.length < 2 || city.length > 80) errors.city = "Escribí la ciudad o localidad.";
+  if (!d.neighborhood.trim()) errors.neighborhood = "Escribí el barrio o la zona.";
   if (d.exactAddress.trim().length < 5) errors.exactAddress = "Escribí la dirección y elegila de la lista.";
   if (!d.exactLocation) errors.exactLocation = "Elegí la dirección del garaje de la lista.";
   const cap = Number(d.capacity);
@@ -119,7 +121,7 @@ export function toGarageInput(d: GarageDraft): GarageInput {
   return {
     title: d.title.trim(),
     description: d.description.trim(),
-    city: cityOf(d),
+    city: cityOf(d).trim(),
     neighborhood: d.neighborhood.trim(),
     approxLocation: d.approxLocation.trim(),
     address: d.exactAddress.trim(),

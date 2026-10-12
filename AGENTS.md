@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # GuSpot — convenciones del proyecto
 
-GuSpot es una plataforma (Argentina, ARS, por ahora CABA) para encontrar garajes cerca, avisar que vas
+GuSpot es una plataforma (Argentina, ARS, todo el país; arranca por CABA) para encontrar garajes cerca, avisar que vas
 o reservar y pagar. **Estado actual (2026-10-11): versión en desarrollo con datos reales** (Supabase,
 garajes comerciales, reservas, pagos con Mercado Pago). Los datos y pantallas de ejemplo de la demo
 original se sacaron a pedido del usuario: no volver a agregarlos.
@@ -43,6 +43,8 @@ original se sacaron a pedido del usuario: no volver a agregarlos.
 - Proveedor de mapas: solo en `src/components/map/config.ts` (o `NEXT_PUBLIC_MAP_STYLE_URL`).
 - Al abrir el mapa sin búsqueda explícita se busca primero **cerca de la persona** (~2 km): si ya dio permiso, directo; si no, se explica antes de que el navegador pregunte; si dice "Ahora no", no se vuelve a ofrecer solo (localStorage `guspot:ubicacion`). Sin ubicación: la última zona buscada (`src/lib/last-zone.ts`) o CABA.
 - "Buscar en esta zona": al mover el mapa se ofrece buscar dentro del rectángulo visible (`MapViewProps.onUserMove`, `searchSpaces(..., area)`).
+- Zona escrita: primero se buscan garajes que la nombren (barrio/ciudad); si ninguno, se la ubica con Photon (`findPlace`, `src/components/explore/use-place.ts`) y se busca dentro de ella. Funciona en toda la Argentina; el alta de garajes tiene selector de provincia (Georef) y ciudad editable.
+- Botón "Ir" (`src/components/garage/navigate-buttons.tsx`): pensado para quien maneja, UN toque abre la app de mapas con la navegación iniciada (sin menús). Está en la ficha del mapa (botón principal), el detalle, la reserva y el aviso. Sin preferencia: Google Maps; se cambia en `/cuenta/navegacion/` (Waze, Mapas de Apple en equipos Apple, app del celular con `geo:` en Android; localStorage `guspot:navegacion`). Lleva al punto público del mapa: no revela dirección escrita ni indicaciones.
 - La búsqueda en el mapa es la pantalla principal (`/`). Alto disponible bajo banner+encabezado: variable CSS `--app-top`.
 - Barra inferior móvil: alto en la variable CSS `--mobile-nav-height`.
 

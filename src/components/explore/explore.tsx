@@ -21,6 +21,7 @@ import { CommercialSelectedCard } from "@/components/garage/garage-summary";
 import { spaceHref, useSearchSource } from "./space-source";
 import { useDriverLocation } from "./use-driver-location";
 import { useInitialZone } from "./use-initial-zone";
+import { usePlace } from "./use-place";
 import { useElementHeight, useLockBodyScroll } from "./use-element-height";
 
 /** Rectángulo de ~2 km alrededor de un punto ("cerca tuyo"). */
@@ -143,7 +144,14 @@ export function Explore() {
 
   // --- Resultados -----------------------------------------------------------
   const { spaces, failed } = useSearchSource();
-  const zoneResults = useMemo(() => searchSpaces(search, spaces ?? [], area), [search, spaces, area]);
+  const textResults = useMemo(() => searchSpaces(search, spaces ?? [], area), [search, spaces, area]);
+  // Si ningún garaje nombra la zona ("Rosario", "Nueva Córdoba"), se la ubica en
+  // el mapa y se busca dentro de ella.
+  const place = usePlace(zona, !area && spaces !== null && textResults.length === 0);
+  const zoneResults = useMemo(
+    () => (place ? searchSpaces(search, spaces ?? [], place.area) : textResults),
+    [place, search, spaces, textResults],
+  );
   const results = useMemo(
     () => zoneResults.filter((r) => matchesFilters(r, filters)),
     [zoneResults, filters],
@@ -157,15 +165,17 @@ export function Explore() {
     () =>
       area
         ? { lat: (area.north + area.south) / 2, lng: (area.east + area.west) / 2 }
-        : zoneCenter(zoneResults),
-    [area, zoneResults],
+        : zoneResults.length === 0 && place
+          ? place.center
+          : zoneCenter(zoneResults),
+    [area, zoneResults, place],
   );
 
   const nearestKm = userCoords
     ? Math.min(...zoneResults.map((r) => distanceKm(userCoords, r.space.coords)))
     : Infinity;
   const userIsNear = nearestKm <= FAR_KM;
-  const fitKey = `${params.toString()}|${zona}|${filters.tipo}|${filters.vehiculo}|${fitNonce}|${spaces?.length ?? -1}`;
+  const fitKey = `${params.toString()}|${zona}|${place ? "lugar" : ""}|${filters.tipo}|${filters.vehiculo}|${fitNonce}|${spaces?.length ?? -1}`;
 
   const selectedIndex = onMap.findIndex((r) => r.space.id === selectedId);
   const selected = selectedIndex >= 0 ? onMap[selectedIndex] : null;

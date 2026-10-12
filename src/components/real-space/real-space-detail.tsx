@@ -11,6 +11,7 @@ import { ACCESS_TYPE_LABEL, FEATURE_LABEL, PAYMENT_METHOD_LABEL, SPACE_TYPE_LABE
 import { liveStatus } from "@/lib/live";
 import { useNow } from "@/components/driver/use-now";
 import { LiveBadge, UpdatedNote } from "@/components/garage/live-badge";
+import { GoButton } from "@/components/garage/navigate-buttons";
 import { ArrivalPanel } from "@/components/arrivals/arrival-views";
 import { Card, Container } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
@@ -185,9 +186,12 @@ function Detail({ space }: { space: Space }) {
         )}
 
         <section aria-labelledby="mapa">
-          <h2 id="mapa" className="text-lg font-semibold text-ink-900">
-            Ubicación
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="mapa" className="text-lg font-semibold text-ink-900">
+              Ubicación
+            </h2>
+            <GoButton to={space.coords} size="md" className="w-24" />
+          </div>
           <div className="relative mt-3 h-64 overflow-hidden rounded-2xl border border-ink-200">
             <MapView
               className="absolute inset-0 h-full w-full"
@@ -370,9 +374,12 @@ function CommercialDetail({ space, voy }: { space: Space; voy: boolean }) {
         )}
 
         <section aria-labelledby="mapa">
-          <h2 id="mapa" className="text-lg font-semibold text-ink-900">
-            Ubicación
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="mapa" className="text-lg font-semibold text-ink-900">
+              Ubicación
+            </h2>
+            <GoButton to={space.coords} size="md" className="w-24" />
+          </div>
           <div className="relative mt-3 h-64 overflow-hidden rounded-2xl border border-ink-200">
             <MapView
               className="absolute inset-0 h-full w-full"

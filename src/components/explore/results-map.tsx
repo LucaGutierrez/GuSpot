@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { MapView } from "@/components/map/map-view";
 import type { Area, SearchResult } from "@/lib/search";
+import type { LatLng } from "@/lib/types";
 import { SearchIcon } from "@/components/ui/icons";
 import { RecenterIcon } from "./icons";
 import { toMarkers, zoneCenter } from "./map-data";
@@ -19,6 +20,7 @@ export function ResultsMap({
   onUserMove,
   canSearchArea = false,
   onSearchArea,
+  center,
 }: {
   /** Resultados ya filtrados (los no disponibles se descartan acá). */
   results: SearchResult[];
@@ -29,10 +31,15 @@ export function ResultsMap({
   /** Muestra el botón "Buscar en esta zona" (la persona movió el mapa). */
   canSearchArea?: boolean;
   onSearchArea?: () => void;
+  /** Centro a mostrar si no hay resultados (la zona buscada). */
+  center?: LatLng | null;
 }) {
   const [nonce, setNonce] = useState(0);
   const markers = useMemo(() => toMarkers(results), [results]);
-  const fallbackCenter = useMemo(() => zoneCenter(results), [results]);
+  const fallbackCenter = useMemo(
+    () => (results.length === 0 && center ? center : zoneCenter(results)),
+    [results, center],
+  );
   const n = markers.length;
 
   return (

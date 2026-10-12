@@ -6,13 +6,14 @@
 // punto en el mapa. Para cambiar de proveedor (p. ej. Google), tocar solo este archivo.
 
 import type { LatLng } from "./types";
+import type { Area } from "./search";
 
-interface Province {
+export interface Province {
   id: string; // código de Georef
   name: string;
 }
 
-const PROVINCES: Province[] = [
+export const PROVINCES: Province[] = [
   { id: "02", name: "Ciudad Autónoma de Buenos Aires" },
   { id: "06", name: "Buenos Aires" },
   { id: "10", name: "Catamarca" },
@@ -244,4 +245,53 @@ export async function reverseLookup(p: LatLng): Promise<{ city: string; neighbor
 /** Enlace para ver un punto en Google Maps (sin clave: es un enlace común). */
 export function googleMapsUrl(p: LatLng): string {
   return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+}
+
+/** Provincia (código de Georef) de un punto de Argentina, o null si no se pudo. */
+export async function provinceAt(p: LatLng): Promise<string | null> {
+  try {
+    const qs = new URLSearchParams({ lat: String(p.lat), lon: String(p.lng) });
+    const res = await fetch(`https://apis.datos.gob.ar/georef/api/ubicacion?${qs}`);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { ubicacion?: { provincia?: { id: string | null } } };
+    return data.ubicacion?.provincia?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export interface Place {
+  center: LatLng;
+  /** Rectángulo donde buscar garajes (el de la ciudad o ~5 km alrededor). */
+  area: Area;
+}
+
+/**
+ * Ubica una zona escrita por el conductor ("Rosario", "Nueva Córdoba") en
+ * Argentina, para mover el mapa ahí aunque ningún garaje la nombre igual.
+ * Nunca lanza por errores de red (sí si se cancela).
+ */
+export async function findPlace(text: string, signal?: AbortSignal): Promise<Place | null> {
+  const q = text.trim();
+  if (q.length < 3) return null;
+  try {
+    const qs = new URLSearchParams({ q, limit: "5", bbox: AR_BBOX, lang: "default" });
+    const res = await fetch(`${PHOTON}/api/?${qs}`, { signal });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      features?: (PhotonFeature & { properties: { extent?: [number, number, number, number] } })[];
+    };
+    const f = data.features?.find((x) => x.properties.countrycode === "AR");
+    if (!f) return null;
+    const [lng, lat] = f.geometry.coordinates;
+    const e = f.properties.extent;
+    // extent de Photon: [oeste, norte, este, sur]. Sin extent (un punto): ~5 km.
+    const area: Area = e
+      ? { west: e[0], north: e[1], east: e[2], south: e[3] }
+      : { north: lat + 0.045, south: lat - 0.045, east: lng + 0.055, west: lng - 0.055 };
+    return { center: { lat, lng }, area };
+  } catch (err) {
+    if (signal?.aborted) throw err;
+    return null;
+  }
 }
