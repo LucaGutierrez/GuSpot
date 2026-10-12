@@ -81,7 +81,7 @@ original se sacaron a pedido del usuario: no volver a agregarlos.
 - **"Voy a este"**: aviso de llegada (`arrival_notices`, `notify_arrival`, `update_arrival`, `arrival_access`), NO reserva lugar y se dice siempre. Pantalla `/aviso/?id=`. El garaje lo recibe por Supabase Realtime con el panel abierto (email/SMS/push: pendiente).
 - **Reservas** en garajes comerciales: hasta `reservable_spots` superpuestas (lo controla `create_booking` con el garaje bloqueado).
 - Marcadores de garaje: "Nombre · $X/h" con punto de disponibilidad (`MapMarker.variant = "garage"`, `tone`).
-- Requisitos: conductor = datos + identidad + licencia + vehículo (también para "Voy a este"); quien publica = datos + identidad + **celular verificado** (`profiles.phone_verified`, código por SMS con Didit). La exigencia del celular se prende/apaga con `app_settings.require_phone_verification` (migración 20261011150000); prendida (ver Pagos).
+- Requisitos: conductor = datos + identidad + licencia + vehículo (también para "Voy a este"); quien publica = datos + identidad + **celular verificado** (`profiles.phone_verified`, código por SMS con Didit). La exigencia del celular se prende/apaga con `app_settings.require_phone_verification` (migración 20261011150000); **apagada desde 2026-10-12** (migración 20261012130000, sin proveedor de SMS): para publicar alcanza con datos personales + identidad (DNI + cara). La sección del código SMS en `/verificacion/` solo aparece si la base lo exige.
 - Precio por demanda y reseñas: NO implementados (sin datos de demanda ni forma de verificar visitas todavía).
 
 ## Pagos con Mercado Pago (2026-10-11)
@@ -92,5 +92,5 @@ original se sacaron a pedido del usuario: no volver a agregarlos.
 - Cliente: `src/lib/data/payments.ts`; pantallas: panel de reserva (tarifa + cargo + total), `/reserva/?id=` (pagar, confirmar al volver, cancelar con/sin devolución), `/cuenta/cobros/` (Tu cuenta → Cobros con Mercado Pago: conectar la cuenta). `/mis-garages/cobros/` es solo la URL de vuelta registrada en Mercado Pago y redirige a `/cuenta/cobros/`.
 - Pasos para activarlo: `docs/pagos.md`.
 - Aplicación de Mercado Pago "GuSpot" (n.º 5830580745068087), creada 2026-10-11, en MODO PRUEBA (`MP_TEST_MODE=true`). Para guardar el Client Secret: `scripts/set-mp-secret.ps1` (lo lee del portapapeles).
-- Interruptores `app_settings.require_phone_verification` y `app_settings.require_identity_verification`: **prendidos** de nuevo el 2026-10-11 (migración 20261011200000). Con el celular exigido, nadie puede publicar hasta cargar saldo en Didit (o cambiar de proveedor de SMS).
+- Interruptores `app_settings.require_phone_verification` y `app_settings.require_identity_verification`: identidad **prendida**; celular **apagado** desde 2026-10-12 (ver arriba).
 - Prueba real de pagos hecha el 2026-10-11: pago aprobado, reserva confirmada y devolución OK. Ojo: Mercado Pago no devuelve si el garaje no tiene saldo disponible (error 2031); la plata de un cobro tarda en liberarse.

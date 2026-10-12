@@ -146,13 +146,16 @@ function Verification({ back, returning }: { back: string | null; returning: boo
         }}
       />
 
-      <PhoneSection
-        profile={profile}
-        onVerified={() => {
-          setProfile((p) => (p ? { ...p, phoneVerified: true } : p));
-          refreshMissing().catch(() => {});
-        }}
-      />
+      {/* El código por SMS solo se muestra si la base lo exige (app_settings.require_phone_verification). */}
+      {(missing.propietario.includes("telefono") || profile.phoneVerified) && (
+        <PhoneSection
+          profile={profile}
+          onVerified={() => {
+            setProfile((p) => (p ? { ...p, phoneVerified: true } : p));
+            refreshMissing().catch(() => {});
+          }}
+        />
+      )}
 
       <IdentitySection
         profile={profile}
