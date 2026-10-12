@@ -81,12 +81,13 @@ interface BookingRow {
   service_fee: number;
   hold_until: string | null;
   paid_at: string | null;
+  arrived_at: string | null;
   created_at: string;
 }
 
 const COLUMNS =
   "id, garage_id, driver_id, driver_name, garage_title, garage_neighborhood, start_at, end_at, status, " +
-  "payment_status, vehicle, plate, car_brand, car_model, car_color, car_insurance, driver_avatar, hours, total_price, service_fee, hold_until, paid_at, created_at";
+  "payment_status, vehicle, plate, car_brand, car_model, car_color, car_insurance, driver_avatar, hours, total_price, service_fee, hold_until, paid_at, arrived_at, created_at";
 
 function toBooking(row: BookingRow, me: string): RealBooking {
   return {
@@ -109,6 +110,7 @@ function toBooking(row: BookingRow, me: string): RealBooking {
     serviceFee: row.service_fee,
     holdUntil: row.hold_until,
     paidAt: row.paid_at,
+    arrivedAt: row.arrived_at,
     createdAt: row.created_at,
     role: row.driver_id === me ? "driver" : "owner",
   };
@@ -189,6 +191,42 @@ export async function getBookingAccess(id: string): Promise<BookingAccess | null
   return row
     ? { address: row.address, arrivalInstructions: row.arrival_instructions, location: { lat: row.exact_lat, lng: row.exact_lng } }
     : null;
+}
+
+/** Lugares guardados ahora por reservas, por garaje. Nunca lanza: sin datos, 0. */
+export async function reservedNowByGarage(): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  const supabase = getSupabase();
+  if (!supabase) return map;
+  const { data, error } = await supabase.rpc("reserved_spots_now");
+  if (error || !data) return map;
+  for (const r of data as { garage_id: string; spots: number }[]) map.set(r.garage_id, r.spots);
+  return map;
+}
+
+/** Reservas de un garaje mío que todavía no terminaron (panel del garaje). */
+export async function listGarageBookings(garageId: string): Promise<RealBooking[]> {
+  const supabase = db();
+  const me = await requireUserId(supabase);
+  const { data, error } = await supabase
+    .from("bookings")
+    .select(COLUMNS)
+    .eq("garage_id", garageId)
+    .eq("status", "confirmada")
+    // end_at es hora argentina (UTC-3): "ahora" en Argentina.
+    .gt("end_at", new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 19))
+    .order("start_at", { ascending: true })
+    .returns<BookingRow[]>();
+  if (error) throw toDataError(error);
+  return data.map((r) => toBooking(r, me));
+}
+
+/** El garaje marca que llegó el auto de una reserva (resta 1 de los lugares libres). */
+export async function markBookingArrived(id: string): Promise<void> {
+  const supabase = db();
+  await requireUserId(supabase);
+  const { error } = await supabase.rpc("mark_booking_arrived", { p_booking_id: id });
+  if (error) throw toDataError(error);
 }
 
 /** Horarios ocupados de los garajes publicados (para la búsqueda). Nunca lanza: sin datos, sin ocupación. */

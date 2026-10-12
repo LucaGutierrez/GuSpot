@@ -3,7 +3,7 @@
 // valida para dar mensajes claros antes de ir a la base.
 
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
-import { busyByGarage } from "./bookings";
+import { busyByGarage, reservedNowByGarage } from "./bookings";
 import { getSupabase } from "../supabase/client";
 import { GARAGE_PHOTOS_BUCKET } from "../supabase/config";
 import type { AvailabilityRule, CommercialInfo, LatLng, ListingStatus, Space } from "../types";
@@ -132,6 +132,11 @@ function publicLocation(row: GarageRow): LatLng | null {
   return row.public_lat == null || row.public_lng == null ? null : { lat: row.public_lat, lng: row.public_lng };
 }
 
+function withReserved(space: Space, reserved: Map<string, number>): Space {
+  const n = reserved.get(space.id) ?? 0;
+  return n && space.commercial ? { ...space, commercial: { ...space.commercial, reservedNow: n } } : space;
+}
+
 function commercialOf(row: GarageRow): CommercialInfo {
   return {
     capacity: row.capacity,
@@ -140,6 +145,7 @@ function commercialOf(row: GarageRow): CommercialInfo {
     updatedAt: row.availability_updated_at,
     acceptingDrivers: row.accepting_drivers,
     reservableSpots: row.reservable_spots,
+    reservedNow: 0,
     contactPhone: row.contact_phone,
     paymentMethods: row.payment_methods,
     payAtGarage: row.pay_at_garage,
@@ -298,11 +304,11 @@ export async function listPublishedGarages(): Promise<Space[]> {
     .order("created_at", { ascending: false })
     .returns<GarageRow[]>();
   if (error) throw toDataError(error);
-  const busy = await busyByGarage();
+  const [busy, reserved] = await Promise.all([busyByGarage(), reservedNowByGarage()]);
   return data
     .map((row) => toSpace(supabase, row))
     .filter((s): s is Space => s !== null)
-    .map((s) => ({ ...s, busy: busy.get(s.id) ?? [] }));
+    .map((s) => withReserved({ ...s, busy: busy.get(s.id) ?? [] }, reserved));
 }
 
 export async function getPublishedGarage(id: string): Promise<Space | null> {
@@ -319,8 +325,8 @@ export async function getPublishedGarage(id: string): Promise<Space | null> {
   }
   const space = data ? toSpace(supabase, data) : null;
   if (!space) return null;
-  const busy = await busyByGarage();
-  return { ...space, busy: busy.get(space.id) ?? [] };
+  const [busy, reserved] = await Promise.all([busyByGarage(), reservedNowByGarage()]);
+  return withReserved({ ...space, busy: busy.get(space.id) ?? [] }, reserved);
 }
 
 export async function listMyGarages(): Promise<OwnerGarage[]> {

@@ -133,6 +133,8 @@ export interface RealBooking {
   /** Hasta cuándo se guarda el lugar esperando el pago (ISO). */
   holdUntil: string | null;
   paidAt: string | null;
+  /** Cuándo el garaje marcó que llegó el auto (ISO). */
+  arrivedAt: string | null;
   createdAt: string; // ISO
   /** Quién la mira: conductor o dueño del garaje. */
   role: "driver" | "owner";

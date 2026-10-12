@@ -45,6 +45,11 @@ export interface CommercialInfo {
   acceptingDrivers: boolean;
   /** Lugares que se pueden reservar a la vez desde GuSpot (0 = sin reservas). */
   reservableSpots: number;
+  /**
+   * Lugares guardados AHORA por reservas cuyo auto todavía no llegó (desde 15 min
+   * antes de la entrada). Se descuentan de `availableSpots` al mostrarlos.
+   */
+  reservedNow: number;
   contactPhone: string;
   paymentMethods: PaymentMethod[];
   /** Se paga en el garaje (no en GuSpot). */

@@ -36,7 +36,8 @@ export function liveStatus(space: Space, now: LocalDateTime | null, nowMs: numbe
   if (!open) return { ...base, tone: "closed", label: "Cerrado", accepting: false };
   if (!c.acceptingDrivers) return { ...base, tone: "closed", label: "No recibe conductores ahora", accepting: false };
 
-  const n = c.availableSpots;
+  // Los lugares guardados por reservas no están libres para quien llega.
+  const n = c.availableSpots === null ? null : Math.max(0, c.availableSpots - c.reservedNow);
   if (c.state === "sin_lugar" || n === 0) return { ...base, tone: "none", label: "Sin lugar", accepting: false };
   if (n !== null) {
     if (n <= FEW_SPOTS) return { ...base, tone: "few", label: n === 1 ? "Queda 1" : `Quedan ${n}`, accepting: true };

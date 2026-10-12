@@ -4,9 +4,14 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { AvailabilityState, CommercialInfo } from "@/lib/types";
-import type { ArrivalNotice, ArrivalStatus, OwnerGarage } from "@/lib/data/types";
+import type { ArrivalNotice, ArrivalStatus, OwnerGarage, RealBooking } from "@/lib/data/types";
 import { getMyGarage, updateLiveAvailability } from "@/lib/data/garages";
 import { listGarageArrivals, setArrivalStatus, subscribeArrivals } from "@/lib/data/arrivals";
+import { listGarageBookings, markBookingArrived } from "@/lib/data/bookings";
+import { toMs } from "@/lib/datetime";
+import { formatARS, formatRange } from "@/lib/format";
+import { nowInArgentina } from "@/components/driver/use-now";
+import { BookingStatusBadge, PaymentStatusBadge } from "@/components/ui/badge";
 import { agoText } from "@/lib/live";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
@@ -93,6 +98,22 @@ function Panel({ garage }: { garage: OwnerGarage }) {
       next === 0 ? "sin_lugar" : live.state === "sin_lugar" || live.state === "cerrado" ? "disponible" : undefined;
     save({ availableSpots: next, ...(state ? { state } : {}) });
   };
+  // Reservas del garaje: se vuelven a leer cada 30 s (con el reloj del panel).
+  const [bookings, setBookings] = useState<RealBooking[] | null>(null);
+  const [bookingsError, setBookingsError] = useState<string | null>(null);
+  const [bookingsVersion, setBookingsVersion] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    listGarageBookings(garage.id)
+      .then((list) => !cancelled && setBookings(list))
+      .catch((err) => !cancelled && setBookingsError(errorMessage(err)));
+    return () => {
+      cancelled = true;
+    };
+  }, [garage.id, now, bookingsVersion]);
+  const nowMs = toMs(nowInArgentina(new Date(now)));
+  const heldNow = (bookings ?? []).filter((b) => isHeld(b, nowMs)).length;
+
   const minutesAgo = live.updatedAt ? Math.max(0, Math.round((now - Date.parse(live.updatedAt)) / 60000)) : null;
 
   return (
@@ -116,6 +137,14 @@ function Panel({ garage }: { garage: OwnerGarage }) {
             {minutesAgo === null ? "Nunca actualizado" : `Actualizado ${agoText(minutesAgo)}`}
           </p>
         </div>
+
+        {spots !== null && heldNow > 0 && (
+          <p className="rounded-xl bg-brand-50 p-3 text-center text-sm text-ink-900">
+            {heldNow === 1 ? "1 lugar está guardado" : `${heldNow} lugares están guardados`} para{" "}
+            {heldNow === 1 ? "un auto que reservó" : "autos que reservaron"} y todavía no llegó. En el mapa se ven{" "}
+            <strong>{Math.max(0, spots - heldNow)} libres</strong>.
+          </p>
+        )}
 
         {spots !== null ? (
           <div className="flex items-center justify-center gap-4">
@@ -203,8 +232,127 @@ function Panel({ garage }: { garage: OwnerGarage }) {
         {error && <ErrorBox>{error}</ErrorBox>}
       </Card>
 
+      <Bookings
+        items={bookings}
+        error={bookingsError}
+        nowMs={nowMs}
+        onArrived={() => {
+          setBookingsVersion((v) => v + 1);
+          // "Llegó" resta 1 de los libres en la base: se refleja acá.
+          if (live.availableSpots !== null) setLive((l) => ({ ...l, availableSpots: Math.max(0, (l.availableSpots ?? 0) - 1) }));
+        }}
+      />
+
       <Arrivals garageId={garage.id} now={now} />
     </div>
+  );
+}
+
+/** La reserva guarda un lugar: desde 15 min antes de la entrada hasta la salida, si el auto no llegó. */
+function isHeld(b: RealBooking, nowMs: number): boolean {
+  return !b.arrivedAt && toMs(b.start) - 15 * 60000 <= nowMs && nowMs < toMs(b.end);
+}
+
+function Bookings({
+  items,
+  error,
+  nowMs,
+  onArrived,
+}: {
+  items: RealBooking[] | null;
+  error: string | null;
+  nowMs: number;
+  onArrived: () => void;
+}) {
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [actError, setActError] = useState<string | null>(null);
+
+  async function arrived(id: string) {
+    setBusyId(id);
+    setActError(null);
+    try {
+      await markBookingArrived(id);
+      onArrived();
+    } catch (err) {
+      setActError(errorMessage(err));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const list = (items ?? []).filter((b) => toMs(b.end) > nowMs || (b.arrivedAt && toMs(b.end) > nowMs - 3 * 3600_000));
+
+  return (
+    <Card className="flex flex-col gap-4 p-5">
+      <div>
+        <h2 className="text-lg font-semibold text-ink-900">
+          Reservas {list.length > 0 && <span className="text-brand-700">({list.length})</span>}
+        </h2>
+        <p className="text-xs text-ink-500">
+          Autos que reservaron y pagaron por GuSpot. Tienen el lugar asegurado: cuando llegue, tocá “Llegó”.
+        </p>
+      </div>
+      {(error || actError) && <ErrorBox>{actError ?? error}</ErrorBox>}
+      {items === null && !error ? (
+        <p className="text-sm text-ink-500">Cargando…</p>
+      ) : list.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-ink-300 p-4 text-center text-sm text-ink-500">
+          No tenés reservas por ahora.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {list.map((b) => {
+            const held = isHeld(b, nowMs);
+            const soon = !b.arrivedAt && toMs(b.start) - 60 * 60000 <= nowMs;
+            return (
+              <li
+                key={b.id}
+                className={`flex flex-col gap-3 rounded-xl border p-4 ${held ? "border-brand-200 bg-brand-50" : "border-ink-200 bg-white"}`}
+              >
+                <div className="flex items-start gap-3">
+                  <Avatar url={b.driverAvatarUrl} name={b.driverName || "Conductor"} size={44} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-ink-900">{b.driverName || "Conductor"}</p>
+                    <p className="text-sm text-ink-700">
+                      {b.car} · <span className="font-mono font-semibold">{b.plate}</span>
+                    </p>
+                    {b.carInsurance && <p className="text-xs text-ink-500">Seguro: {b.carInsurance}</p>}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1 text-sm">
+                  <p className="font-semibold text-ink-900">{formatRange(b.start, b.end)}</p>
+                  <p className="text-ink-700">
+                    Tu tarifa: {formatARS(b.total)} · {b.hours} h
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-ink-500">Reserva:</span>
+                    <BookingStatusBadge status={b.status} />
+                    <span className="text-xs text-ink-500">Pago:</span>
+                    <PaymentStatusBadge status={b.paymentStatus} />
+                  </div>
+                </div>
+                {b.arrivedAt ? (
+                  <p className="text-sm font-semibold text-emerald-800">
+                    Llegó a las{" "}
+                    {new Date(b.arrivedAt).toLocaleTimeString("es-AR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: "America/Argentina/Buenos_Aires",
+                    })}
+                  </p>
+                ) : soon ? (
+                  <Button size="lg" onClick={() => arrived(b.id)} disabled={busyId === b.id}>
+                    {busyId === b.id ? "Guardando…" : "Llegó"}
+                  </Button>
+                ) : (
+                  <p className="text-xs text-ink-500">El lugar se guarda desde 15 min antes de la entrada.</p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Card>
   );
 }
 
