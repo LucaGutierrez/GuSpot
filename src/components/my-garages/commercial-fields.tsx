@@ -63,8 +63,8 @@ export function CapacityFields({ draft, errors, update }: Props) {
       </Field>
       <Field
         id="reservableSpots"
-        label="Lugares para reservas por GuSpot"
-        hint="Cuántos conductores pueden tener una reserva al mismo tiempo. 0 = solo avisos de llegada. Las reservas se pagan con Mercado Pago: conectalo en Tu cuenta → Cobros con Mercado Pago."
+        label="¿Cuántos lugares guardás para reservas?"
+        hint="Son lugares que separás para quien reserva y paga por adelantado en GuSpot: como máximo esa cantidad de autos con reserva al mismo tiempo. El resto queda para los que avisan “Voy a este” y los que llegan de la calle. Poné 0 si no querés reservas. Para cobrarlas, conectá Mercado Pago en Tu cuenta → Cobros con Mercado Pago."
         error={errors.reservableSpots}
       >
         <input
