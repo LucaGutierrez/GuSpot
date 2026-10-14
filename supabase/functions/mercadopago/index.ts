@@ -189,7 +189,20 @@ async function applyPayment(admin: SupabaseClient, b: Booking, p: Payment, token
       await logError("amount_mismatch", { booking: b.id, amount: p.transaction_amount });
       return;
     }
-    if (b.status === "pendiente_pago") {
+    // Aprobado después de que venció la espera (con 2 min de margen): el lugar
+    // pudo quedar para otra persona, así que no se confirma y se devuelve todo.
+    const approvedAt = p.date_approved ? new Date(p.date_approved).getTime() : Date.now();
+    const late = !!b.hold_until && approvedAt > new Date(b.hold_until).getTime() + 120_000;
+    if (b.status === "pendiente_pago" && late) {
+      if (await refund(token, pid, `late-${b.id}`)) {
+        const now = new Date().toISOString();
+        await admin
+          .from("bookings")
+          .update({ status: "cancelada", cancelled_at: now, payment_status: "reembolsado", refunded_at: now, mp_payment_id: pid })
+          .eq("id", b.id)
+          .eq("status", "pendiente_pago");
+      }
+    } else if (b.status === "pendiente_pago") {
       await admin
         .from("bookings")
         .update({

@@ -13,7 +13,9 @@ import type { AuthResult } from "@/lib/auth/actions";
 
 /** Destino después de ingresar: solo rutas internas (evita redirecciones abiertas). */
 export function safeNext(value: string | null, fallback = "/cuenta/"): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return fallback;
+  // Solo rutas internas. Se rechazan "//", "\" y caracteres de control o espacios:
+  // el navegador borra tabulaciones y saltos, y "/\t/otro.com" terminaría en "//otro.com".
+  if (!value || !value.startsWith("/") || value.startsWith("//") || /[\\\x00-\x20\x7f]/.test(value)) return fallback;
   return value;
 }
 
