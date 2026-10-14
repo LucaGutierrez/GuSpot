@@ -15,7 +15,7 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const DIDIT = "https://verification.didit.me/v3";
-const ALLOWED_CALLBACK = [/^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev\//, /^http:\/\/localhost:3000\//];
+const ALLOWED_CALLBACK = [/^https:\/\/(www\.)?guspotapp\.com\//, /^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev\//, /^http:\/\/localhost:3000\//];
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -229,7 +229,7 @@ async function handle(req: Request): Promise<Response> {
 }
 
 // Solo las páginas de GuSpot pueden llamar a esta función desde el navegador.
-const SITE_ORIGINS = [/^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev$/, /^http:\/\/localhost:3000$/];
+const SITE_ORIGINS = [/^https:\/\/(www\.)?guspotapp\.com$/, /^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev$/, /^http:\/\/localhost:3000$/];
 
 Deno.serve(async (req) => {
   const res = await handle(req);

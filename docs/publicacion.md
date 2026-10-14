@@ -1,6 +1,6 @@
 # Publicación
 
-El sitio es estático: `npm run build` genera `out/` y `npm run deploy` lo sube a **Cloudflare Pages** (proyecto `guspot-demo`, https://guspot-demo.pages.dev).
+El sitio es estático: `npm run build` genera `out/` y `npm run deploy` lo sube a **Cloudflare Pages** (proyecto `guspot-demo`, dominio https://guspotapp.com; también responde en https://guspot-demo.pages.dev).
 
 ## Publicar
 

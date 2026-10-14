@@ -2,7 +2,7 @@
 
 Encontrá dónde estacionar en CABA: garajes cerca tuyo con **lugares libres en vivo**, precio a la vista y la opción de **avisar que vas** o **reservar y pagar** desde el celular.
 
-**Sitio:** https://guspot-demo.pages.dev (beta en CABA; se instala en el celular como app desde "Agregar a inicio").
+**Sitio:** https://guspotapp.com (beta en CABA; se instala en el celular como app desde "Agregar a inicio").
 
 ## Qué hace
 

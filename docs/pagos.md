@@ -12,6 +12,8 @@ Cómo funciona y qué hay que configurar. Decisiones del usuario (2026-10-11):
 1. Entrar a https://www.mercadopago.com.ar/developers/panel/app con la cuenta de Mercado Pago de GuSpot.
 2. **Crear aplicación** → tipo de pago online, producto **Checkout Pro**, modelo de integración **Marketplace** (cobrar en nombre de otros vendedores).
 3. En la aplicación, **URLs de redireccionamiento** (OAuth):
+   - `https://guspotapp.com/mis-garages/cobros/` (dominio principal)
+   - `https://www.guspotapp.com/mis-garages/cobros/`
    - `https://guspot-demo.pages.dev/mis-garages/cobros/`
    - `http://localhost:3000/mis-garages/cobros/` (para probar en la compu)
 4. Copiar de **Credenciales de producción**: *Client ID* (número de la app) y *Client Secret*.
