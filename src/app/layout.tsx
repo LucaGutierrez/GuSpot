@@ -30,11 +30,20 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+// La dirección interna de Cloudflare (guspot-demo.pages.dev) lleva al dominio
+// guspotapp.com, en la misma página. Las versiones de prueba (<id>.guspot-demo.pages.dev)
+// no se tocan. Texto fijo: no incluye nada que venga de la persona.
+const MAIN_DOMAIN_REDIRECT =
+  'if(location.hostname==="guspot-demo.pages.dev")location.replace("https://guspotapp.com"+location.pathname+location.search+location.hash)';
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   // El mapa es la pantalla principal: abrimos antes la conexión a su proveedor.
   preconnect(MAP_ORIGIN, { crossOrigin: "anonymous" });
   return (
     <html lang="es-AR" className={`${geistSans.variable} h-full antialiased`}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: MAIN_DOMAIN_REDIRECT }} />
+      </head>
       <body className="pb-safe-nav flex min-h-full flex-col font-sans">
         <AuthProvider>
           <DemoBanner />
