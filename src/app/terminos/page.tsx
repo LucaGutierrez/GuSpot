@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LEGAL, LegalPage } from "@/components/legal/legal-page";
+import { ContactEmail, LEGAL, LegalPage } from "@/components/legal/legal-page";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
@@ -14,8 +14,7 @@ export default function TerminosPage() {
         <h2>1. Qué es GuSpot</h2>
         <p>
           GuSpot es una plataforma que conecta a personas que buscan dónde estacionar con garajes y estacionamientos.
-          El servicio lo presta {LEGAL.owner}, CUIT {LEGAL.cuit}, con domicilio en {LEGAL.address} (en adelante,
-          &quot;GuSpot&quot;). Contacto: {LEGAL.email}.
+          El servicio lo presta {LEGAL.owner} (en adelante, &quot;GuSpot&quot;). Contacto: <ContactEmail />.
         </p>
         <p>
           GuSpot no es dueño ni operador de los garajes: cada garaje es un comercio independiente, responsable de su
