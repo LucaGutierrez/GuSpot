@@ -8,17 +8,33 @@ import { ChromeHeight } from "@/components/chrome-height";
 import { AuthProvider } from "@/lib/auth/auth-provider";
 import { preconnect } from "react-dom";
 import { MAP_ORIGIN } from "@/components/map/config";
+import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
+const DESCRIPTION =
+  "GuSpot: encontrá garajes cerca tuyo en toda la Argentina con lugares libres en vivo. Avisá que vas o reservá pagando una seña desde el celular.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: { default: "GuSpot — Estacionamiento cerca, con precio claro", template: "%s · GuSpot" },
-  description:
-    "GuSpot: encontrá garajes cerca tuyo en toda la Argentina con lugares libres en vivo. Avisá que vas o reservá y pagá desde el celular.",
-  robots: { index: false, follow: false },
+  description: DESCRIPTION,
+  // Visible en Google (decisión del usuario 2026-10-14). Las pantallas privadas se excluyen en robots.ts.
+  robots: { index: true, follow: true },
+  // Dirección principal: la misma página en guspotapp.com (evita duplicados con guspot-demo.pages.dev).
+  alternates: { canonical: "./" },
+  openGraph: {
+    type: "website",
+    siteName: "GuSpot",
+    locale: "es_AR",
+    url: "./",
+    title: "GuSpot — Estacionamiento cerca, con precio claro",
+    description: DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image" },
   applicationName: "GuSpot",
   // Abierta desde la pantalla de inicio del iPhone: sin la barra de Safari.
   appleWebApp: { capable: true, title: "GuSpot", statusBarStyle: "default" },

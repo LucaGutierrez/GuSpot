@@ -9,7 +9,7 @@ export function DemoBanner() {
       {isBackendConfigured ? (
         <>
           <strong className="font-semibold text-accent-300">GuSpot Beta</strong> · Ya funciona en toda la Argentina y estamos
-          sumando garajes. Los pagos con Mercado Pago son reales.
+          sumando garajes.
         </>
       ) : (
         <>

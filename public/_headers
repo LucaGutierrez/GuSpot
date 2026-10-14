@@ -9,3 +9,8 @@
   Permissions-Policy: geolocation=(self), camera=(self), microphone=(), payment=(), usb=(), interest-cohort=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Cross-Origin-Opener-Policy: same-origin
+
+# Imagen para compartir (se genera sin extensión): que se sirva como PNG.
+/opengraph-image
+  Content-Type: image/png
+  Cache-Control: public, max-age=86400
