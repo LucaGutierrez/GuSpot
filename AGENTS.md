@@ -65,6 +65,8 @@ original se sacaron a pedido del usuario: no volver a agregarlos.
 - Base: `supabase/migrations/20261010140000_bookings.sql`. Todo por funciones: `create_booking` (valida horario, superposición —constraint de exclusión— y calcula el precio igual que `src/lib/pricing.ts`), `cancel_booking`, `busy_periods` (ocupación pública, sin datos personales), `booking_access` (dirección + indicaciones + punto exacto solo para el conductor de una reserva confirmada).
 - Cliente: `src/lib/data/bookings.ts`; pantallas en `src/components/bookings/**`, rutas `/reserva/?id=` y `/mis-reservas/` (con Supabase muestra las reales). El dueño ve "Reservas de tus garajes" en `/mis-garages/`.
 - Avisos por email: pendientes (requieren un proveedor de email, p. ej. Resend).
+- **Emails de cuenta** (2026-10-14): el SMTP de prueba de Supabase solo envía a miembros del equipo (2/h), así que se usa **Resend** con el dominio `guspotapp.com` (región São Paulo; registros DKIM/SPF/DMARC cargados en el DNS de Cloudflare). Supabase → Auth → SMTP: `smtp.resend.com:465`, usuario `resend`, contraseña = API key de Resend (la carga el dueño, nunca en el código), remitente `no-reply@guspotapp.com`.
+- **Dominio** (2026-10-14): `guspotapp.com` (+ www) en Cloudflare Pages; `guspot-demo.pages.dev` redirige ahí (`src/app/layout.tsx`). Supabase Site URL = https://guspotapp.com. Visible en Google (robots/sitemap/opengraph en `src/app/`).
 
 ## Seguridad e identidad (2026-10-10)
 - Para **reservar**: datos personales (18+), fotos del DNI (frente/dorso), selfie, licencia vigente (datos + fotos) y al menos un vehículo. Para **publicar**: datos personales, DNI y selfie. Lo controla la base (`missing_requirements`, migración 20261010150000).
