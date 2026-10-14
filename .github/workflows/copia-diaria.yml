@@ -1,0 +1,83 @@
+# Copia diaria de la base de GuSpot (y la mantiene activa).
+#
+# - Todos los días a las 4:00 (hora argentina) se conecta a Supabase y baja una
+#   copia de los datos. Esa conexión cuenta como uso: en el plan gratis el
+#   proyecto no se pausa por inactividad.
+# - La copia se CIFRA con una contraseña (el repositorio es público y los
+#   archivos de las tareas los puede bajar cualquiera con cuenta de GitHub).
+#   Sin la contraseña no se puede leer. Se guarda 30 días en la tarea.
+# - Las fotos (DNI, licencia, seguro, garajes) NO entran en la copia: viven en
+#   Supabase Storage. La copia guarda la base: cuentas, perfiles, vehículos,
+#   garajes, reservas, avisos y pagos.
+#
+# Secretos del repositorio (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL   cadena de conexión "Session pooler" de Supabase (con la contraseña de la base)
+#   BACKUP_PASSWORD   contraseña para cifrar la copia (guardarla en un lugar seguro)
+# Cómo abrir una copia: docs/copias.md
+
+name: Copia diaria de la base
+
+on:
+  schedule:
+    - cron: "0 7 * * *" # 07:00 UTC = 04:00 en Argentina
+  workflow_dispatch: # para correrla a mano desde la pestaña Actions
+
+permissions:
+  contents: read
+
+concurrency:
+  group: copia-diaria
+  cancel-in-progress: false
+
+jobs:
+  copia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Controlar los secretos
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASS: ${{ secrets.BACKUP_PASSWORD }}
+        run: |
+          if [ -z "$DB_URL" ] || [ -z "$PASS" ]; then
+            echo "::error::Faltan los secretos SUPABASE_DB_URL y/o BACKUP_PASSWORD (ver docs/copias.md)."
+            exit 1
+          fi
+
+      - name: Instalar pg_dump 17 (misma versión que la base)
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Bajar y cifrar la copia
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASS: ${{ secrets.BACKUP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          umask 077
+          PG=/usr/lib/postgresql/17/bin
+          day=$(date -u +%Y-%m-%d)
+          mkdir -p work out
+          # 1) Todo lo de GuSpot (tablas, funciones, reglas y datos).
+          "$PG/pg_dump" "$DB_URL" --schema=public --no-owner --no-privileges -f work/public.sql
+          # 2) Cuentas y registro de archivos (solo datos: el esquema lo maneja Supabase).
+          "$PG/pg_dump" "$DB_URL" --data-only --no-owner --no-privileges \
+            -t auth.users -t auth.identities -t storage.buckets -t storage.objects -f work/cuentas-y-archivos.sql
+          tar -czf "work/guspot-$day.tar.gz" -C work public.sql cuentas-y-archivos.sql
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PASS" \
+            --symmetric --cipher-algo AES256 -o "out/guspot-$day.tar.gz.gpg" "work/guspot-$day.tar.gz"
+          rm -rf work
+          ls -lh out
+
+      - name: Guardar la copia cifrada (30 días)
+        uses: actions/upload-artifact@v4
+        with:
+          name: copia-guspot-${{ github.run_id }}
+          path: out/*.gpg
+          retention-days: 30
+          if-no-files-found: error
