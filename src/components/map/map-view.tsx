@@ -13,6 +13,7 @@ import type { LngLatLike, Map as MapLibreMap, Marker } from "maplibre-gl";
 import type { LatLng } from "@/lib/types";
 import type { MapMarker, MapViewProps } from "./types";
 import { MAP_STYLE_URL as STYLE_URL } from "./config";
+import { applyGuSpotStyle } from "./brand-style";
 
 type MapLibreModule = typeof import("maplibre-gl");
 type Padding = NonNullable<MapViewProps["padding"]>;
@@ -125,6 +126,25 @@ function garageGlyph(): SVGSVGElement {
   path.setAttribute("stroke-linejoin", "round");
   svg.appendChild(path);
   return svg;
+}
+
+/** Firma de GuSpot en una esquina del mapa (decorativa). */
+function brandControl() {
+  const el = document.createElement("div");
+  el.className = "maplibregl-ctrl gs-map-brand";
+  el.setAttribute("aria-hidden", "true");
+  const mark = document.createElement("span");
+  mark.className = "gs-map-brand-mark";
+  mark.appendChild(garageGlyph());
+  const name = document.createElement("span");
+  name.className = "gs-map-brand-name";
+  const gu = document.createElement("span");
+  gu.textContent = "Gu";
+  const spot = document.createElement("span");
+  spot.textContent = "Spot";
+  name.append(gu, spot);
+  el.append(mark, name);
+  return { onAdd: () => el, onRemove: () => el.remove() };
 }
 
 // Todo el texto va con textContent: el nombre lo escribe el dueño del garaje.
@@ -295,6 +315,10 @@ export function MapView(props: MapViewProps) {
       container
         .querySelector(".maplibregl-ctrl-zoom-in")
         ?.parentElement?.classList.add("gs-map-zoom");
+
+      m.addControl(brandControl(), "bottom-left");
+      // Colores de GuSpot sobre el mapa base, antes del primer dibujo.
+      m.on("style.load", () => applyGuSpotStyle(m));
 
       let loaded = false;
       m.on("load", () => {

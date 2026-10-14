@@ -182,7 +182,7 @@
   position: absolute;
   inset: -9px;
   border-radius: 9999px;
-  background: rgb(59 130 246 / 0.22);
+  background: rgb(36 83 224 / 0.22);
   animation: gs-map-user-pulse 2.2s ease-out infinite;
 }
 .gs-map-user::after {
@@ -190,7 +190,7 @@
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  background: #2b7bf3;
+  background: var(--gs-brand-600);
   border: 3px solid #fff;
   box-shadow: 0 1px 4px rgb(18 23 34 / 0.35);
 }
@@ -328,4 +328,42 @@
   font-weight: 600;
   box-shadow: 0 2px 6px rgb(18 23 34 / 0.25);
   pointer-events: none;
+}
+
+/* ---------- Firma de GuSpot (abajo a la izquierda) ---------- */
+
+.gs-map .gs-map-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 10px 10px;
+  padding: 3px 8px 3px 3px;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.85);
+  box-shadow: 0 1px 3px rgb(18 23 34 / 0.12);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  pointer-events: none;
+  user-select: none;
+}
+.gs-map-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--gs-brand-600);
+  color: #fff;
+}
+.gs-map-brand-mark svg {
+  width: 13px;
+  height: 13px;
+}
+.gs-map-brand-name > span:first-child {
+  color: #0f1a3d;
+}
+.gs-map-brand-name > span:last-child {
+  color: var(--gs-brand-600);
 }
