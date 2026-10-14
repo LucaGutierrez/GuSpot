@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import type { IdentityDoc, Profile, Requirement, Vehicle } from "@/lib/data/types";
 import { DataError } from "@/lib/data/types";
 import type { VehicleSize } from "@/lib/types";
@@ -22,6 +22,7 @@ import {
   checkPhoneCode,
   isInsured,
   updateVehicleInsurance,
+  uploadInsurancePhoto,
   sendPhoneCode,
   startIdentityCheck,
   syncIdentityCheck,
@@ -337,6 +338,8 @@ function IdentitySection({
         onStatus(r.status);
         if (r.reason === "dni_distinto")
           setNote("El DNI escaneado no coincide con el número que cargaste en tus datos. Revisalo y volvé a verificar.");
+        if (r.reason === "dni_en_uso")
+          setNote("Ese DNI ya está verificado en otra cuenta de GuSpot. Si es tuyo, escribinos para revisarlo.");
       })
       .catch((err) => !cancelled && setError(errText(err)))
       .finally(() => !cancelled && setBusy(null));
@@ -694,6 +697,7 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
   const today = now ? now.slice(0, 10) : "";
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState(empty);
+  const [photo, setPhoto] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -708,20 +712,28 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
       setError("La patente no es válida (ej.: AB123CD o ABC123).");
       return;
     }
-    const insuranceError = checkInsurance(form, today);
+    const insuranceError = checkInsurance(form, today, !!photo);
     if (insuranceError) {
       setError(insuranceError);
       return;
     }
     setBusy(true);
     setError(null);
+    let added = false;
     try {
-      await addVehicle(form);
-      onChange(await listMyVehicles());
+      const id = await addVehicle(form);
+      added = true;
+      if (photo) await uploadInsurancePhoto(id, photo);
       setForm(empty);
+      setPhoto(null);
     } catch (err) {
-      setError(errText(err));
+      setError(
+        added
+          ? `Agregamos el vehículo pero no pudimos subir la foto del seguro: ${errText(err)} Probá de nuevo con "Cargar seguro".`
+          : errText(err),
+      );
     } finally {
+      if (added) onChange(await listMyVehicles().catch(() => vehicles));
       setBusy(false);
     }
   }
@@ -804,6 +816,9 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
           idPrefix="vh"
           value={form}
           onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+          photo={photo}
+          hasPhoto={false}
+          onPhoto={setPhoto}
         />
         {error && <ErrorBox>{error}</ErrorBox>}
         <Button type="submit" variant="secondary" className="w-fit" disabled={busy}>
@@ -818,11 +833,12 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
 
 type InsuranceValue = Pick<Vehicle, "insurer" | "insurancePolicy" | "insuranceExpiry">;
 
-function checkInsurance(v: InsuranceValue, today: string): string | null {
+function checkInsurance(v: InsuranceValue, today: string, hasPhoto: boolean): string | null {
   if (!v.insurer.trim() || !v.insurancePolicy.trim() || !v.insuranceExpiry) {
     return "Completá los datos del seguro: compañía, número de póliza y vencimiento.";
   }
   if (today && v.insuranceExpiry < today) return "El seguro está vencido: cargá la póliza vigente.";
+  if (!hasPhoto) return "Sacale una foto al certificado de cobertura del seguro.";
   return null;
 }
 
@@ -832,15 +848,31 @@ function InsuranceFields({
   idPrefix,
   value,
   onChange,
+  photo,
+  hasPhoto,
+  onPhoto,
 }: {
   idPrefix: string;
   value: InsuranceValue;
   onChange: (patch: Partial<InsuranceValue>) => void;
+  /** Foto nueva elegida (todavía sin subir). */
+  photo: File | null;
+  /** Ya hay una foto subida. */
+  hasPhoto: boolean;
+  onPhoto: (file: File | null) => void;
 }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const preview = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
+  useEffect(() => () => {
+    if (preview) URL.revokeObjectURL(preview);
+  }, [preview]);
+
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="text-sm font-semibold text-ink-900">Seguro del vehículo</legend>
-      <p className="text-xs text-ink-500">Lo ve el garaje junto con tu auto, por si pasa algo.</p>
+      <p className="text-xs text-ink-500">
+        Lo ve el garaje junto con tu auto (datos y foto del certificado) para controlarlo cuando llegás.
+      </p>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Field id={`${idPrefix}-aseguradora`} label="Compañía">
           <input
@@ -871,6 +903,40 @@ function InsuranceFields({
           />
         </Field>
       </div>
+      <div className="flex flex-col gap-2 rounded-xl border border-ink-200 p-3">
+        <p className="text-sm font-semibold text-ink-900">Foto del certificado de cobertura</p>
+        <p className="text-xs text-ink-500">
+          La tarjeta o el certificado del seguro, donde se lean la compañía, la patente y el vencimiento.
+        </p>
+        {preview && (
+          // eslint-disable-next-line @next/next/no-img-element -- foto local antes de subirla
+          <img src={preview} alt="Certificado del seguro" className="max-h-48 w-fit rounded-lg object-contain" />
+        )}
+        {!photo && hasPhoto && (
+          <p className="flex items-center gap-2 text-sm text-emerald-800">
+            <CheckIcon className="shrink-0" /> Foto subida.
+          </p>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => {
+            onPhoto(e.target.files?.[0] ?? null);
+            e.target.value = "";
+          }}
+        />
+        <Button
+          type="button"
+          variant={photo || hasPhoto ? "secondary" : "primary"}
+          className="w-fit"
+          onClick={() => inputRef.current?.click()}
+        >
+          <CameraIcon /> {photo || hasPhoto ? "Cambiar la foto" : "Sacar foto del certificado"}
+        </Button>
+      </div>
     </fieldset>
   );
 }
@@ -878,6 +944,7 @@ function InsuranceFields({
 function InsuranceStatus({ vehicle: v, today, onEdit }: { vehicle: Vehicle; today: string; onEdit: () => void }) {
   const ok = isInsured(v, today);
   const expired = !!v.insuranceExpiry && !!today && v.insuranceExpiry < today;
+  const onlyPhoto = !ok && !expired && !!v.insurer.trim() && !!v.insurancePolicy.trim() && !!v.insuranceExpiry;
   return (
     <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
       {ok ? (
@@ -885,7 +952,9 @@ function InsuranceStatus({ vehicle: v, today, onEdit }: { vehicle: Vehicle; toda
           Seguro: {v.insurer} · vence {formatDay(v.insuranceExpiry)} ✓
         </span>
       ) : (
-        <span className="font-semibold text-red-700">{expired ? "Seguro vencido" : "Falta el seguro"}</span>
+        <span className="font-semibold text-red-700">
+          {expired ? "Seguro vencido" : onlyPhoto ? "Falta la foto del seguro" : "Falta el seguro"}
+        </span>
       )}
       <button type="button" onClick={onEdit} className="font-semibold text-brand-700 hover:underline">
         {ok ? "Cambiar" : "Cargar seguro"}
@@ -900,11 +969,12 @@ function InsuranceForm({ vehicle, today, onSaved }: { vehicle: Vehicle; today: s
     insurancePolicy: vehicle.insurancePolicy,
     insuranceExpiry: vehicle.insuranceExpiry,
   });
+  const [photo, setPhoto] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onSave() {
-    const problem = checkInsurance(value, today);
+    const problem = checkInsurance(value, today, vehicle.insurancePhoto || !!photo);
     if (problem) {
       setError(problem);
       return;
@@ -913,6 +983,7 @@ function InsuranceForm({ vehicle, today, onSaved }: { vehicle: Vehicle; today: s
     setError(null);
     try {
       await updateVehicleInsurance(vehicle.id, value);
+      if (photo) await uploadInsurancePhoto(vehicle.id, photo);
       onSaved();
     } catch (err) {
       setError(errText(err));
@@ -922,7 +993,14 @@ function InsuranceForm({ vehicle, today, onSaved }: { vehicle: Vehicle; today: s
 
   return (
     <div className="mt-3 flex flex-col gap-3 rounded-xl bg-ink-50 p-3">
-      <InsuranceFields idPrefix={`seg-${vehicle.id}`} value={value} onChange={(patch) => setValue((v) => ({ ...v, ...patch }))} />
+      <InsuranceFields
+        idPrefix={`seg-${vehicle.id}`}
+        value={value}
+        onChange={(patch) => setValue((v) => ({ ...v, ...patch }))}
+        photo={photo}
+        hasPhoto={vehicle.insurancePhoto}
+        onPhoto={setPhoto}
+      />
       {error && <ErrorBox>{error}</ErrorBox>}
       <Button type="button" variant="secondary" className="w-fit" onClick={onSave} disabled={busy}>
         {busy ? "Guardando…" : "Guardar seguro"}

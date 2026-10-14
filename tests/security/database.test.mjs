@@ -36,6 +36,8 @@ describe("anónimo (sin sesión)", () => {
     `create_booking('${"0".repeat(8)}-0000-0000-0000-000000000000', now()::timestamp, now()::timestamp, '${"0".repeat(8)}-0000-0000-0000-000000000000')`,
     `missing_requirements('${OWNER}', 'conductor')`,
     `setting_int('x', 1)`,
+    `mark_booking_arrived('${"0".repeat(8)}-0000-0000-0000-000000000000')`,
+    `can_see_insurance_photo('x')`,
   ]) {
     test(`no puede llamar ${fn.split("(")[0]}`, () => rejects(asUser(db, null, `select ${fn}`), "permission denied"));
   }
@@ -88,7 +90,8 @@ describe("usuario con sesión contra datos ajenos (IDOR / escalada)", () => {
 
   test("el dueño no puede reservar su propio garaje", async () => {
     const [{ id: car }] = await asUser(db, OWNER, `insert into vehicles (brand, model, plate, size, insurer, insurance_policy, insurance_expiry)
-      values ('VW', 'Gol', 'AD111AA', 'auto_chico', 'X', '1', '2035-01-01') returning id`);
+      values ('VW', 'Gol', 'AD111AA', 'auto_chico', 'X', '1', current_date + 300) returning id`);
+    await asUser(db, OWNER, `insert into storage.objects (bucket_id, name) values ('insurance-docs', $1)`, [`${OWNER}/${car}`]);
     await asAdmin(db, `insert into storage.objects (bucket_id, name) values ('identity-docs', $1), ('identity-docs', $2)`,
       [`${OWNER}/licencia-frente`, `${OWNER}/licencia-dorso`]);
     await rejects(asUser(db, OWNER, `select create_booking($1, ${tomorrowAt(10)}, ${tomorrowAt(11)}, $2)`, [garage, car]), "own_garage");
@@ -135,6 +138,44 @@ describe("archivos (storage)", () => {
 
   test("no puede subir fotos de perfil a la carpeta de otra persona", () =>
     rejects(asUser(db, DRIVER, `insert into storage.objects (bucket_id, name) values ('avatars', $1)`, [`${OTHER}/x.jpg`])));
+});
+
+describe("datos confiables", () => {
+  test("dos cuentas no pueden quedar verificadas con el mismo DNI", async () => {
+    const [{ dni_number: otherDni }] = await asAdmin(db, `select dni_number from profiles where id = $1`, [OTHER]);
+    await rejects(asUser(db, DRIVER, `update profiles set dni_number = $1`, [otherDni]), "dni_in_use");
+    await rejects(asAdmin(db, `update profiles set dni_number = $1 where id = $2`, [otherDni, DRIVER]), "dni_in_use");
+  });
+
+  test("fechas imposibles se rechazan", async () => {
+    await rejects(asUser(db, DRIVER, `update profiles set birth_date = current_date + 1`), "birth_date_invalid");
+    await rejects(asUser(db, DRIVER, `update profiles set license_expiry = current_date + 5000`), "license_expiry_invalid");
+    await rejects(asUser(db, DRIVER, `update profiles set license_category = 'Z9'`));
+    await rejects(asUser(db, DRIVER, `update vehicles set insurance_expiry = current_date + 1000`), "insurance_expiry_invalid");
+  });
+
+  test("sin foto del certificado el seguro no cuenta", async () => {
+    const [{ id }] = await asUser(db, DRIVER, `insert into vehicles (brand, model, plate, size, insurer, insurance_policy, insurance_expiry)
+      values ('Ford', 'Ka', 'AE222BB', 'auto_chico', 'X', '9', current_date + 100) returning id`);
+    await rejects(asUser(db, DRIVER, `select notify_arrival($1, 10, $2)`, [garage, id]), "insurance_missing");
+  });
+
+  test("foto del seguro: solo en vehículos propios", async () => {
+    await rejects(asUser(db, DRIVER, `insert into storage.objects (bucket_id, name) values ('insurance-docs', $1)`, [`${OTHER}/${cars[OTHER]}`]));
+    await rejects(asUser(db, DRIVER, `insert into storage.objects (bucket_id, name) values ('insurance-docs', $1)`, [`${DRIVER}/${cars[OTHER]}`]));
+  });
+
+  test("foto del seguro: la ve el garaje del aviso, no otros", async () => {
+    const photo = `${DRIVER}/${cars[DRIVER]}`;
+    const see = (uid) => asUser(db, uid, `select name from storage.objects where bucket_id = 'insurance-docs' and name = $1`, [photo]);
+    assert.equal((await see(OTHER)).length, 0);
+    await asUser(db, DRIVER, `select notify_arrival($1, 10, $2)`, [garage, cars[DRIVER]]);
+    const [{ car_insurance_photo }] = await asUser(db, OWNER, `select car_insurance_photo from arrival_notices
+      where driver_id = $1 order by created_at desc limit 1`, [DRIVER]);
+    assert.equal(car_insurance_photo, photo);
+    assert.equal((await see(OWNER)).length, 1);
+    assert.equal((await see(OTHER)).length, 0);
+  });
 });
 
 describe("entradas maliciosas", () => {

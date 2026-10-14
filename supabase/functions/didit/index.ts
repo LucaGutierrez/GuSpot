@@ -144,7 +144,21 @@ async function handle(req: Request): Promise<Response> {
         digits(v.document_number || v.personal_number),
       );
       if (docNumbers.includes(digits(profile?.dni_number))) {
-        next = "verificada";
+        // Un DNI, una cuenta: si ya está verificado en otra, no se aprueba.
+        const { data: other } = await admin
+          .from("profiles")
+          .select("id")
+          .eq("dni_number", profile?.dni_number)
+          .eq("identity_status", "verificada")
+          .neq("id", user.id)
+          .limit(1)
+          .maybeSingle();
+        if (other) {
+          next = "rechazada";
+          reason = "dni_en_uso";
+        } else {
+          next = "verificada";
+        }
       } else {
         next = "rechazada";
         reason = "dni_distinto";

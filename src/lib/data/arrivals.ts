@@ -48,6 +48,7 @@ interface Row {
   car: string;
   plate: string;
   car_insurance: string;
+  car_insurance_photo: string;
   driver_avatar: string;
   eta_minutes: number;
   status: ArrivalStatus;
@@ -55,7 +56,7 @@ interface Row {
   updated_at: string;
 }
 
-const COLUMNS = "id, garage_id, driver_name, car, plate, car_insurance, driver_avatar, eta_minutes, status, created_at, updated_at";
+const COLUMNS = "id, garage_id, driver_name, car, plate, car_insurance, car_insurance_photo, driver_avatar, eta_minutes, status, created_at, updated_at";
 
 function toNotice(r: Row): ArrivalNotice {
   return {
@@ -65,6 +66,7 @@ function toNotice(r: Row): ArrivalNotice {
     car: r.car,
     plate: r.plate,
     carInsurance: r.car_insurance,
+    carInsurancePhoto: r.car_insurance_photo,
     driverAvatarUrl: avatarUrl(r.driver_avatar),
     etaMinutes: r.eta_minutes,
     status: r.status,

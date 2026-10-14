@@ -123,6 +123,8 @@ export interface RealBooking {
   car: string;
   /** "La Caja · póliza 123 · vence 01/01/2027" (copia al reservar). */
   carInsurance: string;
+  /** Ruta privada de la foto del certificado del seguro ("" si no hay). */
+  carInsurancePhoto: string;
   /** Foto de perfil del conductor (URL pública o ""). */
   driverAvatarUrl: string;
   hours: number;
@@ -179,6 +181,8 @@ export interface Vehicle {
   insurer: string;
   insurancePolicy: string;
   insuranceExpiry: string;
+  /** Subió la foto del certificado de cobertura. */
+  insurancePhoto: boolean;
 }
 
 /** Lo que falta para reservar ("conductor") o publicar ("propietario"). */
@@ -207,6 +211,8 @@ export interface ArrivalNotice {
   plate: string;
   /** Seguro del vehículo (copia al avisar). */
   carInsurance: string;
+  /** Ruta privada de la foto del certificado del seguro ("" si no hay). */
+  carInsurancePhoto: string;
   /** Foto de perfil del conductor (URL pública o ""). */
   driverAvatarUrl: string;
   etaMinutes: number;

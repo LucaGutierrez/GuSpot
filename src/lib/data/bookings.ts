@@ -75,6 +75,7 @@ interface BookingRow {
   car_model: string;
   car_color: string;
   car_insurance: string;
+  car_insurance_photo: string;
   driver_avatar: string;
   hours: number;
   total_price: number;
@@ -87,7 +88,7 @@ interface BookingRow {
 
 const COLUMNS =
   "id, garage_id, driver_id, driver_name, garage_title, garage_neighborhood, start_at, end_at, status, " +
-  "payment_status, vehicle, plate, car_brand, car_model, car_color, car_insurance, driver_avatar, hours, total_price, service_fee, hold_until, paid_at, arrived_at, created_at";
+  "payment_status, vehicle, plate, car_brand, car_model, car_color, car_insurance, car_insurance_photo, driver_avatar, hours, total_price, service_fee, hold_until, paid_at, arrived_at, created_at";
 
 function toBooking(row: BookingRow, me: string): RealBooking {
   return {
@@ -104,6 +105,7 @@ function toBooking(row: BookingRow, me: string): RealBooking {
     plate: row.plate,
     car: [row.car_brand, row.car_model, row.car_color].filter(Boolean).join(" "),
     carInsurance: row.car_insurance,
+    carInsurancePhoto: row.car_insurance_photo,
     driverAvatarUrl: avatarUrl(row.driver_avatar),
     hours: row.hours,
     total: row.total_price,

@@ -8,6 +8,7 @@ import type { ArrivalNotice, ArrivalStatus, OwnerGarage, RealBooking } from "@/l
 import { getMyGarage, updateLiveAvailability } from "@/lib/data/garages";
 import { listGarageArrivals, setArrivalStatus, subscribeArrivals } from "@/lib/data/arrivals";
 import { listGarageBookings, markBookingArrived } from "@/lib/data/bookings";
+import { insurancePhotoUrl } from "@/lib/data/profile";
 import { toMs } from "@/lib/datetime";
 import { formatARS, formatRange } from "@/lib/format";
 import { nowInArgentina } from "@/components/driver/use-now";
@@ -316,7 +317,7 @@ function Bookings({
                     <p className="text-sm text-ink-700">
                       {b.car} · <span className="font-mono font-semibold">{b.plate}</span>
                     </p>
-                    {b.carInsurance && <p className="text-xs text-ink-500">Seguro: {b.carInsurance}</p>}
+                    <InsuranceLine text={b.carInsurance} photo={b.carInsurancePhoto} />
                   </div>
                 </div>
                 <div className="flex flex-col gap-1 text-sm">
@@ -432,7 +433,7 @@ function Arrivals({ garageId, now }: { garageId: string; now: number }) {
                     <p className="text-sm text-ink-700">
                       {a.car} · <span className="font-mono font-semibold">{a.plate}</span>
                     </p>
-                    {a.carInsurance && <p className="text-xs text-ink-500">Seguro: {a.carInsurance}</p>}
+                    <InsuranceLine text={a.carInsurance} photo={a.carInsurancePhoto} />
                     </div>
                   </div>
                   <div className="text-right">
@@ -474,5 +475,47 @@ function Arrivals({ garageId, now }: { garageId: string; now: number }) {
         </details>
       )}
     </Card>
+  );
+}
+
+/** Seguro del auto + botón para ver la foto del certificado (enlace temporal). */
+function InsuranceLine({ text, photo }: { text: string; photo: string }) {
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  if (!text && !photo) return null;
+
+  async function onView() {
+    // La pestaña se abre antes de pedir el enlace para que el navegador no la bloquee.
+    const tab = window.open("", "_blank");
+    setBusy(true);
+    setFailed(false);
+    try {
+      const url = await insurancePhotoUrl(photo);
+      if (url && tab) tab.location.href = url;
+      else {
+        tab?.close();
+        setFailed(true);
+      }
+    } catch {
+      tab?.close();
+      setFailed(true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <p className="text-xs text-ink-500">
+      {text && <>Seguro: {text}</>}
+      {photo && (
+        <>
+          {" · "}
+          <button type="button" onClick={onView} disabled={busy} className="font-semibold text-brand-700 hover:underline disabled:opacity-60">
+            {busy ? "Abriendo…" : "Ver foto del seguro"}
+          </button>
+        </>
+      )}
+      {failed && <span className="text-red-700"> · No pudimos abrir la foto.</span>}
+    </p>
   );
 }

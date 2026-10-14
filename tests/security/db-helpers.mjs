@@ -62,15 +62,15 @@ export async function asUser(db, uid, sql, params = []) {
 
 /** Datos de ejemplo: un garaje publicado con Mercado Pago, y dos conductores verificados. */
 export async function seed(db) {
-  for (const id of [OWNER, DRIVER, OTHER]) {
+  for (const [i, id] of [OWNER, DRIVER, OTHER].entries()) {
     await asAdmin(db, `insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)`, [
       id,
       `${id.slice(0, 4)}@ejemplo.test`,
-      JSON.stringify({ first_name: "Ana", last_name: "Pérez", dni: "30123456", birth_date: "1990-01-01", phone: "+541122334455" }),
+      JSON.stringify({ first_name: "Ana", last_name: "Pérez", dni: `3012345${i}`, birth_date: "1990-01-01", phone: "+541122334455" }),
     ]);
   }
   await asAdmin(db, `update profiles set identity_status = 'verificada', phone_verified = true,
-                       license_number = '30123456', license_category = 'B1', license_expiry = '2035-01-01'`);
+                       license_number = dni_number, license_category = 'B1', license_expiry = current_date + 1000`);
   for (const id of [DRIVER, OTHER]) {
     for (const doc of ["licencia-frente", "licencia-dorso"]) {
       await asAdmin(db, `insert into storage.objects (bucket_id, name) values ('identity-docs', $1)`, [`${id}/${doc}`]);
@@ -90,7 +90,8 @@ export async function seed(db) {
   for (const [id, plate] of [[DRIVER, "AB123CD"], [OTHER, "AC456EF"]]) {
     [{ id: cars[id] }] = await asUser(db, id, `
       insert into vehicles (brand, model, color, plate, size, insurer, insurance_policy, insurance_expiry)
-      values ('Fiat', 'Cronos', 'Gris', $1, 'auto_mediano', 'La Caja', '123456', '2035-01-01') returning id`, [plate]);
+      values ('Fiat', 'Cronos', 'Gris', $1, 'auto_mediano', 'La Caja', '123456', current_date + 300) returning id`, [plate]);
+    await asUser(db, id, `insert into storage.objects (bucket_id, name) values ('insurance-docs', $1)`, [`${id}/${cars[id]}`]);
   }
   return { garage, cars };
 }

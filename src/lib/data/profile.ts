@@ -8,6 +8,7 @@ import { getSupabase } from "../supabase/client";
 import { DataError, type IdentityDoc, type Profile, type Requirement, type Vehicle } from "./types";
 
 const IDENTITY_BUCKET = "identity-docs";
+const INSURANCE_BUCKET = "insurance-docs";
 
 function db(): SupabaseClient {
   const supabase = getSupabase();
@@ -24,6 +25,15 @@ async function requireUserId(supabase: SupabaseClient): Promise<string> {
 
 function toDataError(error: { message?: string; code?: string }): DataError {
   const m = error.message ?? "";
+  // Controles de la base (migración 20261014120000_trust_checks.sql).
+  if (m.includes("dni_in_use") || m.includes("profiles_verified_dni_key"))
+    return new DataError("Ese DNI ya está verificado en otra cuenta. Si es tuyo, escribinos para revisarlo.", "validation");
+  if (m.includes("birth_date_invalid")) return new DataError("La fecha de nacimiento no es válida.", "validation");
+  if (m.includes("license_expiry_invalid"))
+    return new DataError("El vencimiento de la licencia no es válido: revisá el año.", "validation");
+  if (m.includes("insurance_expiry_invalid"))
+    return new DataError("El vencimiento del seguro no es válido: revisá el año (las pólizas duran hasta un año).", "validation");
+  if (m.includes("license_category")) return new DataError("Elegí una categoría de licencia de la lista.", "validation");
   if (m.includes("vehicles_plate_check")) return new DataError("La patente no es válida (ej.: AB123CD o ABC123).", "validation");
   if (m.includes("vehicles_user_id_plate_key") || error.code === "23505")
     return new DataError("Ya tenés un vehículo con esa patente.", "validation");
@@ -238,22 +248,61 @@ export function normalizePlate(plate: string): string {
 export async function listMyVehicles(): Promise<Vehicle[]> {
   const supabase = db();
   await requireUserId(supabase);
-  const { data, error } = await supabase
-    .from("vehicles")
-    .select("id, brand, model, color, plate, size, insurer, insurance_policy, insurance_expiry")
-    .order("created_at")
-    .returns<(Omit<Vehicle, "insurancePolicy" | "insuranceExpiry"> & { insurance_policy: string; insurance_expiry: string | null })[]>();
+  const me = await requireUserId(supabase);
+  const [{ data, error }, photos] = await Promise.all([
+    supabase
+      .from("vehicles")
+      .select("id, brand, model, color, plate, size, insurer, insurance_policy, insurance_expiry")
+      .order("created_at")
+      .returns<
+        (Omit<Vehicle, "insurancePolicy" | "insuranceExpiry" | "insurancePhoto"> & {
+          insurance_policy: string;
+          insurance_expiry: string | null;
+        })[]
+      >(),
+    supabase.storage.from(INSURANCE_BUCKET).list(me),
+  ]);
   if (error) throw toDataError(error);
+  const withPhoto = new Set((photos.data ?? []).map((o) => o.name));
   return data.map(({ insurance_policy, insurance_expiry, ...v }) => ({
     ...v,
     insurancePolicy: insurance_policy,
     insuranceExpiry: insurance_expiry ?? "",
+    insurancePhoto: withPhoto.has(v.id),
   }));
 }
 
-/** Seguro vigente (compañía, póliza y vencimiento hoy o después). */
-export function isInsured(v: Pick<Vehicle, "insurer" | "insurancePolicy" | "insuranceExpiry">, today: string): boolean {
-  return !!v.insurer.trim() && !!v.insurancePolicy.trim() && !!v.insuranceExpiry && v.insuranceExpiry >= today;
+/** Seguro vigente: compañía, póliza, vencimiento hoy o después y foto del certificado. */
+export function isInsured(
+  v: Pick<Vehicle, "insurer" | "insurancePolicy" | "insuranceExpiry" | "insurancePhoto">,
+  today: string,
+): boolean {
+  return (
+    !!v.insurer.trim() && !!v.insurancePolicy.trim() && !!v.insuranceExpiry && v.insuranceExpiry >= today && v.insurancePhoto
+  );
+}
+
+/** Sube (o reemplaza) la foto del certificado del seguro de un vehículo propio. */
+export async function uploadInsurancePhoto(vehicleId: string, file: File): Promise<void> {
+  if (!file.type.startsWith("image/")) throw new DataError("Tiene que ser una foto.", "validation");
+  const supabase = db();
+  const me = await requireUserId(supabase);
+  const body = await shrink(file);
+  const { error } = await supabase.storage
+    .from(INSURANCE_BUCKET)
+    .upload(`${me}/${vehicleId}`, body, { contentType: "image/jpeg", upsert: true });
+  if (error) throw toDataError(error);
+}
+
+/**
+ * Enlace temporal (5 min) a la foto del seguro: la propia, o la de un conductor
+ * con reserva o aviso activo en tu garaje (lo controla la base).
+ */
+export async function insurancePhotoUrl(path: string): Promise<string | null> {
+  const supabase = db();
+  await requireUserId(supabase);
+  const { data } = await supabase.storage.from(INSURANCE_BUCKET).createSignedUrl(path, 300);
+  return data?.signedUrl ?? null;
 }
 
 const insuranceRow = (v: Pick<Vehicle, "insurer" | "insurancePolicy" | "insuranceExpiry">) => ({
@@ -272,25 +321,28 @@ export async function updateVehicleInsurance(
   if (error) throw toDataError(error);
 }
 
-export async function addVehicle(v: Omit<Vehicle, "id">): Promise<void> {
+/** Agrega el vehículo y devuelve su id (para subir la foto del seguro). */
+export async function addVehicle(v: Omit<Vehicle, "id" | "insurancePhoto">): Promise<string> {
   const supabase = db();
   await requireUserId(supabase);
-  const { error } = await supabase.from("vehicles").insert({
+  const { data, error } = await supabase.from("vehicles").insert({
     brand: v.brand.trim(),
     model: v.model.trim(),
     color: v.color.trim(),
     plate: normalizePlate(v.plate),
     size: v.size,
     ...insuranceRow(v),
-  });
+  }).select("id").single<{ id: string }>();
   if (error) throw toDataError(error);
+  return data.id;
 }
 
 export async function deleteVehicle(id: string): Promise<void> {
   const supabase = db();
-  await requireUserId(supabase);
+  const me = await requireUserId(supabase);
   const { error } = await supabase.from("vehicles").delete().eq("id", id);
   if (error) throw toDataError(error);
+  await supabase.storage.from(INSURANCE_BUCKET).remove([`${me}/${id}`]);
 }
 
 // --- Verificación con Didit (función del servidor supabase/functions/didit) ---
@@ -367,6 +419,6 @@ export const REQUIREMENT_LABEL: Record<Requirement, string> = {
   licencia: "Licencia de conducir (datos y fotos de frente y dorso)",
   licencia_vencida: "Tu licencia de conducir está vencida",
   vehiculo: "Al menos un vehículo",
-  seguro: "El seguro vigente de tu vehículo (compañía, póliza y vencimiento)",
+  seguro: "El seguro vigente de tu vehículo (compañía, póliza, vencimiento y foto del certificado)",
   licencia_dni: "El número de tu licencia tiene que ser el mismo que el de tu DNI",
 };
