@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/auth-provider";
-import { PASSWORD_MIN_LENGTH, requestPasswordReset, updatePassword, type AuthResult } from "@/lib/auth/actions";
+import { PASSWORD_HINT, passwordProblem, requestPasswordReset, updatePassword, type AuthResult } from "@/lib/auth/actions";
 import { AccountsDisabled, AuthCard, Field, FormMessage, Loading, ShowPassword, TextLink } from "./form-parts";
 
 /** /recuperar/: pide el enlace para crear una contraseña nueva. */
@@ -79,8 +79,9 @@ export function NewPasswordForm() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (password.length < PASSWORD_MIN_LENGTH) {
-      setResult({ ok: false, message: `La contraseña tiene que tener al menos ${PASSWORD_MIN_LENGTH} caracteres.` });
+    const problem = passwordProblem(password);
+    if (problem) {
+      setResult({ ok: false, message: problem });
       return;
     }
     setBusy(true);
@@ -121,7 +122,7 @@ export function NewPasswordForm() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            hint={`Al menos ${PASSWORD_MIN_LENGTH} caracteres.`}
+            hint={PASSWORD_HINT}
             required
           />
           <ShowPassword checked={show} onChange={setShow} />

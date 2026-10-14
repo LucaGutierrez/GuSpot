@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { PASSWORD_MIN_LENGTH, signUp, type AuthResult } from "@/lib/auth/actions";
+import { PASSWORD_HINT, passwordProblem, signUp, type AuthResult } from "@/lib/auth/actions";
 import { normalizePhone } from "@/lib/data/profile";
 import {
   AccountsDisabled,
@@ -53,7 +53,8 @@ function validate(f: Form): Partial<Record<keyof Form, string>> {
   const phoneDigits = normalizePhone(f.phone).replace(/\D/g, "");
   if (phoneDigits.length < 12 || phoneDigits.length > 15) e.phone = "Escribí tu celular con código de área (ej.: 11 2345 6789).";
   if (!EMAIL_RE.test(f.email.trim())) e.email = "Revisá el email: no parece válido.";
-  if (f.password.length < PASSWORD_MIN_LENGTH) e.password = `Usá al menos ${PASSWORD_MIN_LENGTH} caracteres.`;
+  const passwordError = passwordProblem(f.password);
+  if (passwordError) e.password = passwordError;
   if (f.password2 !== f.password) e.password2 = "Las contraseñas no coinciden.";
   return e;
 }
@@ -177,7 +178,7 @@ export function SignUpForm() {
               autoComplete="new-password"
               value={form.password}
               onChange={set("password")}
-              hint={`Al menos ${PASSWORD_MIN_LENGTH} caracteres.`}
+              hint={PASSWORD_HINT}
               aria-invalid={!!errors.password}
               required
             />

@@ -15,12 +15,32 @@ const NOT_CONFIGURED: AuthResult = {
 
 export const PASSWORD_MIN_LENGTH = 8;
 
+/** Lo que exige Supabase (Auth → Email → Password requirements): se avisa antes de enviar. */
+export const PASSWORD_HINT = `Al menos ${PASSWORD_MIN_LENGTH} caracteres, con mayúscula, minúscula, número y símbolo (por ej. ! ? # -).`;
+
+/** Problema de la contraseña nueva, o null si cumple las reglas. */
+export function passwordProblem(password: string): string | null {
+  if (
+    password.length < PASSWORD_MIN_LENGTH ||
+    !/[a-z]/.test(password) ||
+    !/[A-Z]/.test(password) ||
+    !/[0-9]/.test(password) ||
+    !/[^A-Za-z0-9]/.test(password)
+  ) {
+    return `La contraseña tiene que tener ${PASSWORD_HINT.charAt(0).toLowerCase()}${PASSWORD_HINT.slice(1)}`;
+  }
+  return null;
+}
+
 function friendly(error: { message?: string; code?: string; status?: number }): string {
   const code = error.code ?? "";
   if (code === "invalid_credentials") return "Email o contraseña incorrectos.";
   if (code === "email_not_confirmed") return "Todavía no confirmaste tu email. Revisá tu correo (y la carpeta de spam).";
   if (code === "user_already_exists" || code === "email_exists") return "Ya existe una cuenta con ese email. Probá ingresar o recuperar la contraseña.";
-  if (code === "weak_password") return `La contraseña es demasiado débil. Usá al menos ${PASSWORD_MIN_LENGTH} caracteres, mezclando letras y números.`;
+  if (code === "weak_password") return `La contraseña es demasiado débil. Usá ${PASSWORD_HINT.charAt(0).toLowerCase()}${PASSWORD_HINT.slice(1)}`;
+  // "Secure password change": cambiar la contraseña con una sesión de más de 24 h pide volver a ingresar.
+  if (code === "reauthentication_needed" || code === "reauthentication_not_valid")
+    return "Por seguridad, cerrá sesión y volvé a ingresar antes de cambiar la contraseña.";
   if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit" || error.status === 429)
     return "Hiciste demasiados intentos seguidos. Esperá unos minutos y probá de nuevo.";
   if (code === "same_password") return "La nueva contraseña tiene que ser distinta de la anterior.";

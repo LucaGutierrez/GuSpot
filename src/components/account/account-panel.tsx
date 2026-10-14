@@ -8,7 +8,7 @@ import { Card, Container, PageHeader } from "@/components/ui/card";
 import { CameraIcon, CarIcon, ChevronLeftIcon, ChevronRightIcon, KeyIcon, ParkingIcon, PinIcon, ShieldIcon, TicketIcon, WalletIcon } from "@/components/ui/icons";
 import { NavAppPicker } from "@/components/garage/navigate-buttons";
 import { useAuth, type AuthUser } from "@/lib/auth/auth-provider";
-import { PASSWORD_MIN_LENGTH, signOut, updatePassword, type AuthResult } from "@/lib/auth/actions";
+import { PASSWORD_HINT, passwordProblem, signOut, updatePassword, type AuthResult } from "@/lib/auth/actions";
 import type { Profile, Requirement } from "@/lib/data/types";
 import { avatarUrl, getMyAvatarPath, getMyProfile, myMissingRequirements, removeAvatar, uploadAvatar } from "@/lib/data/profile";
 import { RequireSignIn } from "@/components/my-garages/shared";
@@ -326,8 +326,9 @@ function PasswordForm() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (password.length < PASSWORD_MIN_LENGTH) {
-      setResult({ ok: false, message: `La contraseña tiene que tener al menos ${PASSWORD_MIN_LENGTH} caracteres.` });
+    const problem = passwordProblem(password);
+    if (problem) {
+      setResult({ ok: false, message: problem });
       return;
     }
     if (password !== password2) {
@@ -357,7 +358,7 @@ function PasswordForm() {
             setPassword(e.target.value);
             setResult(null);
           }}
-          hint={`Al menos ${PASSWORD_MIN_LENGTH} caracteres.`}
+          hint={PASSWORD_HINT}
         />
         <Field
           id="cuenta-clave2"
