@@ -130,8 +130,13 @@ export interface RealBooking {
   hours: number;
   /** Tarifa del garaje. */
   total: Centavos;
-  /** Cargo de servicio de GuSpot (lo paga el conductor). */
+  /**
+   * Cargo de servicio de GuSpot. Con seña (deposit > 0) sale de la seña y lo
+   * paga el garaje; en reservas viejas (deposit = 0) se le sumaba al conductor.
+   */
   serviceFee: Centavos;
+  /** Seña cobrada con Mercado Pago al reservar (0 = reserva vieja, sin seña). */
+  deposit: Centavos;
   /** Hasta cuándo se guarda el lugar esperando el pago (ISO). */
   holdUntil: string | null;
   paidAt: string | null;

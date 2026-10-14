@@ -87,8 +87,8 @@ export default function ComoFuncionaPage() {
               Encontrá dónde estacionar, con lugar y precio a la vista
             </h1>
             <p className="mt-3 text-lg text-ink-700">
-              GuSpot te muestra los garajes cerca tuyo con sus lugares libres en vivo. Vas en el momento o reservás y
-              pagás desde el celular.
+              GuSpot te muestra los garajes cerca tuyo con sus lugares libres en vivo. Vas en el momento o reservás
+              pagando una seña desde el celular, y el resto en el garaje.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <ButtonLink href="/" size="lg">

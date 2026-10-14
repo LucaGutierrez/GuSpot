@@ -140,6 +140,19 @@ describe("archivos (storage)", () => {
     rejects(asUser(db, DRIVER, `insert into storage.objects (bucket_id, name) values ('avatars', $1)`, [`${OTHER}/x.jpg`])));
 });
 
+describe("seña", () => {
+  test("se cobra el 50 % y el cargo de GuSpot sale de ahí", async () => {
+    const [{ create_booking: id }] = await asUser(db, DRIVER, `select create_booking($1, ${tomorrowAt(6)}, ${tomorrowAt(8)}, $2)`, [garage, cars[DRIVER]]);
+    const [b] = await asAdmin(db, `select total_price, service_fee, deposit from bookings where id = $1`, [id]);
+    // 2 h a $3.000: tarifa $6.000, seña $3.000, GuSpot $600.
+    assert.deepEqual([Number(b.total_price), Number(b.service_fee), Number(b.deposit)], [600000, 60000, 300000]);
+    await asAdmin(db, `update bookings set status = 'cancelada' where id = $1`, [id]);
+  });
+
+  test("la seña no la puede cambiar el conductor", () =>
+    rejects(asUser(db, DRIVER, `update bookings set deposit = 1`), "permission denied"));
+});
+
 describe("datos confiables", () => {
   test("dos cuentas no pueden quedar verificadas con el mismo DNI", async () => {
     const [{ dni_number: otherDni }] = await asAdmin(db, `select dni_number from profiles where id = $1`, [OTHER]);

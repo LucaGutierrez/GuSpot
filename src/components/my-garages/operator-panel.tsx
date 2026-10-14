@@ -325,6 +325,12 @@ function Bookings({
                   <p className="text-ink-700">
                     Tu tarifa: {formatARS(b.total)} · {b.hours} h
                   </p>
+                  {b.deposit > 0 && (
+                    <p className="text-ink-700">
+                      Seña con Mercado Pago: {formatARS(b.deposit)} ({formatARS(b.deposit - b.serviceFee)} para vos ·{" "}
+                      {formatARS(b.serviceFee)} GuSpot) · <strong>Cobrás al llegar: {formatARS(b.total - b.deposit)}</strong>
+                    </p>
+                  )}
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs text-ink-500">Reserva:</span>
                     <BookingStatusBadge status={b.status} />

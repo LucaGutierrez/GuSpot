@@ -7,7 +7,7 @@ import { formatARS, formatRange } from "@/lib/format";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { DataError, type Requirement, type Vehicle } from "@/lib/data/types";
 import { createBooking } from "@/lib/data/bookings";
-import { getPaymentSettings, serviceFeeOf, startCheckout, type PaymentSettings } from "@/lib/data/payments";
+import { depositOf, getPaymentSettings, startCheckout, type PaymentSettings } from "@/lib/data/payments";
 import { REQUIREMENT_LABEL, isInsured, listMyVehicles, myMissingRequirements } from "@/lib/data/profile";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -51,7 +51,7 @@ export function usePaymentSettings(): PaymentSettings | null {
 }
 
 export function paymentNote(s: PaymentSettings | null): string {
-  return `Pagás con Mercado Pago (tarjeta de crédito, débito o dinero en cuenta). Tenés ${s?.refundWindowMinutes ?? 10} minutos después de pagar para cancelar con devolución total.`;
+  return `Al reservar pagás la seña con Mercado Pago (tarjeta de crédito, débito o dinero en cuenta) y el resto en el garaje. Tenés ${s?.refundWindowMinutes ?? 10} minutos después de pagar para cancelar con devolución total de la seña.`;
 }
 
 /**
@@ -83,8 +83,9 @@ export function RealBookingPanel({ space }: { space: Space }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const settings = usePaymentSettings();
-  const fee = check.quote.ok && settings ? serviceFeeOf(check.quote.total, settings.serviceFeePercent) : null;
-  const toPay = check.quote.ok && fee !== null ? check.quote.total + fee : null;
+  // Seña ahora con Mercado Pago; el resto en el garaje. El cargo de GuSpot sale de la seña (no se suma).
+  const toPay = check.quote.ok && settings ? depositOf(check.quote.total, settings) : null;
+  const atGarage = check.quote.ok && toPay !== null ? check.quote.total - toPay : null;
 
   const ready = check.status.ok && check.quote.ok && !!check.interval && verified && !!vehicleId && toPay !== null;
   const here = typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : "/";
@@ -130,7 +131,7 @@ export function RealBookingPanel({ space }: { space: Space }) {
       </ButtonLink>
     ) : (
       <Button size="lg" className="w-full" onClick={onReserve} disabled={!ready || busy || auth.status !== "signed-in"}>
-        {busy ? "Abriendo Mercado Pago…" : ready && toPay !== null ? `Reservar y pagar · ${formatARS(toPay)}` : "Reservar y pagar"}
+        {busy ? "Abriendo Mercado Pago…" : ready && toPay !== null ? `Reservar y pagar la seña · ${formatARS(toPay)}` : "Reservar y pagar la seña"}
       </Button>
     );
 
@@ -223,16 +224,17 @@ export function RealBookingPanel({ space }: { space: Space }) {
             <>
               <p className="text-sm text-ink-700">{formatRange(check.interval.start, check.interval.end)}</p>
               <PriceBreakdown space={space} quote={check.quote} totalLabel="Tarifa del garaje" />
-              {fee !== null && toPay !== null && (
+              {toPay !== null && atGarage !== null && (
                 <dl className="space-y-1.5 text-sm">
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-ink-500">Cargo de servicio GuSpot ({settings?.serviceFeePercent} %)</dt>
-                    <dd className="text-ink-900">{formatARS(fee)}</dd>
-                  </div>
                   <div className="flex justify-between gap-3 border-t border-ink-200 pt-2 font-semibold">
-                    <dt className="text-ink-900">Total a pagar</dt>
+                    <dt className="text-ink-900">Seña ahora ({settings?.depositPercent} %)</dt>
                     <dd className="text-ink-900">{formatARS(toPay)}</dd>
                   </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-ink-500">Resto, en el garaje</dt>
+                    <dd className="text-ink-900">{formatARS(atGarage)}</dd>
+                  </div>
+                  <p className="text-xs text-ink-500">Sin cargos extra: pagás solo la tarifa del garaje.</p>
                 </dl>
               )}
             </>
@@ -259,7 +261,7 @@ export function RealBookingPanel({ space }: { space: Space }) {
             {ready && check.quote.ok && toPay !== null ? (
               <>
                 <p className="font-bold text-ink-900">{formatARS(toPay)}</p>
-                <p className="truncate text-xs text-ink-500">Total a pagar · {check.quote.hours} h</p>
+                <p className="truncate text-xs text-ink-500">Seña ahora · resto en el garaje</p>
               </>
             ) : (
               <p className="line-clamp-2 text-xs text-ink-700">{check.status.label}</p>

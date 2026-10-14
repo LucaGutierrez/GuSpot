@@ -80,6 +80,7 @@ interface BookingRow {
   hours: number;
   total_price: number;
   service_fee: number;
+  deposit: number;
   hold_until: string | null;
   paid_at: string | null;
   arrived_at: string | null;
@@ -88,7 +89,7 @@ interface BookingRow {
 
 const COLUMNS =
   "id, garage_id, driver_id, driver_name, garage_title, garage_neighborhood, start_at, end_at, status, " +
-  "payment_status, vehicle, plate, car_brand, car_model, car_color, car_insurance, car_insurance_photo, driver_avatar, hours, total_price, service_fee, hold_until, paid_at, arrived_at, created_at";
+  "payment_status, vehicle, plate, car_brand, car_model, car_color, car_insurance, car_insurance_photo, driver_avatar, hours, total_price, service_fee, deposit, hold_until, paid_at, arrived_at, created_at";
 
 function toBooking(row: BookingRow, me: string): RealBooking {
   return {
@@ -110,6 +111,7 @@ function toBooking(row: BookingRow, me: string): RealBooking {
     hours: row.hours,
     total: row.total_price,
     serviceFee: row.service_fee,
+    deposit: row.deposit,
     holdUntil: row.hold_until,
     paidAt: row.paid_at,
     arrivedAt: row.arrived_at,
@@ -244,4 +246,14 @@ export async function busyByGarage(): Promise<Map<string, Interval[]>> {
     map.set(r.garage_id, list);
   }
   return map;
+}
+
+/** Lo que el conductor paga con Mercado Pago al reservar: la seña (o tarifa + cargo en reservas viejas). */
+export function paidOnline(b: Pick<RealBooking, "total" | "serviceFee" | "deposit">): number {
+  return b.deposit > 0 ? b.deposit : b.total + b.serviceFee;
+}
+
+/** Lo que el conductor paga en el garaje (el resto de la tarifa). */
+export function payAtGarage(b: Pick<RealBooking, "total" | "deposit">): number {
+  return b.deposit > 0 ? b.total - b.deposit : 0;
 }

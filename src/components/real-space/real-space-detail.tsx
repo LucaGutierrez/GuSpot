@@ -337,7 +337,7 @@ function CommercialDetail({ space, voy }: { space: Space; voy: boolean }) {
             label="Pago"
             value={
               <ul>
-                {c.onlinePayments && c.reservableSpots > 0 && <li>Reservas: se pagan acá, con Mercado Pago</li>}
+                {c.onlinePayments && c.reservableSpots > 0 && <li>Reservas: seña acá con Mercado Pago, el resto en el garaje</li>}
                 <li>{c.payAtGarage ? "Sin reserva: se paga en el garaje" : "Sin reserva: pago a convenir con el garaje"}</li>
                 {c.paymentMethods.length > 0 && <li>{c.paymentMethods.map((m) => PAYMENT_METHOD_LABEL[m]).join(", ")}</li>}
               </ul>

@@ -54,19 +54,20 @@ export default function TerminosPage() {
         <h2>4. Reservas y pagos</h2>
         <ul>
           <li>
-            Al reservar ves, antes de pagar, la tarifa del garaje, el <strong>cargo de servicio de GuSpot</strong> (hoy,
-            10 % de la tarifa) y el total.
+            Al reservar ves, antes de pagar, la tarifa del garaje, la <strong>seña</strong> (hoy, 50 % de la tarifa) y lo
+            que queda para pagar en el garaje. El conductor no paga cargos extra: en total paga la tarifa del garaje.
           </li>
           <li>
-            Se paga con Mercado Pago. Mientras pagás te guardamos el lugar unos minutos; si no se completa el pago, el
-            lugar se libera. La reserva queda confirmada cuando Mercado Pago aprueba el pago.
+            La seña se paga con Mercado Pago. Mientras pagás te guardamos el lugar unos minutos; si no se completa el pago,
+            el lugar se libera. La reserva queda confirmada cuando Mercado Pago aprueba el pago. El resto se le paga al
+            garaje al llegar.
           </li>
           <li>
-            La tarifa se acredita directamente en la cuenta de Mercado Pago del garaje; GuSpot cobra solo el cargo de
-            servicio.
+            La seña se acredita directamente en la cuenta de Mercado Pago del garaje, menos el{" "}
+            <strong>cargo de servicio de GuSpot</strong> (hoy, 10 % de la tarifa total), que paga el garaje.
           </li>
           <li>
-            <strong>Cancelación:</strong> podés cancelar con <strong>devolución total dentro de los 10 minutos</strong>{" "}
+            <strong>Cancelación:</strong> podés cancelar con <strong>devolución total de la seña dentro de los 10 minutos</strong>{" "}
             posteriores al pago. Después podés cancelar para liberar el lugar, pero sin devolución. Una vez empezada la
             reserva no se puede cancelar desde la app.
           </li>

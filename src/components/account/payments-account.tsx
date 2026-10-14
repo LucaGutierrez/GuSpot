@@ -32,19 +32,19 @@ function useAccount(tick: number) {
   return load;
 }
 
-function useFeePercent() {
-  const [percent, setPercent] = useState<number | null>(null);
+function useFeeSettings() {
+  const [settings, setSettings] = useState<{ fee: number; deposit: number } | null>(null);
   useEffect(() => {
-    getPaymentSettings().then((s) => setPercent(s.serviceFeePercent));
+    getPaymentSettings().then((s) => setSettings({ fee: s.serviceFeePercent, deposit: s.depositPercent }));
   }, []);
-  return percent;
+  return settings;
 }
 
 /** Tarjeta "Cobro de reservas": conectar o ver la cuenta de Mercado Pago. */
 function PaymentsCard({ compact = false }: { compact?: boolean }) {
   const [tick, setTick] = useState(0);
   const load = useAccount(tick);
-  const percent = useFeePercent();
+  const fees = useFeeSettings();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -97,17 +97,20 @@ function PaymentsCard({ compact = false }: { compact?: boolean }) {
         </p>
       ) : (
         <p className="text-sm text-ink-700">
-          Para recibir reservas, conectá tu cuenta de Mercado Pago. El conductor paga al reservar y la plata entra directo
-          en tu cuenta. {!compact && "Si no la conectás, los conductores igual pueden avisarte que van en camino."}
+          Para recibir reservas, conectá tu cuenta de Mercado Pago. El conductor paga la seña al reservar y la plata entra
+          directo en tu cuenta. {!compact && "Si no la conectás, los conductores igual pueden avisarte que van en camino."}
         </p>
       )}
 
       {!compact && (
         <ul className="list-disc space-y-1 pl-5 text-sm text-ink-500">
-          <li>Recibís tu tarifa completa, menos la comisión de Mercado Pago.</li>
           <li>
-            GuSpot le cobra al conductor un cargo de servicio
-            {percent !== null ? ` del ${percent} %` : ""} aparte, que se le muestra antes de pagar.
+            Al reservar, el conductor paga una seña{fees ? ` del ${fees.deposit} %` : ""} de tu tarifa con Mercado Pago. El
+            resto te lo paga en el garaje, cuando llega.
+          </li>
+          <li>
+            De esa seña, GuSpot se queda con un cargo de servicio{fees ? ` del ${fees.fee} % de la tarifa total` : ""}; lo
+            demás entra en tu cuenta (menos la comisión de Mercado Pago).
           </li>
           <li>GuSpot nunca ve tus claves ni tu saldo.</li>
         </ul>

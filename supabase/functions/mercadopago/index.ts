@@ -1,6 +1,7 @@
 // Función del servidor (Supabase Edge Function) para cobrar reservas con Mercado Pago.
 // Modelo "marketplace": cada garage conecta su cuenta (OAuth) y cobra directo;
-// GuSpot se queda con el cargo de servicio (`marketplace_fee`).
+// GuSpot se queda con el cargo de servicio (`marketplace_fee`). Desde 2026-10-14 se
+// cobra solo la SEÑA (bookings.deposit); el cargo sale de ahí y el resto se paga en el garaje.
 // Las claves y los tokens son SECRETOS: viven solo acá y en la tabla mp_accounts
 // (sin acceso desde la página).
 //
@@ -27,7 +28,7 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
 const MP = "https://api.mercadopago.com";
-const ORIGINS = [/^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev$/, /^http:\/\/localhost:3000$/];
+const ORIGINS = [/^https:\/\/(www\.)?guspotapp\.com$/, /^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev$/, /^http:\/\/localhost:3000$/];
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -54,6 +55,8 @@ interface Booking {
   payment_status: string;
   total_price: number;
   service_fee: number;
+  /** Seña que se cobra con Mercado Pago (0 = reserva vieja: se cobraba tarifa + cargo). */
+  deposit: number;
   hold_until: string | null;
   paid_at: string | null;
   mp_payment_id: string | null;
@@ -76,9 +79,14 @@ interface Payment {
 }
 
 const BOOKING_COLUMNS =
-  "id, garage_id, driver_id, garage_title, start_at, hours, status, payment_status, total_price, service_fee, hold_until, paid_at, mp_payment_id";
+  "id, garage_id, driver_id, garage_title, start_at, hours, status, payment_status, total_price, service_fee, deposit, hold_until, paid_at, mp_payment_id";
 
 const pesos = (centavos: number) => Math.round(centavos) / 100;
+/**
+ * Lo que se cobra con Mercado Pago: la seña (el cargo de GuSpot sale de ahí y
+ * el resto se paga en el garaje). Reservas viejas sin seña: tarifa + cargo.
+ */
+const amountToCharge = (b: Booking) => (b.deposit > 0 ? b.deposit : b.total_price + b.service_fee);
 /** start_at es hora local argentina (UTC−3, sin horario de verano). */
 const arDate = (local: string) => new Date(`${local.slice(0, 19)}-03:00`);
 
@@ -185,7 +193,7 @@ async function applyPayment(admin: SupabaseClient, b: Booking, p: Payment, token
   if (p.external_reference !== b.id) return;
   const pid = String(p.id);
   if (p.status === "approved") {
-    if (Math.abs(p.transaction_amount - pesos(b.total_price + b.service_fee)) > 0.01) {
+    if (Math.abs(p.transaction_amount - pesos(amountToCharge(b))) > 0.01) {
       await logError("amount_mismatch", { booking: b.id, amount: p.transaction_amount });
       return;
     }
@@ -388,11 +396,14 @@ async function handle(req: Request): Promise<Response> {
         items: [
           {
             id: b.id,
-            title: `Reserva en ${b.garage_title}`.slice(0, 250),
-            description: `${b.hours} h de estacionamiento`,
+            title: (b.deposit > 0 ? `Seña de reserva en ${b.garage_title}` : `Reserva en ${b.garage_title}`).slice(0, 250),
+            description:
+              b.deposit > 0
+                ? `${b.hours} h de estacionamiento. El resto ($${pesos(b.total_price - b.deposit).toLocaleString("es-AR")}) se paga en el garaje.`
+                : `${b.hours} h de estacionamiento`,
             quantity: 1,
             currency_id: "ARS",
-            unit_price: pesos(b.total_price + b.service_fee),
+            unit_price: pesos(amountToCharge(b)),
           },
         ],
         marketplace_fee: pesos(b.service_fee),
@@ -472,7 +483,7 @@ async function handle(req: Request): Promise<Response> {
 }
 
 // Solo las páginas de GuSpot pueden llamar a esta función desde el navegador.
-const SITE_ORIGINS = [/^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev$/, /^http:\/\/localhost:3000$/];
+const SITE_ORIGINS = [/^https:\/\/(www\.)?guspotapp\.com$/, /^https:\/\/([a-z0-9-]+\.)?guspot-demo\.pages\.dev$/, /^http:\/\/localhost:3000$/];
 
 Deno.serve(async (req) => {
   const res = await handle(req);

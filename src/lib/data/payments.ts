@@ -52,15 +52,17 @@ async function callMP<T = Record<string, unknown>>(body: Record<string, unknown>
 // --- Reglas -----------------------------------------------------------------
 
 export interface PaymentSettings {
-  /** Cargo de servicio en % de la tarifa (lo paga el conductor). */
+  /** Cargo de servicio de GuSpot en % de la tarifa total (sale de la seña). */
   serviceFeePercent: number;
+  /** Seña que se cobra al reservar, en % de la tarifa (el resto se paga en el garaje). */
+  depositPercent: number;
   /** Minutos después de pagar para cancelar con devolución total. */
   refundWindowMinutes: number;
   /** Minutos que se guarda el lugar esperando el pago. */
   holdMinutes: number;
 }
 
-const FALLBACK: PaymentSettings = { serviceFeePercent: 10, refundWindowMinutes: 10, holdMinutes: 15 };
+const FALLBACK: PaymentSettings = { serviceFeePercent: 10, depositPercent: 50, refundWindowMinutes: 10, holdMinutes: 15 };
 let cached: Promise<PaymentSettings> | null = null;
 
 /** Nunca lanza: si no hay datos, usa los valores por defecto. */
@@ -69,10 +71,15 @@ export function getPaymentSettings(): Promise<PaymentSettings> {
     const supabase = getSupabase();
     if (!supabase) return FALLBACK;
     const { data, error } = await supabase.rpc("payment_settings");
-    const row = (data as { service_fee_percent: number; refund_window_minutes: number; payment_hold_minutes: number }[] | null)?.[0];
+    const row = (
+      data as
+        | { service_fee_percent: number; refund_window_minutes: number; payment_hold_minutes: number; deposit_percent: number }[]
+        | null
+    )?.[0];
     if (error || !row) return FALLBACK;
     return {
       serviceFeePercent: row.service_fee_percent,
+      depositPercent: row.deposit_percent,
       refundWindowMinutes: row.refund_window_minutes,
       holdMinutes: row.payment_hold_minutes,
     };
@@ -83,6 +90,11 @@ export function getPaymentSettings(): Promise<PaymentSettings> {
 /** Igual que create_booking: porcentaje de la tarifa, redondeado a pesos enteros (en centavos). */
 export function serviceFeeOf(total: number, percent: number): number {
   return Math.round((total * percent) / 10000) * 100;
+}
+
+/** Igual que bookings_set_deposit: seña en pesos enteros, entre el cargo y la tarifa. */
+export function depositOf(total: number, s: Pick<PaymentSettings, "depositPercent" | "serviceFeePercent">): number {
+  return Math.min(total, Math.max(serviceFeeOf(total, s.serviceFeePercent), serviceFeeOf(total, s.depositPercent)));
 }
 
 // --- Conductor --------------------------------------------------------------

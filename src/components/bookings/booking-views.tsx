@@ -5,7 +5,15 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { BookingAccess, RealBooking } from "@/lib/data/types";
 import { DataError } from "@/lib/data/types";
-import { cancelBooking, getBooking, getBookingAccess, listMyBookings, listOwnerBookings } from "@/lib/data/bookings";
+import {
+  cancelBooking,
+  getBooking,
+  getBookingAccess,
+  listMyBookings,
+  listOwnerBookings,
+  paidOnline,
+  payAtGarage,
+} from "@/lib/data/bookings";
 import { cancelPaidBooking, startCheckout, syncPayment } from "@/lib/data/payments";
 import type { BookingStatus } from "@/lib/types";
 import { VEHICLE_LABEL, formatARS, formatRange } from "@/lib/format";
@@ -193,7 +201,29 @@ function BookingDetail({
               <dd className="font-medium text-ink-900">{b.carInsurance}</dd>
             </div>
           )}
-          {b.role === "driver" && b.serviceFee > 0 && (
+          {b.deposit > 0 && (
+            <>
+              <div>
+                <dt className="text-ink-500">
+                  {b.paymentStatus === "aprobado" ? "Seña pagada" : "Seña a pagar"} (Mercado Pago)
+                </dt>
+                <dd className="font-medium text-ink-900">{formatARS(paidOnline(b))}</dd>
+              </div>
+              <div>
+                <dt className="text-ink-500">{b.role === "owner" ? "Cobrás en el garaje" : "Resto, en el garaje"}</dt>
+                <dd className="font-medium text-ink-900">{formatARS(payAtGarage(b))}</dd>
+              </div>
+              {b.role === "owner" && (
+                <div className="col-span-2">
+                  <dt className="text-ink-500">De la seña</dt>
+                  <dd className="font-medium text-ink-900">
+                    {formatARS(b.deposit - b.serviceFee)} para vos · {formatARS(b.serviceFee)} cargo de GuSpot
+                  </dd>
+                </div>
+              )}
+            </>
+          )}
+          {b.deposit === 0 && b.role === "driver" && b.serviceFee > 0 && (
             <>
               <div>
                 <dt className="text-ink-500">Cargo de servicio</dt>
@@ -201,7 +231,7 @@ function BookingDetail({
               </div>
               <div>
                 <dt className="text-ink-500">{b.paymentStatus === "aprobado" ? "Total pagado" : "Total a pagar"}</dt>
-                <dd className="font-medium text-ink-900">{formatARS(b.total + b.serviceFee)}</dd>
+                <dd className="font-medium text-ink-900">{formatARS(paidOnline(b))}</dd>
               </div>
             </>
           )}
@@ -282,7 +312,9 @@ function PayNow({ booking: b, rejected }: { booking: RealBooking; rejected: bool
       </p>
       {b.holdUntil && <p className="text-sm text-ink-700">Te guardamos el lugar hasta las {hhmm(b.holdUntil)}.</p>}
       <Button size="lg" onClick={onPay} disabled={busy}>
-        {busy ? "Abriendo Mercado Pago…" : `Pagar ${formatARS(b.total + b.serviceFee)} con Mercado Pago`}
+        {busy
+          ? "Abriendo Mercado Pago…"
+          : `Pagar ${b.deposit > 0 ? "la seña de " : ""}${formatARS(paidOnline(b))} con Mercado Pago`}
       </Button>
       {error && <ErrorBox>{error}</ErrorBox>}
     </Card>
@@ -323,7 +355,7 @@ function CancelBooking({
   const question = !paid
     ? "¿Cancelar la reserva? El lugar queda libre para otros conductores. No se te cobra nada."
     : withRefund
-      ? `¿Cancelar la reserva? Te devolvemos ${formatARS(b.total + b.serviceFee)} completos al mismo medio de pago.`
+      ? `¿Cancelar la reserva? Te devolvemos ${formatARS(paidOnline(b))} completos al mismo medio de pago.`
       : "¿Cancelar la reserva? Ya pasó el tiempo para cancelar con devolución: el lugar se libera, pero NO se te devuelve el pago.";
 
   return (
@@ -374,7 +406,7 @@ function BookingRow({ b, nowMs }: { b: RealBooking; nowMs: number }) {
         <div className="flex flex-wrap items-center gap-2">
           <BookingStatusBadge status={shownStatus(b, nowMs)} />
           <span className="text-sm font-semibold text-ink-900">
-            {formatARS(b.role === "driver" ? b.total + b.serviceFee : b.total)}
+            {formatARS(b.role === "driver" && b.deposit === 0 ? b.total + b.serviceFee : b.total)}
           </span>
         </div>
         <p className="font-semibold text-ink-900">{b.garageTitle}</p>
