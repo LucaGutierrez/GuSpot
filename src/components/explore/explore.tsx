@@ -20,6 +20,7 @@ import { SelectedCard } from "./selected-card";
 import { CommercialSelectedCard } from "@/components/garage/garage-summary";
 import { spaceHref, useSearchSource } from "./space-source";
 import { useDriverLocation } from "./use-driver-location";
+import { LocationSteps } from "@/components/ui/location-help";
 import { useInitialZone } from "./use-initial-zone";
 import { usePlace } from "./use-place";
 import { useElementHeight, useLockBodyScroll } from "./use-element-height";
@@ -83,6 +84,9 @@ export function Explore() {
   const [fitNonce, setFitNonce] = useState(0);
   const [askLocation, setAskLocation] = useState(false);
   const [locationExplained, setLocationExplained] = useState(false);
+  // Ubicación bloqueada al abrir (el navegador ya no pregunta) y si se cerró la ayuda.
+  const [blockedAtStart, setBlockedAtStart] = useState(false);
+  const [helpDismissed, setHelpDismissed] = useState(false);
   const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
   const [focusCardTick, setFocusCardTick] = useState(0);
   // "Buscar en esta zona": rectángulo del mapa elegido (vale para la búsqueda actual de la URL).
@@ -128,7 +132,11 @@ export function Explore() {
       if (state === "granted") {
         setLocationExplained(true);
         requestLocation();
-      } else if (state !== "denied") {
+      } else if (state === "denied") {
+        // Ya no se puede preguntar: se explica cómo activarla.
+        setBlockedAtStart(true);
+        setLocationExplained(true);
+      } else {
         setAskLocation(true);
       }
     });
@@ -257,6 +265,7 @@ export function Explore() {
 
   const onLocate = () => {
     setDismissedNotice(null);
+    setHelpDismissed(false);
     if (location.status === "ok") {
       refit();
     } else if (!locationExplained) {
@@ -277,14 +286,40 @@ export function Explore() {
     rememberLocationChoice("no");
     locateRef.current?.focus();
   };
+  const closeHelp = () => {
+    setHelpDismissed(true);
+    rememberLocationChoice("no");
+    locateRef.current?.focus();
+  };
+  const retryLocate = () => {
+    setLocationExplained(true);
+    rememberLocationChoice("si");
+    requestLocation();
+  };
+
+  // Ubicación bloqueada o apagada: el navegador no vuelve a preguntar, así que se
+  // muestran los pasos para activarla en ese equipo.
+  const locationProblem =
+    location.status === "denied" || location.status === "off"
+      ? location.status
+      : blockedAtStart && location.status === "idle"
+        ? "denied"
+        : null;
+  const showHelp = locationProblem !== null && !helpDismissed && !askLocation;
+  // Al volver de la configuración del celular, se reintenta solo.
+  useEffect(() => {
+    if (!showHelp) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") requestLocation();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [showHelp, requestLocation]);
 
   // --- Avisos ---------------------------------------------------------------
   let notice: string | null = null;
-  if (location.status === "denied") {
-    notice =
-      "No diste permiso para usar tu ubicación. Podés seguir buscando por zona; si cambiás de idea, habilitalo en tu navegador.";
-  } else if (location.status === "error") {
-    notice = "No pudimos obtener tu ubicación. Podés seguir buscando por zona.";
+  if (location.status === "error") {
+    notice = "No pudimos obtener tu ubicación. Probá de nuevo con el botón de ubicación o buscá por zona.";
   } else if (location.status === "unsupported") {
     notice = "Tu navegador no permite compartir la ubicación. Podés seguir buscando por zona.";
   } else if (!area && userCoords && zoneResults.length > 0 && !userIsNear) {
@@ -445,6 +480,35 @@ export function Explore() {
               className={buttonClass("primary")}
             >
               Usar mi ubicación
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Cómo activar la ubicación cuando está bloqueada o apagada */}
+      {showHelp && (
+        <div
+          role="dialog"
+          aria-labelledby={`${id}-ayuda-titulo`}
+          onKeyDown={(e) => e.key === "Escape" && closeHelp()}
+          className="absolute inset-x-3 z-20 max-h-[70%] overflow-y-auto rounded-2xl border border-ink-200 bg-white p-4 shadow-xl"
+          style={{ bottom: bottomH + 12 }}
+        >
+          <h2 id={`${id}-ayuda-titulo`} className="font-semibold text-ink-900">
+            {locationProblem === "off" ? "Prendé la ubicación del celular" : "Activá la ubicación"}
+          </h2>
+          <p className="mt-1 text-sm text-ink-700">
+            {locationProblem === "off"
+              ? "Tu celular no está dando la ubicación. Para ver los garajes cerca tuyo:"
+              : "La ubicación está bloqueada para GuSpot y el navegador ya no la vuelve a preguntar. Para ver los garajes cerca tuyo:"}
+          </p>
+          <LocationSteps problem={locationProblem ?? "denied"} className="mt-2" />
+          <div className="mt-3 flex justify-end gap-2">
+            <Button variant="secondary" onClick={closeHelp}>
+              Ahora no
+            </Button>
+            <button type="button" onClick={retryLocate} className={buttonClass("primary")}>
+              Reintentar
             </button>
           </div>
         </div>

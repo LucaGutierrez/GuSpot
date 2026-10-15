@@ -13,6 +13,7 @@ import type { LatLng } from "@/lib/types";
 import { DEFAULT_CENTER } from "@/lib/geo";
 import { MAP_STYLE_URL } from "@/components/map/config";
 import { Button } from "@/components/ui/button";
+import { LocationSteps, type LocationProblem } from "@/components/ui/location-help";
 
 const WORKER_URL = "/vendor/maplibre-gl-worker.mjs";
 
@@ -57,6 +58,7 @@ export function LocationPicker({
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [geoProblem, setGeoProblem] = useState<LocationProblem | null>(null);
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -159,6 +161,7 @@ export function LocationPicker({
     }
     setLocating(true);
     setGeoError(null);
+    setGeoProblem(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocating(false);
@@ -166,8 +169,11 @@ export function LocationPicker({
         onChangeRef.current(p);
         mapRef.current?.flyTo({ center: toLngLat(p), zoom: 17 });
       },
-      () => {
+      (err) => {
         setLocating(false);
+        setGeoProblem(
+          err.code === err.PERMISSION_DENIED ? "denied" : err.code === err.POSITION_UNAVAILABLE ? "off" : null,
+        );
         setGeoError("No pudimos obtener tu ubicación. Marcá el punto tocando el mapa.");
       },
       { enableHighAccuracy: true, timeout: 15000 },
@@ -196,6 +202,14 @@ export function LocationPicker({
         </Button>
       </div>
       {geoError && <p className="text-sm font-medium text-red-700">{geoError}</p>}
+      {geoProblem && (
+        <div className="rounded-xl border border-ink-200 bg-ink-50 p-3">
+          <p className="text-sm font-semibold text-ink-900">
+            {geoProblem === "off" ? "Para usar tu ubicación, prendela en el celular:" : "Para usar tu ubicación, activala:"}
+          </p>
+          <LocationSteps problem={geoProblem} retryLabel="Usar mi ubicación" className="mt-1" />
+        </div>
+      )}
     </div>
   );
 }

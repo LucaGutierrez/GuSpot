@@ -7,7 +7,7 @@ type LocationState =
   | { status: "idle" }
   | { status: "locating" }
   | { status: "ok"; coords: LatLng }
-  | { status: "denied" | "error" | "unsupported" };
+  | { status: "denied" | "off" | "error" | "unsupported" };
 
 /**
  * Ubicación del conductor. Solo se pide cuando se llama a `request()` (al tocar
@@ -38,7 +38,12 @@ export function useDriverLocation(onLocated?: (coords: LatLng) => void) {
       },
       (err) => {
         clearTimeout(watchdog);
-        setState({ status: err.code === err.PERMISSION_DENIED ? "denied" : "error" });
+        // POSITION_UNAVAILABLE: hay permiso pero el celular no da la ubicación
+        // (en Android, la ubicación del equipo apagada).
+        setState({
+          status:
+            err.code === err.PERMISSION_DENIED ? "denied" : err.code === err.POSITION_UNAVAILABLE ? "off" : "error",
+        });
       },
       { timeout: 10_000, maximumAge: 60_000, enableHighAccuracy: false },
     );
