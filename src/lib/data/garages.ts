@@ -5,6 +5,7 @@
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js";
 import { busyByGarage, reservedNowByGarage } from "./bookings";
 import { getSupabase } from "../supabase/client";
+import { nowInArgentina } from "@/components/driver/use-now";
 import { GARAGE_PHOTOS_BUCKET } from "../supabase/config";
 import type { AvailabilityRule, CommercialInfo, LatLng, ListingStatus, Space } from "../types";
 import {
@@ -108,6 +109,11 @@ function toDataError(error: Pick<PostgrestError, "code" | "message"> | { message
     );
   if (message.includes("photo_limit"))
     return new DataError(`Podés subir hasta ${PHOTO_LIMITS.maxPerGarage} fotos por garaje.`, "validation");
+  if (message.includes("garage_has_active_bookings"))
+    return new DataError(
+      "Este garaje tiene reservas activas. Cuando terminen (o se cancelen) lo vas a poder eliminar; mientras tanto podés pausarlo.",
+      "validation",
+    );
   if (code === "23503")
     return new DataError("Este garaje tiene reservas: pausalo en lugar de eliminarlo.", "validation");
   if (code === "23514" || code === "22P02" || code === "23502")
@@ -413,6 +419,15 @@ export async function setGarageStatus(id: string, status: ListingStatus): Promis
 export async function deleteGarage(id: string): Promise<void> {
   const supabase = db();
   await requireUserId(supabase);
+  // Antes de borrar las fotos: si hay reservas activas la base no deja borrar el garaje
+  // (trigger garages_block_delete_with_active_bookings) y las fotos se perderían.
+  const { count, error: activeError } = await supabase
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("garage_id", id)
+    .or(`and(status.eq.confirmada,end_at.gt.${nowInArgentina()}),and(status.eq.pendiente_pago,hold_until.gt.${new Date().toISOString()})`);
+  if (activeError) throw toDataError(activeError);
+  if ((count ?? 0) > 0) throw toDataError({ message: "garage_has_active_bookings" });
   // Primero los archivos: las reglas de Storage exigen que el garaje exista.
   const { data: photos, error: listError } = await supabase.from("garage_photos").select("path").eq("garage_id", id);
   if (listError) throw toDataError(listError);

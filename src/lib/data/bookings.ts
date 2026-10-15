@@ -60,7 +60,7 @@ const local = (ts: string): LocalDateTime => ts.slice(0, 16) as LocalDateTime;
 
 interface BookingRow {
   id: string;
-  garage_id: string;
+  garage_id: string | null;
   driver_id: string;
   driver_name: string;
   garage_title: string;

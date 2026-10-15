@@ -107,7 +107,8 @@ export const PHOTO_LIMITS = {
 /** Reserva real. Se confirma sola cuando Mercado Pago aprueba el pago. */
 export interface RealBooking {
   id: string;
-  garageId: string;
+  /** null si el dueño eliminó el garaje (la reserva queda en el historial). */
+  garageId: string | null;
   /** Copia al reservar (para el historial). */
   garageTitle: string;
   garageNeighborhood: string;

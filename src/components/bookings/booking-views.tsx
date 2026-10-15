@@ -159,11 +159,16 @@ function BookingDetail({
       )}
       {b.role === "driver" && status === "expirada" && (
         <ErrorBox>
-          Se venció el tiempo para pagar y el lugar se liberó. Si querés, volvé a{" "}
-          <Link href={`/espacio/?id=${b.garageId}`} className="font-semibold underline">
-            reservar este garaje
-          </Link>
-          .
+          Se venció el tiempo para pagar y el lugar se liberó.
+          {b.garageId && (
+            <>
+              {" "}Si querés, volvé a{" "}
+              <Link href={`/espacio/?id=${b.garageId}`} className="font-semibold underline">
+                reservar este garaje
+              </Link>
+              .
+            </>
+          )}
         </ErrorBox>
       )}
 
@@ -173,9 +178,13 @@ function BookingDetail({
           <PaymentStatusBadge status={b.paymentStatus} />
         </div>
         <h1 className="text-xl font-bold text-ink-900 sm:text-2xl">
-          <Link href={`/espacio/?id=${b.garageId}`} className="hover:underline">
-            {b.garageTitle}
-          </Link>
+          {b.garageId ? (
+            <Link href={`/espacio/?id=${b.garageId}`} className="hover:underline">
+              {b.garageTitle}
+            </Link>
+          ) : (
+            b.garageTitle
+          )}
         </h1>
         <p className="text-ink-700">{formatRange(b.start, b.end)}</p>
         <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">

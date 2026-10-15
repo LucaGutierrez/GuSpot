@@ -371,7 +371,11 @@ function DeleteGarage({ id }: { id: string }) {
       <h2 className="text-lg font-semibold text-ink-900">Eliminar garaje</h2>
       {confirming ? (
         <>
-          <p className="text-sm text-ink-700">Se borran el garaje y sus fotos. No se puede deshacer.</p>
+          <p className="font-semibold text-ink-900">¿Seguro que querés eliminar este garaje?</p>
+          <p className="text-sm text-ink-700">
+            Se borran el garaje y sus fotos, y deja de aparecer en el mapa. Las reservas pasadas quedan en el historial de
+            los conductores. No se puede deshacer.
+          </p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
