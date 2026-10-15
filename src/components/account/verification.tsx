@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-import type { IdentityDoc, Profile, Requirement, Vehicle } from "@/lib/data/types";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import type { Profile, Requirement, Vehicle } from "@/lib/data/types";
 import { DataError } from "@/lib/data/types";
 import type { VehicleSize } from "@/lib/types";
 import { VEHICLE_LABEL } from "@/lib/format";
@@ -11,29 +11,22 @@ import {
   REQUIREMENT_LABEL,
   addVehicle,
   deleteVehicle,
-  docPreviewUrl,
   getMyProfile,
   listMyVehicles,
   myMissingRequirements,
-  myUploadedDocs,
   normalizePhone,
   normalizePlate,
   saveMyProfile,
   checkPhoneCode,
-  isInsured,
-  updateVehicleInsurance,
-  uploadInsurancePhoto,
   sendPhoneCode,
   startIdentityCheck,
   syncIdentityCheck,
-  uploadIdentityDoc,
 } from "@/lib/data/profile";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, Container, PageHeader } from "@/components/ui/card";
-import { CameraIcon, CheckIcon } from "@/components/ui/icons";
+import { CheckIcon } from "@/components/ui/icons";
 import { Field, inputClass } from "@/components/ui/form-fields";
 import { VEHICLE_ORDER } from "@/components/driver/vehicles";
-import { useNow } from "@/components/driver/use-now";
 import { ErrorBox, RequireSignIn, SuccessBox } from "@/components/my-garages/shared";
 import { safeNext } from "./form-parts";
 import { BackToAccount } from "./account-panel";
@@ -98,10 +91,8 @@ export function VerificationPage() {
 
 function Verification({ back, returning }: { back: string | null; returning: boolean }) {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [docs, setDocs] = useState<Set<IdentityDoc>>(new Set());
   const [missing, setMissing] = useState<{ conductor: Requirement[]; propietario: Requirement[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [consent, setConsent] = useState(false);
 
   async function refreshMissing() {
     const [conductor, propietario] = await Promise.all([
@@ -113,13 +104,11 @@ function Verification({ back, returning }: { back: string | null; returning: boo
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([getMyProfile(), myUploadedDocs(), myMissingRequirements("conductor"), myMissingRequirements("propietario")])
-      .then(([p, d, conductor, propietario]) => {
+    Promise.all([getMyProfile(), myMissingRequirements("conductor"), myMissingRequirements("propietario")])
+      .then(([p, conductor, propietario]) => {
         if (cancelled) return;
         setProfile(p);
-        setDocs(d);
         setMissing({ conductor, propietario });
-        if (d.size > 0) setConsent(true);
       })
       .catch((err) => !cancelled && setError(errText(err)));
     return () => {
@@ -129,11 +118,6 @@ function Verification({ back, returning }: { back: string | null; returning: boo
 
   if (error) return <ErrorBox>{error}</ErrorBox>;
   if (!profile || !missing) return <p className="text-sm text-ink-500">Cargando…</p>;
-
-  const onDocUploaded = (doc: IdentityDoc) => {
-    setDocs((d) => new Set(d).add(doc));
-    refreshMissing().catch(() => {});
-  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -169,14 +153,10 @@ function Verification({ back, returning }: { back: string | null; returning: boo
 
       <LicenseSection
         profile={profile}
-        consent={consent}
-        onConsent={setConsent}
-        docs={docs}
         onSaved={(p) => {
           setProfile(p);
           refreshMissing().catch(() => {});
         }}
-        onDocUploaded={onDocUploaded}
       />
 
     </div>
@@ -202,7 +182,7 @@ function StatusCard({
         <ul className="list-disc pl-9 text-sm text-ink-700">
           {list.map((m) => (
             <li key={m}>
-              {m === "vehiculo" || m === "seguro" ? (
+              {m === "vehiculo" ? (
                 <Link href="/cuenta/vehiculos/" className="font-semibold text-brand-700 hover:underline">
                   {REQUIREMENT_LABEL[m]}
                 </Link>
@@ -401,96 +381,6 @@ function IdentitySection({
   );
 }
 
-function Consent({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="flex items-start gap-2 rounded-xl bg-ink-50 p-3 text-sm text-ink-700">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 shrink-0 rounded border-ink-300 accent-brand-600"
-      />
-      <span>
-        Acepto que GuSpot guarde las fotos de mi licencia solo para verificar que puedo manejar. No
-        se muestran a otros usuarios. La política de privacidad está a definir.
-      </span>
-    </label>
-  );
-}
-
-function PhotoSlot({
-  doc,
-  label,
-  uploaded,
-  disabled,
-  capture,
-  onUploaded,
-}: {
-  doc: IdentityDoc;
-  label: string;
-  uploaded: boolean;
-  disabled: boolean;
-  capture: "user" | "environment";
-  onUploaded: (doc: IdentityDoc) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!uploaded || preview) return;
-    let cancelled = false;
-    docPreviewUrl(doc)
-      .then((url) => !cancelled && setPreview(url))
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [uploaded, doc, preview]);
-
-  async function onFile(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await uploadIdentityDoc(doc, file);
-      setPreview(URL.createObjectURL(file));
-      onUploaded(doc);
-    } catch (err) {
-      setError(errText(err));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-2 rounded-xl border border-ink-200 p-3">
-      <div className="relative grid aspect-[4/3] place-items-center overflow-hidden rounded-lg bg-ink-100 text-ink-500">
-        {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element -- foto privada con enlace temporal
-          <img src={preview} alt={label} className="h-full w-full object-cover" />
-        ) : (
-          <CameraIcon width={32} height={32} />
-        )}
-        {uploaded && (
-          <span className="absolute top-2 right-2 rounded-full bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white">
-            Subida
-          </span>
-        )}
-      </div>
-      <input ref={inputRef} type="file" accept="image/*" capture={capture} className="hidden" onChange={onFile} />
-      <Button variant={uploaded ? "secondary" : "primary"} onClick={() => inputRef.current?.click()} disabled={disabled || busy}>
-        {busy ? "Subiendo…" : uploaded ? `Cambiar: ${label}` : `Sacar foto: ${label}`}
-      </Button>
-      {disabled && !uploaded && <p className="text-xs text-ink-500">Primero aceptá el uso de tus datos.</p>}
-      {error && <ErrorBox>{error}</ErrorBox>}
-    </div>
-  );
-}
-
 function usePersonal(profile: Profile) {
   const [form, setForm] = useState(profile);
   const set = (patch: Partial<Profile>) => setForm((f) => ({ ...f, ...patch }));
@@ -564,21 +454,7 @@ function PersonalForm({ profile, onSaved }: { profile: Profile; onSaved: (p: Pro
   );
 }
 
-function LicenseSection({
-  profile,
-  consent,
-  onConsent,
-  docs,
-  onSaved,
-  onDocUploaded,
-}: {
-  profile: Profile;
-  consent: boolean;
-  onConsent: (v: boolean) => void;
-  docs: Set<IdentityDoc>;
-  onSaved: (p: Profile) => void;
-  onDocUploaded: (doc: IdentityDoc) => void;
-}) {
+function LicenseSection({ profile, onSaved }: { profile: Profile; onSaved: (p: Profile) => void }) {
   const [form, setForm] = useState({
     // En Argentina el número de licencia es el del DNI: se propone ese.
     licenseNumber: profile.licenseNumber || profile.dni,
@@ -587,10 +463,7 @@ function LicenseSection({
   });
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
-  const done =
-    !!(profile.licenseNumber && profile.licenseCategory && profile.licenseExpiry) &&
-    docs.has("licencia-frente") &&
-    docs.has("licencia-dorso");
+  const done = !!(profile.licenseNumber && profile.licenseCategory && profile.licenseExpiry);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -645,11 +518,6 @@ function LicenseSection({
           {busy ? "Guardando…" : "Guardar licencia"}
         </Button>
       </form>
-      <Consent checked={consent} onChange={onConsent} />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <PhotoSlot doc="licencia-frente" label="Frente de la licencia" uploaded={docs.has("licencia-frente")} disabled={!consent} capture="environment" onUploaded={onDocUploaded} />
-        <PhotoSlot doc="licencia-dorso" label="Dorso de la licencia" uploaded={docs.has("licencia-dorso")} disabled={!consent} capture="environment" onUploaded={onDocUploaded} />
-      </div>
     </Section>
   );
 }
@@ -659,7 +527,7 @@ export function VehiclesPage() {
   return (
     <Container className="max-w-2xl pb-16">
       <BackToAccount />
-      <PageHeader title="Mis vehículos" subtitle="Reservás con uno de tus vehículos, con el seguro vigente. El garaje ve marca, modelo, color, patente y seguro." />
+      <PageHeader title="Mis vehículos" subtitle="Reservás con uno de tus vehículos. El garaje ve marca, modelo, color y patente." />
       <RequireSignIn back="/cuenta/vehiculos/">{() => <VehiclesLoader />}</RequireSignIn>
     </Container>
   );
@@ -693,11 +561,7 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
     insurancePolicy: "",
     insuranceExpiry: "",
   };
-  const now = useNow();
-  const today = now ? now.slice(0, 10) : "";
-  const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState(empty);
-  const [photo, setPhoto] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -712,28 +576,15 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
       setError("La patente no es válida (ej.: AB123CD o ABC123).");
       return;
     }
-    const insuranceError = checkInsurance(form, today, !!photo);
-    if (insuranceError) {
-      setError(insuranceError);
-      return;
-    }
     setBusy(true);
     setError(null);
-    let added = false;
     try {
-      const id = await addVehicle(form);
-      added = true;
-      if (photo) await uploadInsurancePhoto(id, photo);
+      await addVehicle(form);
       setForm(empty);
-      setPhoto(null);
+      onChange(await listMyVehicles().catch(() => vehicles));
     } catch (err) {
-      setError(
-        added
-          ? `Agregamos el vehículo pero no pudimos subir la foto del seguro: ${errText(err)} Probá de nuevo con "Cargar seguro".`
-          : errText(err),
-      );
+      setError(errText(err));
     } finally {
-      if (added) onChange(await listMyVehicles().catch(() => vehicles));
       setBusy(false);
     }
   }
@@ -752,7 +603,7 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
   }
 
   return (
-    <Section id="vehiculos" title="Tus vehículos" done={vehicles.some((v) => isInsured(v, today))}>
+    <Section id="vehiculos" title="Tus vehículos" done={vehicles.length > 0}>
       {vehicles.length > 0 && (
         <ul className="flex flex-col gap-2">
           {vehicles.map((v) => (
@@ -764,17 +615,6 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
                 <p className="text-sm text-ink-700">
                   {v.plate} · {VEHICLE_LABEL[v.size]}
                 </p>
-                <InsuranceStatus vehicle={v} today={today} onEdit={() => setEditing(editing === v.id ? null : v.id)} />
-                {editing === v.id && (
-                  <InsuranceForm
-                    vehicle={v}
-                    today={today}
-                    onSaved={async () => {
-                      setEditing(null);
-                      onChange(await listMyVehicles());
-                    }}
-                  />
-                )}
               </div>
               <button
                 type="button"
@@ -812,199 +652,11 @@ function VehiclesSection({ vehicles, onChange }: { vehicles: Vehicle[]; onChange
             </select>
           </Field>
         </div>
-        <InsuranceFields
-          idPrefix="vh"
-          value={form}
-          onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
-          photo={photo}
-          hasPhoto={false}
-          onPhoto={setPhoto}
-        />
         {error && <ErrorBox>{error}</ErrorBox>}
         <Button type="submit" variant="secondary" className="w-fit" disabled={busy}>
           {busy ? "Agregando…" : "Agregar vehículo"}
         </Button>
       </form>
     </Section>
-  );
-}
-
-// ---------------------------------------------------------------- seguro del vehículo
-
-type InsuranceValue = Pick<Vehicle, "insurer" | "insurancePolicy" | "insuranceExpiry">;
-
-function checkInsurance(v: InsuranceValue, today: string, hasPhoto: boolean): string | null {
-  if (!v.insurer.trim() || !v.insurancePolicy.trim() || !v.insuranceExpiry) {
-    return "Completá los datos del seguro: compañía, número de póliza y vencimiento.";
-  }
-  if (today && v.insuranceExpiry < today) return "El seguro está vencido: cargá la póliza vigente.";
-  if (!hasPhoto) return "Sacale una foto al certificado de cobertura del seguro.";
-  return null;
-}
-
-const formatDay = (d: string) => (d ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}` : "");
-
-function InsuranceFields({
-  idPrefix,
-  value,
-  onChange,
-  photo,
-  hasPhoto,
-  onPhoto,
-}: {
-  idPrefix: string;
-  value: InsuranceValue;
-  onChange: (patch: Partial<InsuranceValue>) => void;
-  /** Foto nueva elegida (todavía sin subir). */
-  photo: File | null;
-  /** Ya hay una foto subida. */
-  hasPhoto: boolean;
-  onPhoto: (file: File | null) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const preview = useMemo(() => (photo ? URL.createObjectURL(photo) : null), [photo]);
-  useEffect(() => () => {
-    if (preview) URL.revokeObjectURL(preview);
-  }, [preview]);
-
-  return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm font-semibold text-ink-900">Seguro del vehículo</legend>
-      <p className="text-xs text-ink-500">
-        Lo ve el garaje junto con tu auto (datos y foto del certificado) para controlarlo cuando llegás.
-      </p>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <Field id={`${idPrefix}-aseguradora`} label="Compañía">
-          <input
-            id={`${idPrefix}-aseguradora`}
-            className={inputClass}
-            placeholder="La Caja"
-            maxLength={60}
-            value={value.insurer}
-            onChange={(e) => onChange({ insurer: e.target.value })}
-          />
-        </Field>
-        <Field id={`${idPrefix}-poliza`} label="N.º de póliza">
-          <input
-            id={`${idPrefix}-poliza`}
-            className={inputClass}
-            maxLength={40}
-            value={value.insurancePolicy}
-            onChange={(e) => onChange({ insurancePolicy: e.target.value })}
-          />
-        </Field>
-        <Field id={`${idPrefix}-vence-seguro`} label="Vence">
-          <input
-            id={`${idPrefix}-vence-seguro`}
-            type="date"
-            className={inputClass}
-            value={value.insuranceExpiry}
-            onChange={(e) => onChange({ insuranceExpiry: e.target.value })}
-          />
-        </Field>
-      </div>
-      <div className="flex flex-col gap-2 rounded-xl border border-ink-200 p-3">
-        <p className="text-sm font-semibold text-ink-900">Foto del certificado de cobertura</p>
-        <p className="text-xs text-ink-500">
-          La tarjeta o el certificado del seguro, donde se lean la compañía, la patente y el vencimiento.
-        </p>
-        {preview && (
-          // eslint-disable-next-line @next/next/no-img-element -- foto local antes de subirla
-          <img src={preview} alt="Certificado del seguro" className="max-h-48 w-fit rounded-lg object-contain" />
-        )}
-        {!photo && hasPhoto && (
-          <p className="flex items-center gap-2 text-sm text-emerald-800">
-            <CheckIcon className="shrink-0" /> Foto subida.
-          </p>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={(e) => {
-            onPhoto(e.target.files?.[0] ?? null);
-            e.target.value = "";
-          }}
-        />
-        <Button
-          type="button"
-          variant={photo || hasPhoto ? "secondary" : "primary"}
-          className="w-fit"
-          onClick={() => inputRef.current?.click()}
-        >
-          <CameraIcon /> {photo || hasPhoto ? "Cambiar la foto" : "Sacar foto del certificado"}
-        </Button>
-      </div>
-    </fieldset>
-  );
-}
-
-function InsuranceStatus({ vehicle: v, today, onEdit }: { vehicle: Vehicle; today: string; onEdit: () => void }) {
-  const ok = isInsured(v, today);
-  const expired = !!v.insuranceExpiry && !!today && v.insuranceExpiry < today;
-  const onlyPhoto = !ok && !expired && !!v.insurer.trim() && !!v.insurancePolicy.trim() && !!v.insuranceExpiry;
-  return (
-    <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm">
-      {ok ? (
-        <span className="text-emerald-700">
-          Seguro: {v.insurer} · vence {formatDay(v.insuranceExpiry)} ✓
-        </span>
-      ) : (
-        <span className="font-semibold text-red-700">
-          {expired ? "Seguro vencido" : onlyPhoto ? "Falta la foto del seguro" : "Falta el seguro"}
-        </span>
-      )}
-      <button type="button" onClick={onEdit} className="font-semibold text-brand-700 hover:underline">
-        {ok ? "Cambiar" : "Cargar seguro"}
-      </button>
-    </p>
-  );
-}
-
-function InsuranceForm({ vehicle, today, onSaved }: { vehicle: Vehicle; today: string; onSaved: () => void }) {
-  const [value, setValue] = useState<InsuranceValue>({
-    insurer: vehicle.insurer,
-    insurancePolicy: vehicle.insurancePolicy,
-    insuranceExpiry: vehicle.insuranceExpiry,
-  });
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function onSave() {
-    const problem = checkInsurance(value, today, vehicle.insurancePhoto || !!photo);
-    if (problem) {
-      setError(problem);
-      return;
-    }
-    setBusy(true);
-    setError(null);
-    try {
-      await updateVehicleInsurance(vehicle.id, value);
-      if (photo) await uploadInsurancePhoto(vehicle.id, photo);
-      onSaved();
-    } catch (err) {
-      setError(errText(err));
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="mt-3 flex flex-col gap-3 rounded-xl bg-ink-50 p-3">
-      <InsuranceFields
-        idPrefix={`seg-${vehicle.id}`}
-        value={value}
-        onChange={(patch) => setValue((v) => ({ ...v, ...patch }))}
-        photo={photo}
-        hasPhoto={vehicle.insurancePhoto}
-        onPhoto={setPhoto}
-      />
-      {error && <ErrorBox>{error}</ErrorBox>}
-      <Button type="button" variant="secondary" className="w-fit" onClick={onSave} disabled={busy}>
-        {busy ? "Guardando…" : "Guardar seguro"}
-      </Button>
-    </div>
   );
 }

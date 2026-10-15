@@ -43,9 +43,8 @@ export default function PrivacidadPage() {
             para confirmar que el número es tuyo.
           </li>
           <li>
-            <strong>Si reservás o avisás que vas:</strong> licencia de conducir (número, categoría, vencimiento y fotos),
-            vehículos (marca, modelo, color, patente) y su seguro (compañía, póliza, vencimiento y foto del
-            certificado). Para que el garaje sepa quién llega y tenga los datos del vehículo por si pasa algo.
+            <strong>Si reservás o avisás que vas:</strong> licencia de conducir (número, categoría y vencimiento) y
+            vehículos (marca, modelo, color, patente). Para que el garaje sepa quién llega y tenga los datos del vehículo por si pasa algo.
           </li>
           <li>
             <strong>Si publicás un garaje:</strong> los datos del establecimiento (ubicación, tarifas, horario, fotos,
@@ -97,13 +96,12 @@ export default function PrivacidadPage() {
         <h2>5. Quién ve tus datos</h2>
         <ul>
           <li>
-            <strong>Las fotos de tu DNI, tu selfie y tu licencia</strong> se guardan en un espacio privado: no las ve
-            ningún otro usuario. <strong>La foto del certificado del seguro</strong> la ve solo el garaje donde tenés
-            una reserva o un aviso activo.
+            <strong>Las fotos de tu DNI y tu selfie</strong> se guardan en un espacio privado: no las ve ningún otro
+            usuario.
           </li>
           <li>
             <strong>El garaje donde reservás o al que avisás que vas</strong> ve tu nombre, tu foto de perfil y los datos
-            de tu vehículo (marca, modelo, color, patente y seguro).
+            de tu vehículo (marca, modelo, color y patente).
           </li>
           <li>
             <strong>Quien reserva en tu garaje</strong> ve la dirección y las indicaciones de llegada recién cuando la

@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth/auth-provider";
 import { DataError, type Requirement, type Vehicle } from "@/lib/data/types";
 import { createBooking } from "@/lib/data/bookings";
 import { depositOf, getPaymentSettings, startCheckout, type PaymentSettings } from "@/lib/data/payments";
-import { REQUIREMENT_LABEL, isInsured, listMyVehicles, myMissingRequirements } from "@/lib/data/profile";
+import { REQUIREMENT_LABEL, listMyVehicles, myMissingRequirements } from "@/lib/data/profile";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { InfoIcon } from "@/components/ui/icons";
@@ -76,7 +76,7 @@ export function RealBookingPanel({ space }: { space: Space }) {
   };
   const check = checkBooking(space, value, now);
   const driver = useDriver(auth.status === "signed-in");
-  const fitting = driver.state === "ready" ? driver.vehicles.filter((v) => fitsVehicle(space.maxVehicle, v.size) && isInsured(v, now ? now.slice(0, 10) : "")) : [];
+  const fitting = driver.state === "ready" ? driver.vehicles.filter((v) => fitsVehicle(space.maxVehicle, v.size)) : [];
   const [chosen, setChosen] = useState<string | null>(null);
   const vehicleId = chosen && fitting.some((v) => v.id === chosen) ? chosen : (fitting[0]?.id ?? null);
   const verified = driver.state === "ready" && driver.missing.length === 0;
@@ -207,7 +207,7 @@ export function RealBookingPanel({ space }: { space: Space }) {
               </select>
             ) : (
               <p className="mt-1 text-sm text-ink-700">
-                Ninguno de tus vehículos con seguro vigente entra en este garaje.{" "}
+                Ninguno de tus vehículos entra en este garaje.{" "}
                 <a href="/cuenta/vehiculos/" className="font-semibold text-brand-700 hover:underline">
                   Revisá tus vehículos
                 </a>

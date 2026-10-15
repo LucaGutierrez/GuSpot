@@ -28,7 +28,7 @@ export default function TerminosPage() {
           <li>Tenés que ser mayor de 18 años y cargar tus datos reales, tal como figuran en tu DNI.</li>
           <li>
             Para reservar o avisar que vas tenés que verificar tu identidad (DNI y reconocimiento facial), cargar tu
-            licencia de conducir vigente —con el mismo número que tu DNI— y al menos un vehículo con su seguro vigente.
+            licencia de conducir vigente —con el mismo número que tu DNI— y al menos un vehículo (marca, modelo y patente).
           </li>
           <li>Para publicar un garaje tenés que verificar tu identidad y tu celular.</li>
           <li>La cuenta es personal: no la compartas. Sos responsable de lo que se haga con ella.</li>
