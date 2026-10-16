@@ -4,6 +4,12 @@ Guía práctica para registrar "GuSpot" en el **INPI** (Instituto Nacional de la
 
 > Información general, no asesoramiento legal. Montos y pasos cambian: verificá en el portal del INPI antes de pagar. Lo ideal es hacerlo con un agente de la propiedad industrial.
 
+## Estado
+
+- **Acta 4807677**: "GUSPOT" denominativa, clase 39 (20 servicios de estacionamiento y garajes, incluida la reserva de plazas). Presentada el 14/10/2026, arancel $41.259 pagado. Titular: Luca Ferreira Gutierrez (100 %).
+- 15/10/2026: en estudio (todavía sin publicar en el Boletín, sin oposiciones ni vistas). Seguimiento: Portal de Trámites → Marcas → Consultas de Marcas → número de acta.
+- Pendiente, sin apuro (decisión 15/10/2026: esperar por presupuesto). Cada una es una solicitud y un pago aparte (~$41.259; el INPI no acepta varias clases juntas). Orden sugerido: 1) clase 9 antes de publicar la app en las tiendas; 2) clase 42; 3) logo (mixta) en clase 39 cuando el logo sea definitivo; 4) clase 35.
+
 ## Qué registrar
 
 | Qué | Para qué |
